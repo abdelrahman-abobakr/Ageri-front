@@ -1,0 +1,148 @@
+import apiClient from './api';
+import axios from 'axios';
+import { API_ENDPOINTS, API_CONFIG } from '../constants';
+
+// Create a separate axios instance for public API calls (no auth required)
+const publicApiClient = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+export const contentService = {
+  // Public Announcements (for guests - no auth required)
+  getPublicAnnouncements: async (params = {}) => {
+    try {
+      const response = await publicApiClient.get(API_ENDPOINTS.CONTENT.ANNOUNCEMENTS, { params });
+      return response.data;
+    } catch (error) {
+      // If public access fails, try with auth (for logged-in users)
+      if (error.response?.status === 401) {
+        const response = await apiClient.get(API_ENDPOINTS.CONTENT.ANNOUNCEMENTS, { params });
+        return response.data;
+      }
+      throw error;
+    }
+  },
+
+  // Announcements (authenticated)
+  getAnnouncements: async (params = {}) => {
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.ANNOUNCEMENTS, { params });
+    return response.data;
+  },
+
+  createAnnouncement: async (announcementData) => {
+    const response = await apiClient.post(API_ENDPOINTS.CONTENT.ANNOUNCEMENTS, announcementData);
+    return response.data;
+  },
+
+  getAnnouncementById: async (id) => {
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.ANNOUNCEMENT_DETAIL(id));
+    return response.data;
+  },
+
+  updateAnnouncement: async (id, announcementData) => {
+    const response = await apiClient.put(API_ENDPOINTS.CONTENT.ANNOUNCEMENT_DETAIL(id), announcementData);
+    return response.data;
+  },
+
+  deleteAnnouncement: async (id) => {
+    const response = await apiClient.delete(API_ENDPOINTS.CONTENT.ANNOUNCEMENT_DETAIL(id));
+    return response.data;
+  },
+
+  // Public Posts (for guests - no auth required)
+  getPublicPosts: async (params = {}) => {
+    try {
+      const response = await publicApiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
+      return response.data;
+    } catch (error) {
+      // If public access fails, try with auth (for logged-in users)
+      if (error.response?.status === 401) {
+        const response = await apiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
+        return response.data;
+      }
+      throw error;
+    }
+  },
+
+  // Posts (authenticated)
+  getPosts: async (params = {}) => {
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
+    return response.data;
+  },
+
+  createPost: async (postData) => {
+    const response = await apiClient.post(API_ENDPOINTS.CONTENT.POSTS, postData);
+    return response.data;
+  },
+
+  getPostById: async (id) => {
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
+    return response.data;
+  },
+
+  updatePost: async (id, postData) => {
+    const response = await apiClient.put(API_ENDPOINTS.CONTENT.POST_DETAIL(id), postData);
+    return response.data;
+  },
+
+  deletePost: async (id) => {
+    const response = await apiClient.delete(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
+    return response.data;
+  },
+
+  // Comments
+  getPostComments: async (postId) => {
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_COMMENTS(postId));
+    return response.data;
+  },
+
+  addComment: async (postId, commentData) => {
+    const response = await apiClient.post(API_ENDPOINTS.CONTENT.POST_COMMENTS(postId), commentData);
+    return response.data;
+  },
+
+  updateComment: async (commentId, commentData) => {
+    const response = await apiClient.put(API_ENDPOINTS.CONTENT.COMMENT_DETAIL(commentId), commentData);
+    return response.data;
+  },
+
+  deleteComment: async (commentId) => {
+    const response = await apiClient.delete(API_ENDPOINTS.CONTENT.COMMENT_DETAIL(commentId));
+    return response.data;
+  },
+
+  // Combined public content feed (announcements + posts for homepage)
+  getPublicContentFeed: async (params = {}) => {
+    try {
+      // Fetch both announcements and posts in parallel
+      const [announcementsResponse, postsResponse] = await Promise.allSettled([
+        contentService.getPublicAnnouncements(params),
+        contentService.getPublicPosts(params)
+      ]);
+
+      const announcements = announcementsResponse.status === 'fulfilled'
+        ? (announcementsResponse.value.results || []).map(item => ({ ...item, type: 'announcement' }))
+        : [];
+
+      const posts = postsResponse.status === 'fulfilled'
+        ? (postsResponse.value.results || []).map(item => ({ ...item, type: 'post' }))
+        : [];
+
+      // Combine and sort by creation date (newest first)
+      const combinedContent = [...announcements, ...posts]
+        .sort((a, b) => new Date(b.created_at || b.date) - new Date(a.created_at || a.date));
+
+      return {
+        results: combinedContent,
+        count: combinedContent.length
+      };
+    } catch (error) {
+      console.error('Failed to fetch public content feed:', error);
+      return { results: [], count: 0 };
+    }
+  },
+};
