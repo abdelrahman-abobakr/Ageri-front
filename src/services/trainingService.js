@@ -95,4 +95,21 @@ export const trainingService = {
     const response = await apiClient.get(API_ENDPOINTS.TRAINING.PUBLIC_SERVICE_DETAIL(id));
     return response.data;
   },
+
+  // Training Sessions
+  getTrainingSessions: async (params = {}) => {
+    const response = await apiClient.get('/training/sessions/', { params });
+    return response.data;
+  },
+
+  createTrainingSession: async (sessionData) => {
+    const response = await apiClient.post('/training/sessions/', sessionData);
+    return response.data;
+  },
+
+  // Enrollments Management
+  getEnrollments: async (params = {}) => {
+    const response = await apiClient.get('/training/enrollments/', { params });
+    return response.data;
+  },
 };

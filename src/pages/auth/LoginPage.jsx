@@ -3,6 +3,7 @@ import { Form, Input, Button, Card, Alert, Typography, Divider } from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { loginUser, clearError, getDefaultRedirectPath } from '../../store/slices/authSlice';
 import ErrorDisplay from '../../components/common/ErrorDisplay';
 import { setFormFieldErrors, clearFormFieldErrors } from '../../utils/errorHandler';
@@ -10,6 +11,7 @@ import { setFormFieldErrors, clearFormFieldErrors } from '../../utils/errorHandl
 const { Title, Text } = Typography;
 
 const LoginPage = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,10 +71,10 @@ const LoginPage = () => {
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <Title level={2} style={{ color: '#1890ff', marginBottom: 8 }}>
-            Ageri Research Platform
+            {t('homepage.heroTitle')}
           </Title>
           <Text type="secondary">
-            Sign in to your account
+            {t('auth.loginTitle')}
           </Text>
         </div>
 
@@ -91,37 +93,37 @@ const LoginPage = () => {
         >
           <Form.Item
             name="email"
-            label="Email"
+            label={t('auth.email')}
             rules={[
               {
                 required: true,
-                message: 'Please input your email!',
+                message: t('auth.email') + ' مطلوب',
               },
               {
                 type: 'email',
-                message: 'Please enter a valid email address!',
+                message: 'يرجى إدخال عنوان بريد إلكتروني صحيح',
               },
             ]}
           >
             <Input
               prefix={<MailOutlined />}
-              placeholder="Enter your email"
+              placeholder={t('auth.email')}
             />
           </Form.Item>
 
           <Form.Item
             name="password"
-            label="Password"
+            label={t('auth.password')}
             rules={[
               {
                 required: true,
-                message: 'Please input your password!',
+                message: t('auth.password') + ' مطلوبة',
               },
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Enter your password"
+              placeholder={t('auth.password')}
             />
           </Form.Item>
 
@@ -133,7 +135,7 @@ const LoginPage = () => {
               block
               style={{ height: 40 }}
             >
-              Sign In
+              {t('auth.signIn')}
             </Button>
           </Form.Item>
         </Form>
@@ -142,16 +144,16 @@ const LoginPage = () => {
 
         <div style={{ textAlign: 'center' }}>
           <Text type="secondary">
-            Don't have an account?{' '}
+            {t('auth.noAccount')}{' '}
             <Link to="/register" style={{ color: '#1890ff' }}>
-              Register here
+              {t('auth.signUp')}
             </Link>
           </Text>
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 8 }}>
           <Link to="/forgot-password" style={{ color: '#1890ff' }}>
-            Forgot your password?
+            {t('auth.forgotPassword')}
           </Link>
         </div>
       </Card>

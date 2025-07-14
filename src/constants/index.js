@@ -210,9 +210,10 @@ export const API_ENDPOINTS = {
     DEPARTMENT_DETAIL: (id) => `/organization/departments/${id}/`,
     LABS: '/organization/labs/',
     LAB_DETAIL: (id) => `/organization/labs/${id}/`,
-    ASSIGN_RESEARCHER: (id) => `/organization/labs/${id}/assign-researcher/`,
-    REMOVE_RESEARCHER: (id) => `/organization/labs/${id}/remove-researcher/`,
+    ASSIGNMENTS: '/organization/assignments/',
+    MY_ASSIGNMENTS: '/organization/assignments/my/',
     LAB_RESEARCHERS: (id) => `/organization/labs/${id}/researchers/`,
+    SETTINGS: '/organization/settings/',
   },
 
   // Training System
@@ -258,7 +259,7 @@ export const API_ENDPOINTS = {
   },
 
   ANALYTICS: {
-    DASHBOARD: '/analytics/dashboard/',
+    DASHBOARD: '/dashboard/analytics/', // Special endpoint outside /api prefix
     PUBLICATIONS: '/analytics/publications/',
     USERS: '/analytics/users/',
     SERVICES: '/analytics/services/',
@@ -344,6 +345,7 @@ export const MENU_ITEMS = {
   ],
   [USER_ROLES.GUEST]: [
     { key: 'home', label: 'Home', icon: 'DashboardOutlined', path: '/' },
+    { key: 'announcements', label: 'Announcements', icon: 'FileTextOutlined', path: '/announcements' },
     { key: 'courses', label: 'Courses', icon: 'ReadOutlined', path: '/courses' },
     { key: 'services', label: 'Services', icon: 'ToolOutlined', path: '/services' },
   ],

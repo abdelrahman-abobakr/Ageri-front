@@ -26,7 +26,7 @@ const AnnouncementDetailPage = () => {
   const loadAnnouncementDetails = async () => {
     try {
       setLoading(true);
-      const response = await contentService.getAnnouncementById(id);
+      const response = await contentService.getPublicAnnouncementById(id);
       setAnnouncement(response);
     } catch (error) {
       console.error('Failed to load announcement details:', error);

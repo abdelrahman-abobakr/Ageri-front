@@ -2,9 +2,14 @@ import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
 import { ConfigProvider } from 'antd';
+import { useTranslation } from 'react-i18next';
+import arEG from 'antd/locale/ar_EG';
+import enUS from 'antd/locale/en_US';
 import store from './store';
 import { getCurrentUser } from './store/slices/authSlice';
 import { USER_ROLES } from './constants';
+import './i18n';
+import './styles/rtl.css';
 
 // Layout Components
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -25,10 +30,22 @@ import TestPage from './pages/public/TestPage';
 import ResearcherProfilePage from './pages/public/ResearcherProfilePage';
 import LabDetailPage from './pages/public/LabDetailPage';
 import AnnouncementDetailPage from './pages/public/AnnouncementDetailPage';
+import AnnouncementsPage from './pages/public/AnnouncementsPage';
 
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ProfilePage from './pages/profile/ProfilePage';
+
+// Admin Pages
+import UserManagementPage from './pages/admin/UserManagementPage';
+import AnalyticsPage from './pages/admin/AnalyticsPage';
+import ContentManagementPage from './pages/admin/ContentManagementPage';
+import SystemSettingsPage from './pages/admin/SystemSettingsPage';
+import ResearchManagementPage from './pages/admin/ResearchManagementPage';
+import ServicesManagementPage from './pages/admin/ServicesManagementPage';
+import TrainingManagementPage from './pages/admin/TrainingManagementPage';
+import OrganizationManagementPage from './pages/admin/OrganizationManagementPage';
+import NotificationsManagementPage from './pages/admin/NotificationsManagementPage';
 
 // Ant Design theme configuration
 const theme = {
@@ -48,6 +65,7 @@ const theme = {
 const AppContent = () => {
   const dispatch = useDispatch();
   const { isAuthenticated, user } = useSelector((state) => state.auth);
+  const { i18n } = useTranslation();
 
   useEffect(() => {
     // Check if user is logged in and get current user data
@@ -56,9 +74,21 @@ const AppContent = () => {
     }
   }, [dispatch, isAuthenticated, user]);
 
+  useEffect(() => {
+    // Set document direction based on language
+    document.documentElement.dir = i18n.language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = i18n.language;
+  }, [i18n.language]);
+
+  // Get Ant Design locale based on current language
+  const getAntdLocale = () => {
+    return i18n.language === 'ar' ? arEG : enUS;
+  };
+
   return (
-    <Router>
-      <Routes>
+    <ConfigProvider theme={theme} locale={getAntdLocale()}>
+      <Router>
+        <Routes>
         {/* Auth routes (no layout) */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
@@ -74,6 +104,7 @@ const AppContent = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/services" element={<ServicesPage />} />
+          <Route path="/announcements" element={<AnnouncementsPage />} />
           <Route path="/researchers/:id" element={<ResearcherProfilePage />} />
           <Route path="/labs/:id" element={<LabDetailPage />} />
           <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
@@ -98,7 +129,7 @@ const AppContent = () => {
             path="users"
             element={
               <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <div>User Management - Coming Soon</div>
+                <UserManagementPage />
               </ProtectedRoute>
             }
           />
@@ -106,19 +137,68 @@ const AppContent = () => {
             path="analytics"
             element={
               <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <div>Analytics - Coming Soon</div>
+                <AnalyticsPage />
               </ProtectedRoute>
             }
           />
 
-          {/* Module routes - will be implemented in later phases */}
-          <Route path="research" element={<div>Research Module - Coming Soon</div>} />
-          <Route path="organization" element={<div>Organization Module - Coming Soon</div>} />
-          <Route path="training" element={<div>Training Module - Coming Soon</div>} />
-          <Route path="services" element={<div>Services Module - Coming Soon</div>} />
-          <Route path="content" element={<div>Content Module - Coming Soon</div>} />
-          <Route path="notifications" element={<div>Notifications - Coming Soon</div>} />
-          <Route path="settings" element={<div>Settings Page - Coming Soon</div>} />
+          {/* Module routes - now fully implemented */}
+          <Route
+            path="research"
+            element={
+              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                <ResearchManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="organization"
+            element={
+              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                <OrganizationManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="training"
+            element={
+              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                <TrainingManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="services"
+            element={
+              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                <ServicesManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="content"
+            element={
+              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                <ContentManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="notifications"
+            element={
+              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                <NotificationsManagementPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="settings"
+            element={
+              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                <SystemSettingsPage />
+              </ProtectedRoute>
+            }
+          />
         </Route>
 
         {/* Catch all route - redirect unknown paths */}
@@ -130,17 +210,16 @@ const AppContent = () => {
               <Navigate to="/" replace />
           }
         />
-      </Routes>
-    </Router>
+        </Routes>
+      </Router>
+    </ConfigProvider>
   );
 };
 
 function App() {
   return (
     <Provider store={store}>
-      <ConfigProvider theme={theme}>
-        <AppContent />
-      </ConfigProvider>
+      <AppContent />
     </Provider>
   );
 }

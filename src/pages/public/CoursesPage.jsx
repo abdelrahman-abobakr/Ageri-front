@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, List, Input, Select, Button, Tag, Typography, Row, Col, Pagination } from 'antd';
 import { SearchOutlined, ReadOutlined, CalendarOutlined, UserOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { trainingService } from '../../services';
 import { COURSE_STATUS } from '../../constants';
 
@@ -10,6 +11,7 @@ const { Search } = Input;
 const { Option } = Select;
 
 const CoursesPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -80,7 +82,7 @@ const CoursesPage = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('ar-EG', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
@@ -92,10 +94,10 @@ const CoursesPage = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <ReadOutlined style={{ marginRight: '8px' }} />
-          Training Courses
+          {t('courses.title')}
         </Title>
         <Paragraph type="secondary">
-          Explore our comprehensive training programs and professional development courses.
+          {t('courses.description')}
         </Paragraph>
       </div>
 
@@ -104,7 +106,7 @@ const CoursesPage = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Search
-              placeholder="Search courses..."
+              placeholder={t('courses.searchPlaceholder')}
               allowClear
               enterButton={<SearchOutlined />}
               onSearch={handleSearch}
@@ -236,14 +238,14 @@ const CoursesPage = () => {
       {!loading && courses.length === 0 && (
         <Card style={{ textAlign: 'center', padding: '40px' }}>
           <ReadOutlined style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }} />
-          <Title level={4} type="secondary">No Courses Found</Title>
+          <Title level={4} type="secondary">{t('courses.noCourses')}</Title>
           <Paragraph type="secondary">
-            {searchTerm || statusFilter 
-              ? 'Try adjusting your search criteria or filters.'
-              : 'No courses are currently available.'}
+            {searchTerm || statusFilter
+              ? t('courses.tryAdjusting')
+              : t('courses.noCoursesDesc')}
           </Paragraph>
           <Button type="primary" onClick={() => navigate('/register')}>
-            Register to Access More Courses
+            {t('courses.registerToAccess')}
           </Button>
         </Card>
       )}

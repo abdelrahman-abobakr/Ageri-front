@@ -3,6 +3,7 @@ import { Form, Input, Button, Card, Alert, Typography, Divider, Select } from 'a
 import { UserOutlined, LockOutlined, MailOutlined, PhoneOutlined } from '@ant-design/icons';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { registerUser, clearError, clearRegistrationSuccess, getDefaultRedirectPath } from '../../store/slices/authSlice';
 import ErrorDisplay from '../../components/common/ErrorDisplay';
 import { setFormFieldErrors, clearFormFieldErrors } from '../../utils/errorHandler';
@@ -11,6 +12,7 @@ const { Title, Text } = Typography;
 const { Option } = Select;
 
 const RegisterPage = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, registrationSuccess, isAuthenticated, user } = useSelector((state) => state.auth);
@@ -99,10 +101,10 @@ const RegisterPage = () => {
       >
         <div style={{ textAlign: 'center', marginBottom: 24 }}>
           <Title level={2} style={{ color: '#1890ff', marginBottom: 8 }}>
-            Create Account
+            {t('auth.registerTitle')}
           </Title>
           <Text type="secondary">
-            Join the Ageri Research Platform
+            {t('homepage.heroTitle')}
           </Text>
         </div>
 
@@ -121,116 +123,116 @@ const RegisterPage = () => {
         >
           <Form.Item
             name="username"
-            label="Username"
+            label={t('auth.username')}
             rules={[
               {
                 required: true,
-                message: 'Please input your username!',
+                message: t('validation.usernameRequired'),
               },
               {
                 min: 3,
-                message: 'Username must be at least 3 characters long!',
+                message: t('validation.usernameMinLength'),
               },
             ]}
           >
             <Input
               prefix={<UserOutlined />}
-              placeholder="Choose a username"
+              placeholder={t('validation.enterUsername')}
             />
           </Form.Item>
 
           <Form.Item
             name="email"
-            label="Email"
+            label={t('auth.email')}
             rules={[
               {
                 required: true,
-                message: 'Please input your email!',
+                message: t('validation.emailRequired'),
               },
               {
                 type: 'email',
-                message: 'Please enter a valid email address!',
+                message: t('validation.invalidEmail'),
               },
             ]}
           >
             <Input
               prefix={<MailOutlined />}
-              placeholder="Enter your email"
+              placeholder={t('validation.enterEmail')}
             />
           </Form.Item>
 
           <div style={{ display: 'flex', gap: 16 }}>
             <Form.Item
               name="first_name"
-              label="First Name"
+              label={t('auth.firstName')}
               style={{ flex: 1 }}
               rules={[
                 {
                   required: true,
-                  message: 'Please input your first name!',
+                  message: t('validation.firstNameRequired'),
                 },
               ]}
             >
-              <Input placeholder="First name" />
+              <Input placeholder={t('validation.enterFirstName')} />
             </Form.Item>
 
             <Form.Item
               name="last_name"
-              label="Last Name"
+              label={t('auth.lastName')}
               style={{ flex: 1 }}
               rules={[
                 {
                   required: true,
-                  message: 'Please input your last name!',
+                  message: t('validation.lastNameRequired'),
                 },
               ]}
             >
-              <Input placeholder="Last name" />
+              <Input placeholder={t('validation.enterLastName')} />
             </Form.Item>
           </div>
 
           <Form.Item
             name="password"
-            label="Password"
+            label={t('auth.password')}
             rules={[
               {
                 required: true,
-                message: 'Please input your password!',
+                message: t('validation.passwordRequired'),
               },
               {
                 min: 8,
-                message: 'Password must be at least 8 characters long!',
+                message: t('validation.passwordTooShort'),
               },
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Create a password"
+              placeholder={t('validation.enterPassword')}
             />
           </Form.Item>
 
           <Form.Item
             name="password_confirm"
-            label="Confirm Password"
+            label={t('auth.confirmPassword')}
             dependencies={['password']}
             rules={[
               {
                 required: true,
-                message: 'Please confirm your password!',
+                message: t('validation.required'),
               },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('password') === value) {
                     return Promise.resolve();
                   }
-                  return Promise.reject(new Error('The two passwords do not match!'));
+                  return Promise.reject(new Error(t('validation.passwordsDoNotMatch')));
                 },
               }),
             ]}
           >
             <Input.Password
               prefix={<LockOutlined />}
-              placeholder="Confirm your password"
+              placeholder={t('validation.confirmPassword')}
             />
           </Form.Item>
 
@@ -242,7 +244,7 @@ const RegisterPage = () => {
               block
               style={{ height: 40 }}
             >
-              Create Account
+              {t('auth.signUp')}
             </Button>
           </Form.Item>
         </Form>
@@ -251,9 +253,9 @@ const RegisterPage = () => {
 
         <div style={{ textAlign: 'center' }}>
           <Text type="secondary">
-            Already have an account?{' '}
+            {t('auth.hasAccount')}{' '}
             <Link to="/login" style={{ color: '#1890ff' }}>
-              Sign in here
+              {t('auth.signIn')}
             </Link>
           </Text>
         </div>

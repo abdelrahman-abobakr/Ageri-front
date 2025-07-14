@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Button, theme, Breadcrumb, Badge, List, Typography } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -21,6 +22,7 @@ import {
 import { logoutUser } from '../../store/slices/authSlice';
 import { toggleSidebar } from '../../store/slices/uiSlice';
 import { MENU_ITEMS, USER_ROLES } from '../../constants';
+import LanguageSwitcher from '../common/LanguageSwitcher';
 import { notificationService } from '../../services';
 
 const { Header, Sider, Content } = Layout;
@@ -42,6 +44,7 @@ const iconMap = {
 };
 
 const MainLayout = () => {
+  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
@@ -113,17 +116,38 @@ const MainLayout = () => {
     navigate(appPath);
   };
 
+  // Get translated menu label
+  const getMenuLabel = (key) => {
+    const labelMap = {
+      'dashboard': t('common.dashboard'),
+      'users': t('navigation.userManagement'),
+      'research': t('navigation.myResearch'),
+      'organization': t('navigation.organization'),
+      'training': t('navigation.training'),
+      'services': t('common.services'),
+      'content': t('navigation.content'),
+      'analytics': t('navigation.analytics'),
+      'notifications': t('navigation.notifications'),
+      'settings': t('common.settings'),
+      'profile': t('common.profile'),
+      'home': t('common.home'),
+      'announcements': t('common.announcements'),
+      'courses': t('common.courses'),
+    };
+    return labelMap[key] || key;
+  };
+
   // Get menu items based on user role
   const getMenuItems = () => {
     const userRole = user?.role || USER_ROLES.RESEARCHER;
     const items = MENU_ITEMS[userRole] || MENU_ITEMS[USER_ROLES.RESEARCHER];
-    
+
     return items.map((item) => {
       const IconComponent = iconMap[item.icon];
       return {
         key: item.path,
         icon: IconComponent ? <IconComponent /> : <DashboardOutlined />,
-        label: item.label,
+        label: getMenuLabel(item.key),
       };
     });
   };
@@ -133,13 +157,13 @@ const MainLayout = () => {
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: 'Profile',
+      label: t('common.profile'),
       onClick: () => navigate('/app/profile'),
     },
     {
       key: 'settings',
       icon: <SettingOutlined />,
-      label: 'Settings',
+      label: t('common.settings'),
       onClick: () => navigate('/app/settings'),
     },
     {
@@ -148,7 +172,7 @@ const MainLayout = () => {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Logout',
+      label: t('common.logout'),
       onClick: handleLogout,
     },
   ];
@@ -281,7 +305,7 @@ const MainLayout = () => {
           fontWeight: 'bold',
           color: '#1890ff',
         }}>
-          {sidebarCollapsed ? 'A' : 'Ageri'}
+          {sidebarCollapsed ? 'أ' : t('homepage.heroTitle').split(' ')[0]}
         </div>
         <Menu
           mode="inline"
@@ -321,15 +345,18 @@ const MainLayout = () => {
                 fontSize: '20px',
                 color: '#1890ff'
               }}>
-                Ageri Research Platform
+                {t('homepage.heroTitle')}
               </h1>
             )}
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
             {!isMobile && (
-              <span>Welcome, {user?.first_name || user?.username}</span>
+              <span>{t('common.welcome')}, {user?.first_name || user?.username}</span>
             )}
+
+            {/* Language Switcher */}
+            <LanguageSwitcher size="small" />
 
             {/* Notification Bell */}
             <Dropdown

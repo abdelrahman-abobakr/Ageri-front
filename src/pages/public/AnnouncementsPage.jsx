@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Card, List, Input, Button, Tag, Typography, Row, Col, Pagination } from 'antd';
 import { SearchOutlined, FileTextOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { contentService } from '../../services';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 
 const AnnouncementsPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +29,7 @@ const AnnouncementsPage = () => {
 
       if (search) params.search = search;
 
-      const response = await contentService.getAnnouncements(params);
+      const response = await contentService.getPublicAnnouncements(params);
       setAnnouncements(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {

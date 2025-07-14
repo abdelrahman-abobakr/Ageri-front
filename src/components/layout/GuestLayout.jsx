@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Layout, Menu, Button, theme, Breadcrumb, Dropdown, message, Avatar } from 'antd';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
+import { useTranslation } from 'react-i18next';
 import {
   DashboardOutlined,
   BookOutlined,
@@ -19,6 +20,7 @@ import {
 import { MENU_ITEMS, USER_ROLES } from '../../constants';
 import { organizationService } from '../../services';
 import { logoutUser } from '../../store/slices/authSlice';
+import LanguageSwitcher from '../common/LanguageSwitcher';
 
 const { Header, Content } = Layout;
 
@@ -32,6 +34,7 @@ const iconMap = {
 };
 
 const GuestLayout = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -125,6 +128,17 @@ const GuestLayout = () => {
     return { items };
   };
 
+  // Get translated menu label
+  const getMenuLabel = (key) => {
+    const labelMap = {
+      'home': t('common.home'),
+      'announcements': t('common.announcements'),
+      'courses': t('common.courses'),
+      'services': t('common.services'),
+    };
+    return labelMap[key] || key;
+  };
+
   // Get menu items for guest users
   const getMenuItems = () => {
     const items = MENU_ITEMS[USER_ROLES.GUEST] || [];
@@ -134,7 +148,7 @@ const GuestLayout = () => {
       return {
         key: item.path,
         icon: IconComponent ? <IconComponent /> : <DashboardOutlined />,
-        label: item.label,
+        label: getMenuLabel(item.key),
       };
     });
   };
@@ -144,7 +158,7 @@ const GuestLayout = () => {
     const pathSegments = location.pathname.split('/').filter(Boolean);
     const breadcrumbItems = [
       {
-        title: 'Home',
+        title: t('common.home'),
         href: '/',
       },
     ];
@@ -209,10 +223,10 @@ const GuestLayout = () => {
                   fontSize: '24px',
                   fontWeight: 'bold'
                 }}>
-                  AGERI
+                  {t('homepage.heroTitle').split(' ')[0]}
                 </h1>
                 <div style={{ fontSize: '12px', color: '#666', lineHeight: '1' }}>
-                  Research Institute
+                  {t('homepage.heroTitle').split(' ').slice(1).join(' ')}
                 </div>
               </div>
             )}
@@ -267,8 +281,9 @@ const GuestLayout = () => {
           </div>
         </div>
 
-        {/* Auth Buttons */}
+        {/* Language Switcher and Auth Buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+          <LanguageSwitcher size={isMobile ? 'small' : 'middle'} />
           {isAuthenticated ? (
             // Show user info and logout when authenticated
             <>
@@ -283,7 +298,7 @@ const GuestLayout = () => {
                 onClick={() => navigate('/app/dashboard')}
                 size={isMobile ? 'small' : 'middle'}
               >
-                {!isMobile && 'Dashboard'}
+                {!isMobile && t('common.dashboard')}
               </Button>
               <Dropdown
                 menu={{
@@ -291,7 +306,7 @@ const GuestLayout = () => {
                     {
                       key: 'profile',
                       icon: <UserOutlined />,
-                      label: 'Profile',
+                      label: t('common.profile'),
                       onClick: () => navigate('/app/profile'),
                     },
                     {
@@ -325,7 +340,7 @@ const GuestLayout = () => {
                 onClick={() => navigate('/login')}
                 size={isMobile ? 'small' : 'middle'}
               >
-                {!isMobile && 'Login'}
+                {!isMobile && t('common.login')}
               </Button>
               <Button
                 type="primary"
@@ -333,7 +348,7 @@ const GuestLayout = () => {
                 onClick={() => navigate('/register')}
                 size={isMobile ? 'small' : 'middle'}
               >
-                {!isMobile && 'Register'}
+                {!isMobile && t('common.register')}
               </Button>
             </>
           )}

@@ -61,4 +61,13 @@ apiClient.interceptors.response.use(
   }
 );
 
+// Create public axios instance (no authentication required)
+export const publicApiClient = axios.create({
+  baseURL: API_CONFIG.BASE_URL,
+  timeout: API_CONFIG.TIMEOUT,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 export default apiClient;

@@ -1,11 +1,12 @@
 import React from 'react';
 import { Alert, List, Typography } from 'antd';
-import { 
-  ExclamationCircleOutlined, 
-  CloseCircleOutlined, 
+import {
+  ExclamationCircleOutlined,
+  CloseCircleOutlined,
   WarningOutlined,
-  InfoCircleOutlined 
+  InfoCircleOutlined
 } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import { formatFieldErrors } from '../../utils/errorHandler';
 
 const { Text } = Typography;
@@ -18,19 +19,20 @@ const { Text } = Typography;
  * @param {boolean} props.showFieldErrors - Whether to show field-specific errors
  * @param {string} props.style - Additional styles
  */
-const ErrorDisplay = ({ 
-  error, 
-  onClose, 
+const ErrorDisplay = ({
+  error,
+  onClose,
   showFieldErrors = false,
-  style = {} 
+  style = {}
 }) => {
+  const { t } = useTranslation();
   if (!error) return null;
 
   // Handle string errors (legacy support)
   if (typeof error === 'string') {
     return (
       <Alert
-        message="Error"
+        message={t('errors.somethingWentWrong')}
         description={error}
         type="error"
         showIcon
@@ -52,49 +54,49 @@ const ErrorDisplay = ({
         return {
           type: 'error',
           icon: <ExclamationCircleOutlined />,
-          message: 'Connection Error'
+          message: t('errors.connectionError')
         };
-      
+
       case 'auth':
         return {
           type: 'error',
           icon: <CloseCircleOutlined />,
-          message: 'Authentication Error'
+          message: t('errors.authenticationError')
         };
-      
+
       case 'validation':
         return {
           type: 'warning',
           icon: <WarningOutlined />,
-          message: 'Validation Error'
+          message: t('errors.validationError')
         };
-      
+
       case 'permission':
         return {
           type: 'error',
           icon: <CloseCircleOutlined />,
-          message: 'Access Denied'
+          message: t('errors.accessDenied')
         };
-      
+
       case 'server':
         return {
           type: 'error',
           icon: <ExclamationCircleOutlined />,
-          message: 'Server Error'
+          message: t('errors.serverError')
         };
-      
+
       case 'ratelimit':
         return {
           type: 'warning',
           icon: <WarningOutlined />,
-          message: 'Rate Limit Exceeded'
+          message: t('errors.rateLimitExceeded')
         };
-      
+
       default:
         return {
           type: 'error',
           icon: <InfoCircleOutlined />,
-          message: 'Error'
+          message: t('errors.error')
         };
     }
   };

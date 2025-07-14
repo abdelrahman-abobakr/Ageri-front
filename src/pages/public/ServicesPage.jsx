@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { Card, List, Input, Button, Tag, Typography, Row, Col, Pagination, Modal } from 'antd';
 import { SearchOutlined, ToolOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { servicesService } from '../../services';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 
 const ServicesPage = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,10 +84,10 @@ const ServicesPage = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <ToolOutlined style={{ marginRight: '8px' }} />
-          Research Services
+          {t('services.title')}
         </Title>
         <Paragraph type="secondary">
-          Professional research services and technical support for your projects.
+          {t('services.description')}
         </Paragraph>
       </div>
 
@@ -94,7 +96,7 @@ const ServicesPage = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Search
-              placeholder="Search services..."
+              placeholder={t('services.searchPlaceholder')}
               allowClear
               enterButton={<SearchOutlined />}
               onSearch={handleSearch}
@@ -103,7 +105,7 @@ const ServicesPage = () => {
           </Col>
           <Col xs={24} md={16}>
             <Text type="secondary">
-              Showing {services.length} of {total} services
+              {t('services.showing', { count: services.length, total })}
             </Text>
           </Col>
         </Row>
@@ -130,17 +132,17 @@ const ServicesPage = () => {
                 </div>
               }
               actions={[
-                <Button 
-                  type="link" 
+                <Button
+                  type="link"
                   onClick={() => handleServiceDetails(service)}
                 >
-                  View Details
+                  {t('services.viewDetails')}
                 </Button>,
-                <Button 
-                  type="primary" 
+                <Button
+                  type="primary"
                   onClick={() => handleRequestService(service.id)}
                 >
-                  Request Service
+                  {t('services.requestService')}
                 </Button>
               ]}
             >
