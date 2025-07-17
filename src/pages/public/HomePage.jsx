@@ -251,7 +251,7 @@ const HomePage = () => {
     const defaultImages = {
       vision: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Agricultural field with modern farming
       mission: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Scientists in laboratory
-      about: 'https://images.unsplash.com/photo-1416879595882-3373a0480b5b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80' // Agricultural research facility
+      about: 'https://images.unsplash.com/photo-1508385082359-f48b1c1b5c81?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' // DNA and scientific research
     };
     return defaultImages[type];
   };
@@ -708,13 +708,37 @@ const HomePage = () => {
         {/* About Section */}
         {organizationData.about && (
           <div style={{ marginBottom: '60px' }}>
-            <Card style={{ textAlign: 'center', background: '#f8f9fa' }}>
-              <Title level={3} style={{ color: '#1890ff', marginBottom: '24px' }}>
-                نبذة عن المنظمة
-              </Title>
-              <Paragraph style={{ fontSize: '16px', lineHeight: '1.8', maxWidth: '800px', margin: '0 auto' }}>
-                {organizationData.about}
-              </Paragraph>
+            <Card
+              style={{
+                textAlign: 'center',
+                background: 'linear-gradient(135deg, #e0f7fa 0%, #f8f9fa 100%)',
+                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.10)',
+                borderRadius: '24px',
+                border: 'none',
+                padding: 0,
+                overflow: 'hidden',
+                position: 'relative',
+                minHeight: '320px',
+              }}
+              bodyStyle={{ padding: 0 }}
+            >
+              <Row gutter={[0, 0]} align="middle" justify="center" style={{ flexWrap: 'wrap-reverse' }}>
+                <Col xs={24} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
+                  <Image
+                    src="https://images.unsplash.com/photo-1508385082359-f48b1c1b5c81?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                    alt="أبحاث الجينات والعلوم الحيوية"
+                    preview={false}
+                    style={{
+                      width: '100%',
+                      maxWidth: 400,
+                      height: '100%',
+                      objectFit: 'cover',
+                      borderRadius: '24px',
+                      boxShadow: '0 4px 24px 0 rgba(31, 38, 135, 0.10)'
+                    }}
+                  />
+                </Col>
+              </Row>
             </Card>
           </div>
         )}

@@ -3,10 +3,7 @@ import { Row, Col, Card, Statistic, Typography, Button, Space, Spin } from 'antd
 import {
   UserOutlined,
   BookOutlined,
-  ToolOutlined,
-  ReadOutlined,
   PlusOutlined,
-  EyeOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
@@ -76,6 +73,13 @@ const DashboardPage = () => {
 
   const getQuickActions = () => {
     const userRole = user?.role || USER_ROLES.RESEARCHER;
+    if (userRole === USER_ROLES.RESEARCHER) {
+      return [
+        { label: 'Submit Publication', icon: <PlusOutlined />, path: '/research/publications/new', type: 'primary' },
+        { label: 'My Publications', icon: <BookOutlined />, path: '/research/publications', type: 'default' },
+        { label: 'Profile', icon: <UserOutlined />, path: '/profile', type: 'default' },
+      ];
+    }
     
     switch (userRole) {
       case USER_ROLES.ADMIN:
@@ -101,6 +105,11 @@ const DashboardPage = () => {
 
   const getRoleSpecificStats = () => {
     const userRole = user?.role || USER_ROLES.RESEARCHER;
+    if (userRole === USER_ROLES.RESEARCHER) {
+      return [
+        { title: 'My Publications', value: researcherStats.publications, icon: <BookOutlined />, color: '#1890ff' },
+      ];
+    }
 
     switch (userRole) {
       case USER_ROLES.ADMIN:
@@ -162,7 +171,6 @@ const DashboardPage = () => {
         <Paragraph style={{ fontSize: '16px', marginBottom: 24 }}>
           {welcomeMessage.description}
         </Paragraph>
-        
         <Space size="middle">
           {quickActions.map((action, index) => (
             <Button
@@ -180,85 +188,14 @@ const DashboardPage = () => {
 
       {/* Statistics Cards */}
       <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <div>
-            <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
-              {user?.role === USER_ROLES.RESEARCHER ? 'My Statistics' : 'Dashboard Statistics'}
-            </Title>
-            {user?.role !== USER_ROLES.RESEARCHER && (
-              <span style={{ fontSize: '12px', color: dashboardStats ? '#52c41a' : '#ff4d4f' }}>
-                {dashboardLoading ? '🔄 Loading Real Data...' :
-                 dashboardStats ? '🟢 Real Data from API' : '🔴 Fallback Data (API not available)'}
-              </span>
-            )}
-          </div>
-          <Space>
-            {user?.role !== USER_ROLES.RESEARCHER && dashboardStats && (
-              <span style={{ fontSize: '12px', color: '#666' }}>
-                Auto-refreshes every 30s
-              </span>
-            )}
-            {user?.role !== USER_ROLES.RESEARCHER && (
-              <Button
-                size="small"
-                icon={<ReloadOutlined />}
-                onClick={() => {
-                  console.log('🔄 Manually refreshing dashboard stats...');
-                  refreshDashboard();
-                }}
-                loading={dashboardLoading}
-              >
-                Refresh Stats
-              </Button>
-            )}
-            {user?.role !== USER_ROLES.RESEARCHER && (
-              <Button
-                size="small"
-                onClick={async () => {
-                  console.log('🔍 Testing analytics endpoint manually...');
-                  try {
-                    const token = localStorage.getItem('access_token');
-                    const response = await fetch('/dashboard/analytics/', {
-                      method: 'GET',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        ...(token && { 'Authorization': `Bearer ${token}` })
-                      },
-                    });
-                    console.log('📊 Analytics endpoint response status:', response.status);
-                    if (response.ok) {
-                      const data = await response.json();
-                      console.log('📊 Analytics endpoint data:', data);
-                    } else {
-                      console.log('❌ Analytics endpoint error:', response.statusText);
-                    }
-                  } catch (error) {
-                    console.log('❌ Analytics endpoint error:', error.message);
-                    if (error.message.includes('CORS')) {
-                      console.log('💡 CORS Error: Backend may not be running or CORS not configured');
-                    }
-                  }
-                }}
-              >
-                Test API
-              </Button>
-            )}
-            <Button
-              icon={<ReloadOutlined />}
-              onClick={user?.role === USER_ROLES.RESEARCHER ? refetchStats : refreshDashboard}
-              loading={user?.role === USER_ROLES.RESEARCHER ? statsLoading : dashboardLoading}
-              size="small"
-            >
-              Refresh
-            </Button>
-          </Space>
-        </div>
+        <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
+          My Statistics
+        </Title>
         <Row gutter={[16, 16]}>
           {roleStats.map((stat, index) => (
             <Col xs={24} sm={12} md={6} key={index}>
               <Card>
-                {((user?.role === USER_ROLES.RESEARCHER && statsLoading) ||
-                  (user?.role !== USER_ROLES.RESEARCHER && dashboardLoading)) ? (
+                {statsLoading ? (
                   <div style={{ textAlign: 'center', padding: '20px 0' }}>
                     <Spin size="small" />
                     <div style={{ marginTop: 8, color: '#666' }}>{stat.title}</div>
@@ -268,21 +205,7 @@ const DashboardPage = () => {
                     title={stat.title}
                     value={stat.value}
                     prefix={stat.icon}
-                    valueStyle={{
-                      color: stat.color,
-                      transition: 'all 0.3s ease'
-                    }}
-                    suffix={
-                      user?.role !== USER_ROLES.RESEARCHER && (
-                        <Button
-                          type="text"
-                          size="small"
-                          icon={<ReloadOutlined spin={totalUsersCount.isAnimating || totalPublicationsCount.isAnimating || pendingRequestsCount.isAnimating || activeCoursesCount.isAnimating} />}
-                          onClick={refreshDashboard}
-                          style={{ marginLeft: '8px', opacity: 0.6 }}
-                        />
-                      )
-                    }
+                    valueStyle={{ color: stat.color, transition: 'all 0.3s ease' }}
                   />
                 )}
               </Card>
@@ -291,66 +214,7 @@ const DashboardPage = () => {
         </Row>
       </div>
 
-      {/* Recent Activity Section */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} lg={12}>
-          <Card title="Recent Activity" extra={<Button type="link">View All</Button>}>
-            <div style={{ padding: '16px 0' }}>
-              <Paragraph>
-                • New publication submitted: "Advanced Research Methods"
-              </Paragraph>
-              <Paragraph>
-                • Course enrollment: "Data Analysis Fundamentals"
-              </Paragraph>
-              <Paragraph>
-                • Service request completed: "Statistical Analysis"
-              </Paragraph>
-              <Paragraph>
-                • Profile updated successfully
-              </Paragraph>
-            </div>
-          </Card>
-        </Col>
-
-        <Col xs={24} lg={12}>
-          <Card
-            title="Announcements"
-            extra={<Button type="link" onClick={() => navigate('/announcements')}>View All</Button>}
-            loading={announcementsLoading}
-          >
-            <div style={{ padding: '16px 0' }}>
-              {announcements.length > 0 ? (
-                announcements.map((announcement, index) => (
-                  <div key={announcement.id} style={{ marginBottom: index < announcements.length - 1 ? '16px' : 0 }}>
-                    <Paragraph style={{ marginBottom: '4px' }}>
-                      <strong>{announcement.title}</strong>
-                    </Paragraph>
-                    <Paragraph
-                      type="secondary"
-                      style={{ marginBottom: '8px', fontSize: '14px' }}
-                      ellipsis={{ rows: 2 }}
-                    >
-                      {announcement.content || announcement.description}
-                    </Paragraph>
-                    <Button
-                      type="link"
-                      size="small"
-                      style={{ padding: 0, height: 'auto' }}
-                      onClick={() => navigate(`/announcements/${announcement.id}`)}
-                    >
-                      Read more
-                    </Button>
-                  </div>
-                ))
-              ) : (
-                <Paragraph type="secondary">
-                  No announcements available at the moment.
-                </Paragraph>
-              )}
-            </div>
-          </Card>
-        </Col>
-      </Row>
+      {/* Remove announcements, service requests, enrolled courses, recent activity for researchers */}
     </div>
   );
 };

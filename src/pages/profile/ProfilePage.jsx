@@ -98,9 +98,19 @@ const ProfilePage = () => {
             <br />
             <Upload
               name="avatar"
-              listType="picture"
               showUploadList={false}
-              action="/api/upload/avatar"
+              customRequest={async ({ file, onSuccess, onError }) => {
+                try {
+                  await authService.uploadAvatar(file);
+                  const updatedUser = await authService.getCurrentUser();
+                  dispatch(setUser(updatedUser));
+                  message.success(`${file.name} uploaded successfully`);
+                  onSuccess();
+                } catch (error) {
+                  message.error(`${file.name} upload failed.`);
+                  onError(error);
+                }
+              }}
               onChange={handleAvatarUpload}
             >
               <Button icon={<UploadOutlined />}>

@@ -31,6 +31,7 @@ import ResearcherProfilePage from './pages/public/ResearcherProfilePage';
 import LabDetailPage from './pages/public/LabDetailPage';
 import AnnouncementDetailPage from './pages/public/AnnouncementDetailPage';
 import AnnouncementsPage from './pages/public/AnnouncementsPage';
+import PostDetailPage from './pages/public/PostDetailPage';
 
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -46,6 +47,11 @@ import ServicesManagementPage from './pages/admin/ServicesManagementPage';
 import TrainingManagementPage from './pages/admin/TrainingManagementPage';
 import OrganizationManagementPage from './pages/admin/OrganizationManagementPage';
 import NotificationsManagementPage from './pages/admin/NotificationsManagementPage';
+
+// Import PublicationDetailPage to fix the 'not defined' error
+import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
+import PublicationsPage from './pages/research/PublicationsPage.jsx';
+import PublicationForm from './pages/research/PublicationForm.jsx';
 
 // Ant Design theme configuration
 const theme = {
@@ -109,6 +115,7 @@ const AppContent = () => {
           <Route path="/labs/:id" element={<LabDetailPage />} />
           <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
           <Route path="/test" element={<TestPage />} />
+          <Route path="/posts/:id" element={<PostDetailPage />} />
         </Route>
 
         {/* Authenticated routes with main layout */}
@@ -123,6 +130,12 @@ const AppContent = () => {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="research/publications" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationsPage /></ProtectedRoute>} />
+          <Route path="research/publications/new" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm /></ProtectedRoute>} />
+          <Route path="research/publications/:id" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationDetailPage /></ProtectedRoute>} />
+          <Route path="research/publications/:id/edit" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm isEdit={true} /></ProtectedRoute>} />
+          {/* Home page for authenticated users */}
+          <Route path="home" element={<HomePage />} />
 
           {/* Admin only routes */}
           <Route

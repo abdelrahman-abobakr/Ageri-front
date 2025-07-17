@@ -336,11 +336,9 @@ export const MENU_ITEMS = {
     { key: 'notifications', label: 'Notifications', icon: 'BellOutlined', path: '/notifications' },
   ],
   [USER_ROLES.RESEARCHER]: [
+    { key: 'home', label: 'Home', icon: 'DashboardOutlined', path: '/app/home' },
     { key: 'dashboard', label: 'Dashboard', icon: 'DashboardOutlined', path: '/dashboard' },
-    { key: 'research', label: 'My Research', icon: 'BookOutlined', path: '/research' },
-    { key: 'training', label: 'Training', icon: 'ReadOutlined', path: '/training' },
-    { key: 'services', label: 'Services', icon: 'ToolOutlined', path: '/services' },
-    { key: 'notifications', label: 'Notifications', icon: 'BellOutlined', path: '/notifications' },
+    { key: 'research', label: 'My Research', icon: 'BookOutlined', path: '/research/publications' },
     { key: 'profile', label: 'Profile', icon: 'UserOutlined', path: '/profile' },
   ],
   [USER_ROLES.GUEST]: [
