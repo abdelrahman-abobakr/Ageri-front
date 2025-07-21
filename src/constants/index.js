@@ -324,7 +324,7 @@ export const MENU_ITEMS = {
     { key: 'services', label: 'Services', icon: 'ToolOutlined', path: '/services' },
     { key: 'content', label: 'Content', icon: 'FileTextOutlined', path: '/content' },
     { key: 'analytics', label: 'Analytics', icon: 'BarChartOutlined', path: '/analytics' },
-    { key: 'notifications', label: 'Notifications', icon: 'BellOutlined', path: '/notifications' },
+    { key: 'Add Course', label: 'Add Course', icon: 'BellOutlined', path: '/AddCourse' },
     { key: 'settings', label: 'Settings', icon: 'SettingOutlined', path: '/settings' },
   ],
   [USER_ROLES.MODERATOR]: [

@@ -12,6 +12,10 @@ import { USER_ROLES } from '../../constants';
 import { useResearcherStats } from '../../hooks/useResearcherStats';
 import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
 import { contentService } from '../../services';
+import { ToolOutlined } from '@ant-design/icons';
+import { EyeOutlined } from '@ant-design/icons';
+import { ReadOutlined } from '@ant-design/icons';
+
 
 const { Title, Paragraph } = Typography;
 
