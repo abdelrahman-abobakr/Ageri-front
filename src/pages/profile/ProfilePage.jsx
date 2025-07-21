@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Card, Form, Input, Button, Avatar, Upload, message, Row, Col, Typography, Divider, List, Tag } from 'antd';
+import { Card, Form, Input, Button, Avatar, Upload, message, Row, Col, Typography, Divider, List, Tag, Switch } from 'antd';
 import { UserOutlined, UploadOutlined, SaveOutlined, BookOutlined, CalendarOutlined, PlusOutlined } from '@ant-design/icons';
 import { useSelector, useDispatch } from 'react-redux';
 import { setUser } from '../../store/slices/authSlice';
-import { authService } from '../../services/authService';
+import profileService from '../../services/profileService';
 import { researchService } from '../../services';
 import { PUBLICATION_STATUS } from '../../constants';
 import { useNavigate } from 'react-router-dom';
@@ -18,12 +18,58 @@ const ProfilePage = () => {
   const [form] = Form.useForm();
   const [publications, setPublications] = useState([]);
   const [publicationsLoading, setPublicationsLoading] = useState(false);
+  const [profile, setProfile] = useState(null);
+  const [cvUploading, setCvUploading] = useState(false);
+  // تحميل بيانات البروفايل عند فتح الصفحة
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await profileService.getMyProfile();
+        setProfile(data);
+        form.setFieldsValue(data);
+      } catch (error) {
+        message.error('Failed to load profile data.');
+      }
+    };
+    fetchProfile();
+    if (user && user.role === 'researcher') {
+      loadUserPublications();
+    }
+  }, [user]);
+  // رفع السيرة الذاتية
+  const handleCvUpload = async (info) => {
+    if (info.file.status === 'uploading') {
+      setCvUploading(true);
+    }
+    if (info.file.status === 'done') {
+      setProfile((prev) => ({ ...prev, cv_file: info.file.response.cv_file }));
+      setCvUploading(false);
+      message.success(`${info.file.name} uploaded successfully`);
+    } else if (info.file.status === 'error') {
+      setCvUploading(false);
+      message.error(`${info.file.name} file upload failed.`);
+    }
+  };
 
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      const updatedUser = await authService.updateProfile(values);
-      dispatch(setUser(updatedUser));
+      let submitData = values;
+      // إذا كان هناك ملف CV جديد مرفوع في الفورم
+      if (values.cv_file && values.cv_file instanceof File) {
+        const formData = new FormData();
+        Object.entries(values).forEach(([key, value]) => {
+          if (value !== undefined && value !== null) {
+            if (key === 'cv_file') {
+              formData.append('cv_file', value);
+            } else {
+              formData.append(key, value);
+            }
+          }
+        });
+        submitData = formData;
+      }
+      await profileService.updateMyProfile(submitData);
       message.success('Profile updated successfully!');
     } catch (error) {
       message.error('Failed to update profile. Please try again.');
@@ -140,18 +186,18 @@ const ProfilePage = () => {
             <Form
               form={form}
               layout="vertical"
-              initialValues={{
-                username: user?.username,
-                email: user?.email,
-                first_name: user?.first_name,
-                last_name: user?.last_name,
-                phone: user?.phone,
-                bio: user?.bio,
-                research_interests: user?.research_interests,
-                orcid: user?.orcid,
-              }}
+              initialValues={profile}
               onFinish={handleSubmit}
             >
+              {/* Username (disabled) */}
+              <Form.Item
+                name="username"
+                label="Username"
+                rules={[{ required: true, message: 'Please enter your username' }]}
+              >
+                <Input />
+              </Form.Item>
+
               <Row gutter={16}>
                 <Col xs={24} sm={12}>
                   <Form.Item
@@ -173,35 +219,22 @@ const ProfilePage = () => {
                 </Col>
               </Row>
 
-              <Row gutter={16}>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="username"
-                    label="Username"
-                    rules={[{ required: true, message: 'Please enter your username' }]}
-                  >
-                    <Input disabled />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item
-                    name="email"
-                    label="Email"
-                    rules={[
-                      { required: true, message: 'Please enter your email' },
-                      { type: 'email', message: 'Please enter a valid email' }
-                    ]}
-                  >
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-
               <Form.Item
-                name="phone"
-                label="Phone Number"
+                name="email"
+                label="Email"
+                rules={[
+                  { required: true, message: 'Please enter your email' },
+                  { type: 'email', message: 'Please enter a valid email' }
+                ]}
               >
                 <Input />
+              </Form.Item>
+
+              <Form.Item
+                name="orcid_id"
+                label="ORCID ID"
+              >
+                <Input placeholder="0000-0000-0000-0000" />
               </Form.Item>
 
               <Form.Item
@@ -218,12 +251,66 @@ const ProfilePage = () => {
                 <Input.TextArea rows={3} placeholder="Describe your research interests..." />
               </Form.Item>
 
-              <Form.Item
-                name="orcid"
-                label="ORCID ID"
-              >
-                <Input placeholder="0000-0000-0000-0000" />
+              {/* CV File */}
+              <Form.Item label="CV File">
+                {profile?.cv_file ? (
+                  <a href={profile.cv_file} target="_blank" rel="noopener noreferrer">Download CV</a>
+                ) : (
+                  <span style={{ color: '#888' }}>No CV uploaded</span>
+                )}
+                <Upload
+                  name="cv_file"
+                  showUploadList={false}
+                  customRequest={async ({ file, onSuccess, onError }) => {
+                    try {
+                      const formData = new FormData();
+                      formData.append('cv_file', file);
+                      const response = await profileService.updateMyProfile(formData);
+                      setProfile((prev) => ({ ...prev, cv_file: response.cv_file }));
+                      onSuccess(response, file);
+                    } catch (error) {
+                      onError(error);
+                    }
+                  }}
+                  onChange={handleCvUpload}
+                  accept=".pdf,.doc,.docx"
+                  disabled={cvUploading}
+                >
+                  <Button icon={<UploadOutlined />} loading={cvUploading} style={{ marginTop: 8 }}>Upload CV</Button>
+                </Upload>
               </Form.Item>
+
+              {/* Social Links */}
+              <Row gutter={16}>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="website" label="Website">
+                    <Input placeholder="https://yourwebsite.com" />
+                  </Form.Item>
+                  <Form.Item name="linkedin" label="LinkedIn">
+                    <Input placeholder="https://linkedin.com/in/username" />
+                  </Form.Item>
+                </Col>
+                <Col xs={24} sm={12}>
+                  <Form.Item name="scholar" label="Google Scholar">
+                    <Input placeholder="https://scholar.google.com/citations?user=xxxx" />
+                  </Form.Item>
+                  <Form.Item name="researchgate" label="ResearchGate">
+                    <Input placeholder="https://www.researchgate.net/profile/username" />
+                  </Form.Item>
+                </Col>
+              </Row>
+
+              {/* Profile Public */}
+              <Form.Item name="is_public" label="Profile Public" valuePropName="checked">
+                <Switch />
+              </Form.Item>
+
+              {/* Admin Notes (only for admin) */}
+              {user?.role === 'admin' && (
+                <Form.Item name="admin_notes" label="Admin Notes">
+                  <Input.TextArea rows={2} placeholder="Notes for admin only..." />
+                </Form.Item>
+              )}
 
               <Divider />
 

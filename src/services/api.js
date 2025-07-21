@@ -1,9 +1,9 @@
 import axios from 'axios';
-import { API_CONFIG } from '../constants';
+import { API_CONFIG } from '../constants'; // Ensure this path is correct and API_CONFIG is defined
 
 // Create axios instance
 const apiClient = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
+  baseURL: API_CONFIG.BASE_URL.endsWith('/') ? API_CONFIG.BASE_URL : API_CONFIG.BASE_URL + '/',
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
@@ -51,8 +51,8 @@ apiClient.interceptors.response.use(
         // Refresh failed, redirect to login
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
-        localStorage.removeItem('user');
-        window.location.href = '/login';
+        localStorage.removeItem('user'); // Assuming you store user info here
+        window.location.href = '/login'; // Or use react-router-dom's navigate
         return Promise.reject(refreshError);
       }
     }

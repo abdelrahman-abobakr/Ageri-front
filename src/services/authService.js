@@ -16,6 +16,7 @@ export const authService = {
     try {
       const refreshToken = localStorage.getItem('refresh_token');
       if (refreshToken) {
+        // Assuming your logout endpoint requires refresh token
         await apiClient.post('/auth/logout/', { refresh: refreshToken });
       }
     } catch (error) {
@@ -24,7 +25,7 @@ export const authService = {
       // Clear local storage regardless of API call success
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
-      localStorage.removeItem('user');
+      localStorage.removeItem('user'); // Clear user info from state/storage
     }
   },
 

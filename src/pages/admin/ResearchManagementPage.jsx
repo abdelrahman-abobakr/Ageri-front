@@ -42,6 +42,7 @@ import { useTranslation } from 'react-i18next';
 import { researchService } from '../../services';
 import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
 import RealTimeIndicator from '../../components/admin/RealTimeIndicator';
+import { useSelector } from 'react-redux';
 import moment from 'moment';
 
 const { Title, Text } = Typography;
@@ -52,6 +53,7 @@ const { confirm } = Modal;
 
 const ResearchManagementPage = () => {
   const { t } = useTranslation();
+  const { user } = useSelector((state) => state.auth);
   const [publications, setPublications] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -80,7 +82,6 @@ const ResearchManagementPage = () => {
   const loadPublications = async () => {
     try {
       setLoading(true);
-
       const params = {
         page: currentPage,
         page_size: pageSize
@@ -103,7 +104,7 @@ const ResearchManagementPage = () => {
       setTotal(response.count || 0);
     } catch (error) {
       console.error('Failed to load publications:', error);
-      message.error('فشل في تحميل المنشورات');
+      message.error(t('failed_to_load_publications'));
       // Fallback to mock data
       setPublications([
         {
@@ -154,19 +155,65 @@ const ResearchManagementPage = () => {
     setModalVisible(true);
   };
 
+  const handleAcceptPublication = async (publication) => {
+    confirm({
+      title: t('confirm_accept'),
+      content: t('are_you_sure_you_want_to_accept_this_publication'),
+      icon: <CheckOutlined />,
+      onOk: async () => {
+        try {
+          await researchService.approvePublication(publication.id, {
+            status: 'approved',
+            is_public: true, // Make publication visible to researchers
+            review_notes: 'Approved by admin'
+          });
+          message.success(t('publication_accepted_successfully'));
+          loadPublications();
+          refreshStats();
+        } catch (error) {
+          console.error('Failed to accept publication:', error);
+          message.error(t('failed_to_accept_publication'));
+        }
+      },
+    });
+  };
+
+  const handleRejectPublication = async (publication) => {
+    confirm({
+      title: t('confirm_reject'),
+      content: t('are_you_sure_you_want_to_reject_this_publication'),
+      icon: <ExclamationCircleOutlined />,
+      onOk: async () => {
+        try {
+          await researchService.rejectPublication(publication.id, {
+            status: 'rejected',
+            review_notes: 'Rejected by admin'
+          });
+          message.success(t('publication_rejected_successfully'));
+          loadPublications();
+          refreshStats();
+        } catch (error) {
+          console.error('Failed to reject publication:', error);
+          message.error(t('failed_to_reject_publication'));
+        }
+      },
+    });
+  };
+
   const handleDeletePublication = async (publication) => {
     confirm({
-      title: 'تأكيد الحذف',
-      content: 'هل أنت متأكد من حذف هذا المنشور؟',
+      title: t('confirm_delete'),
+      content: t('are_you_sure_you_want_to_delete_this_publication'),
       icon: <ExclamationCircleOutlined />,
       onOk: async () => {
         try {
           await researchService.deletePublication(publication.id);
-          message.success('تم حذف المنشور بنجاح');
+          message.success(t('publication_deleted_successfully'));
           loadPublications();
           refreshStats();
         } catch (error) {
-          message.error('فشل في حذف المنشور');
+          console.error('Failed to delete publication:', error);
+          message.error(t('failed_to_delete_publication'));
         }
       },
     });
@@ -176,25 +223,27 @@ const ResearchManagementPage = () => {
     try {
       if (editingPublication) {
         await researchService.updatePublication(editingPublication.id, values);
-        message.success('تم تحديث المنشور بنجاح');
+        message.success(t('publication_updated_successfully'));
       } else {
         await researchService.createPublication(values);
-        message.success('تم إنشاء المنشور بنجاح');
+        message.success(t('publication_created_successfully'));
       }
       setModalVisible(false);
       loadPublications();
       refreshStats();
     } catch (error) {
-      message.error('فشل في حفظ المنشور');
+      console.error('Failed to save publication:', error);
+      message.error(t('failed_to_save_publication'));
     }
   };
 
   const getStatusTag = (status) => {
     const statusConfig = {
-      published: { color: 'green', text: 'منشور' },
-      under_review: { color: 'orange', text: 'قيد المراجعة' },
-      draft: { color: 'blue', text: 'مسودة' },
-      rejected: { color: 'red', text: 'مرفوض' },
+      published: { color: 'green', text: t('published') },
+      under_review: { color: 'orange', text: t('under_review') },
+      draft: { color: 'blue', text: t('draft') },
+      rejected: { color: 'red', text: t('rejected') },
+      approved: { color: 'purple', text: t('approved') },
     };
     
     const config = statusConfig[status] || { color: 'default', text: status };
@@ -203,11 +252,11 @@ const ResearchManagementPage = () => {
 
   const getTypeTag = (type) => {
     const typeConfig = {
-      journal_article: { color: 'blue', text: 'مقال علمي' },
-      conference_paper: { color: 'green', text: 'ورقة مؤتمر' },
-      book_chapter: { color: 'purple', text: 'فصل كتاب' },
-      thesis: { color: 'orange', text: 'رسالة' },
-      report: { color: 'cyan', text: 'تقرير' },
+      journal_article: { color: 'blue', text: t('journal_article') },
+      conference_paper: { color: 'green', text: t('conference_paper') },
+      book_chapter: { color: 'purple', text: t('book_chapter') },
+      thesis: { color: 'orange', text: t('thesis') },
+      report: { color: 'cyan', text: t('report') },
     };
     
     const config = typeConfig[type] || { color: 'default', text: type };
@@ -227,7 +276,7 @@ const ResearchManagementPage = () => {
     {
       key: 'view',
       icon: <EyeOutlined />,
-      label: 'عرض التفاصيل',
+      label: t('view_details'),
       onClick: () => {
         console.log('View publication:', publication.id);
       }
@@ -235,13 +284,13 @@ const ResearchManagementPage = () => {
     {
       key: 'edit',
       icon: <EditOutlined />,
-      label: 'تعديل',
+      label: t('edit'),
       onClick: () => handleEditPublication(publication)
     },
     {
       key: 'authors',
       icon: <TeamOutlined />,
-      label: 'إدارة المؤلفين',
+      label: t('manage_authors'),
       onClick: () => {
         console.log('Manage authors for:', publication.id);
       }
@@ -252,7 +301,7 @@ const ResearchManagementPage = () => {
     {
       key: 'delete',
       icon: <DeleteOutlined />,
-      label: 'حذف',
+      label: t('delete'),
       onClick: () => handleDeletePublication(publication),
       danger: true
     }
@@ -260,7 +309,7 @@ const ResearchManagementPage = () => {
 
   const columns = [
     {
-      title: 'العنوان',
+      title: t('title'),
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
@@ -268,53 +317,53 @@ const ResearchManagementPage = () => {
         <div>
           <div style={{ fontWeight: 500, marginBottom: '4px' }}>{text}</div>
           <Text type="secondary" style={{ fontSize: '12px' }}>
-            {record.authors?.join(', ') || 'لا يوجد مؤلفين'}
+            {record.authors?.join(', ') || t('no_authors_listed')}
           </Text>
         </div>
       ),
     },
     {
-      title: 'النوع',
+      title: t('type'),
       dataIndex: 'type',
       key: 'type',
       render: (type) => getTypeTag(type),
     },
     {
-      title: 'الحالة',
+      title: t('status'),
       dataIndex: 'status',
       key: 'status',
       render: (status) => getStatusTag(status),
     },
     {
-      title: 'المجلة/المؤتمر',
+      title: t('journal_conference'),
       dataIndex: 'journal',
       key: 'journal',
       ellipsis: true,
     },
     {
-      title: 'تاريخ النشر',
+      title: t('publication_date'),
       dataIndex: 'publication_date',
       key: 'publication_date',
       render: (date) => formatDate(date),
     },
     {
-      title: 'الاقتباسات',
+      title: t('citations'),
       dataIndex: 'citations',
       key: 'citations',
       render: (citations) => citations || 0,
     },
     {
-      title: 'التحميلات',
+      title: t('downloads'),
       dataIndex: 'downloads',
       key: 'downloads',
       render: (downloads) => downloads || 0,
     },
     {
-      title: 'الإجراءات',
+      title: t('actions'),
       key: 'actions',
       render: (_, record) => (
         <Space>
-          <Tooltip title="تعديل">
+          <Tooltip title={t('edit')}>
             <Button
               type="primary"
               size="small"
@@ -322,6 +371,32 @@ const ResearchManagementPage = () => {
               onClick={() => handleEditPublication(record)}
             />
           </Tooltip>
+          {user && user.is_admin && record.status === 'under_review' && (
+            <>
+              <Tooltip title={t('approve')}>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<CheckOutlined />}
+                  style={{ backgroundColor: '#52c41a', borderColor: '#52c41a' }}
+                  onClick={() => handleAcceptPublication(record)}
+                >
+                  {t('approve')}
+                </Button>
+              </Tooltip>
+              <Tooltip title={t('reject')}>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<CloseOutlined />}
+                  danger
+                  onClick={() => handleRejectPublication(record)}
+                >
+                  {t('reject')}
+                </Button>
+              </Tooltip>
+            </>
+          )}
           <Dropdown
             menu={{ items: getActionMenuItems(record) }}
             trigger={['click']}
@@ -339,10 +414,10 @@ const ResearchManagementPage = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <BookOutlined style={{ marginRight: '8px' }} />
-          إدارة البحوث
+          {t('research_management')}
         </Title>
         <Text type="secondary">
-          إدارة المنشورات البحثية والمؤلفين والإحصائيات
+          {t('manage_research_publications_and_authors')}
         </Text>
         <RealTimeIndicator />
       </div>
@@ -352,7 +427,7 @@ const ResearchManagementPage = () => {
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic
-              title="إجمالي المنشورات"
+              title={t('total_publications')}
               value={totalPublicationsCount.value}
               prefix={<BookOutlined />}
               valueStyle={{
@@ -374,7 +449,7 @@ const ResearchManagementPage = () => {
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic
-              title="المنشورات المنشورة"
+              title={t('published_publications')}
               value={publishedCount.value}
               prefix={<CheckOutlined />}
               valueStyle={{
@@ -387,7 +462,7 @@ const ResearchManagementPage = () => {
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic
-              title="قيد المراجعة"
+              title={t('under_review')}
               value={underReviewCount.value}
               prefix={<CloseOutlined />}
               valueStyle={{
@@ -400,7 +475,7 @@ const ResearchManagementPage = () => {
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic
-              title="المسودات"
+              title={t('drafts')}
               value={draftCount.value}
               prefix={<FileTextOutlined />}
               valueStyle={{
@@ -417,7 +492,7 @@ const ResearchManagementPage = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Search
-              placeholder="البحث في المنشورات..."
+              placeholder={t('search_publications')}
               allowClear
               enterButton={<SearchOutlined />}
               value={searchTerm}
@@ -427,44 +502,37 @@ const ResearchManagementPage = () => {
           </Col>
           <Col xs={24} sm={6} md={4}>
             <Select
-              placeholder="تصفية حسب النوع"
+              placeholder={t('filter_by_type')}
               allowClear
               style={{ width: '100%' }}
               value={typeFilter}
               onChange={setTypeFilter}
             >
-              <Option value="">جميع الأنواع</Option>
-              <Option value="journal_article">مقال علمي</Option>
-              <Option value="conference_paper">ورقة مؤتمر</Option>
-              <Option value="book_chapter">فصل كتاب</Option>
-              <Option value="thesis">رسالة</Option>
-              <Option value="report">تقرير</Option>
+              <Option value="">{t('all_types')}</Option>
+              <Option value="journal_article">{t('journal_article')}</Option>
+              <Option value="conference_paper">{t('conference_paper')}</Option>
+              <Option value="book_chapter">{t('book_chapter')}</Option>
+              <Option value="thesis">{t('thesis')}</Option>
+              <Option value="report">{t('report')}</Option>
             </Select>
           </Col>
           <Col xs={24} sm={6} md={4}>
             <Select
-              placeholder="تصفية حسب الحالة"
+              placeholder={t('filter_by_status')}
               allowClear
               style={{ width: '100%' }}
               value={statusFilter}
               onChange={setStatusFilter}
             >
-              <Option value="">جميع الحالات</Option>
-              <Option value="published">منشور</Option>
-              <Option value="under_review">قيد المراجعة</Option>
-              <Option value="draft">مسودة</Option>
-              <Option value="rejected">مرفوض</Option>
+              <Option value="">{t('all_statuses')}</Option>
+              <Option value="published">{t('published')}</Option>
+              <Option value="under_review">{t('under_review')}</Option>
+              <Option value="draft">{t('draft')}</Option>
+              <Option value="rejected">{t('rejected')}</Option>
+              <Option value="approved">{t('approved')}</Option>
             </Select>
           </Col>
-          <Col xs={24} sm={12} md={8} style={{ textAlign: 'right' }}>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreatePublication}
-            >
-              إضافة منشور جديد
-            </Button>
-          </Col>
+          {/* زر إضافة بحث جديد تم إزالته للأدمن */}
         </Row>
       </Card>
 
@@ -483,10 +551,10 @@ const ResearchManagementPage = () => {
               showSizeChanger: false,
               showQuickJumper: true,
               showTotal: (total, range) =>
-                `${range[0]}-${range[1]} من ${total} منشور`,
+                `${range[0]}-${range[1]} ${t('of')} ${total} ${t('publications')}`,
             }}
             locale={{
-              emptyText: 'لا توجد منشورات',
+              emptyText: t('no_publications'),
             }}
             scroll={{ x: 1000 }}
           />
@@ -495,7 +563,7 @@ const ResearchManagementPage = () => {
 
       {/* Create/Edit Publication Modal */}
       <Modal
-        title={editingPublication ? 'تعديل المنشور' : 'إضافة منشور جديد'}
+        title={editingPublication ? t('edit_publication') : t('add_new_publication')}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
         footer={null}
@@ -509,46 +577,46 @@ const ResearchManagementPage = () => {
         >
           <Form.Item
             name="title"
-            label="العنوان"
-            rules={[{ required: true, message: 'العنوان مطلوب' }]}
+            label={t('title')}
+            rules={[{ required: true, message: t('title_required') }]}
           >
-            <Input placeholder="أدخل عنوان المنشور" />
+            <Input placeholder={t('enter_publication_title')} />
           </Form.Item>
 
           <Form.Item
             name="abstract"
-            label="الملخص"
-            rules={[{ required: true, message: 'الملخص مطلوب' }]}
+            label={t('abstract')}
+            rules={[{ required: true, message: t('abstract_required') }]}
           >
-            <TextArea rows={4} placeholder="أدخل ملخص المنشور" />
+            <TextArea rows={4} placeholder={t('enter_abstract')} />
           </Form.Item>
 
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item
                 name="type"
-                label="نوع المنشور"
-                rules={[{ required: true, message: 'نوع المنشور مطلوب' }]}
+                label={t('publication_type')}
+                rules={[{ required: true, message: t('type_required') }]}
               >
-                <Select placeholder="اختر نوع المنشور">
-                  <Option value="journal_article">مقال علمي</Option>
-                  <Option value="conference_paper">ورقة مؤتمر</Option>
-                  <Option value="book_chapter">فصل كتاب</Option>
-                  <Option value="thesis">رسالة</Option>
-                  <Option value="report">تقرير</Option>
+                <Select placeholder={t('select_type')}>
+                  <Option value="journal_article">{t('journal_article')}</Option>
+                  <Option value="conference_paper">{t('conference_paper')}</Option>
+                  <Option value="book_chapter">{t('book_chapter')}</Option>
+                  <Option value="thesis">{t('thesis')}</Option>
+                  <Option value="report">{t('report')}</Option>
                 </Select>
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
                 name="status"
-                label="الحالة"
+                label={t('status')}
                 initialValue="draft"
               >
                 <Select>
-                  <Option value="draft">مسودة</Option>
-                  <Option value="under_review">قيد المراجعة</Option>
-                  <Option value="published">منشور</Option>
+                  <Option value="draft">{t('draft')}</Option>
+                  <Option value="under_review">{t('under_review')}</Option>
+                  <Option value="published">{t('published')}</Option>
                 </Select>
               </Form.Item>
             </Col>
@@ -558,15 +626,15 @@ const ResearchManagementPage = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="journal"
-                label="المجلة/المؤتمر"
+                label={t('journal_conference')}
               >
-                <Input placeholder="اسم المجلة أو المؤتمر" />
+                <Input placeholder={t('enter_journal_or_conference_name')} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
                 name="publication_date"
-                label="تاريخ النشر"
+                label={t('publication_date')}
               >
                 <DatePicker style={{ width: '100%' }} />
               </Form.Item>
@@ -576,10 +644,10 @@ const ResearchManagementPage = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                {editingPublication ? 'تحديث' : 'إنشاء'}
+                {editingPublication ? t('update') : t('create')}
               </Button>
               <Button onClick={() => setModalVisible(false)}>
-                إلغاء
+                {t('cancel')}
               </Button>
             </Space>
           </Form.Item>

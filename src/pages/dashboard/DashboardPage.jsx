@@ -5,6 +5,8 @@ import {
   BookOutlined,
   PlusOutlined,
   ReloadOutlined,
+  EyeOutlined,
+  ReadOutlined,
 } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +14,7 @@ import { USER_ROLES } from '../../constants';
 import { useResearcherStats } from '../../hooks/useResearcherStats';
 import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
 import { contentService } from '../../services';
+import { ToolOutlined } from '@ant-design/icons';
 
 const { Title, Paragraph } = Typography;
 
