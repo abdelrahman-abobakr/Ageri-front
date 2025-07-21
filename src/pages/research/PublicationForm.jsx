@@ -55,15 +55,24 @@ const PublicationForm = ({ isEdit = false, initialValues = {} }) => {
       <Form form={form} layout="vertical" onFinish={handleFinish}>
         <Form.Item name="title" label="Title" rules={[{ required: true, message: 'Title is required' }]}> <Input /> </Form.Item>
         <Form.Item name="abstract" label="Abstract" rules={[{ required: true, message: 'Abstract is required' }]}> <Input.TextArea rows={4} /> </Form.Item>
-        <Form.Item name="status" label="Status" rules={[{ required: true }]}> <Select> <Option value="draft">Draft</Option> <Option value="pending">Pending</Option> <Option value="published">Published</Option> </Select> </Form.Item>
-        <Form.Item name="authors" label="Authors" rules={[{ required: true, message: 'At least one author is required' }]}> <Select mode="tags" placeholder="Enter author names" /> </Form.Item>
-        {isEdit && (
-          <Form.Item label="Upload File">
-            <Upload customRequest={handleFileUpload} showUploadList={false}>
-              <Button icon={<UploadOutlined />}>Upload File</Button>
-            </Upload>
-          </Form.Item>
-        )}
+        <Form.Item name="publication_type" label="Publication Type" rules={[{ required: true, message: 'Type is required' }]}> <Select> <Option value="journal_article">Journal Article</Option> <Option value="conference_paper">Conference Paper</Option> <Option value="book">Book</Option> <Option value="thesis">Thesis</Option> </Select> </Form.Item>
+        <Form.Item name="journal_name" label="Journal Name"> <Input /> </Form.Item>
+        <Form.Item name="conference_name" label="Conference Name"> <Input /> </Form.Item>
+        <Form.Item name="publisher" label="Publisher"> <Input /> </Form.Item>
+        <Form.Item name="volume" label="Volume"> <Input /> </Form.Item>
+        <Form.Item name="issue" label="Issue"> <Input /> </Form.Item>
+        <Form.Item name="pages" label="Pages"> <Input /> </Form.Item>
+        <Form.Item name="publication_date" label="Publication Date" rules={[{ required: true, message: 'Date is required' }]}> <Input type="date" /> </Form.Item>
+        <Form.Item name="doi" label="DOI"> <Input /> </Form.Item>
+        <Form.Item name="isbn" label="ISBN"> <Input /> </Form.Item>
+        <Form.Item name="issn" label="ISSN"> <Input /> </Form.Item>
+        <Form.Item name="pmid" label="PMID"> <Input /> </Form.Item>
+        <Form.Item name="url" label="URL"> <Input /> </Form.Item>
+        <Form.Item name="pdf_url" label="PDF URL"> <Input /> </Form.Item>
+        <Form.Item name="keywords" label="Keywords"> <Input /> </Form.Item>
+        <Form.Item name="research_area" label="Research Area"> <Input /> </Form.Item>
+        {/* Remove is_public from the form, it is set by admin approval */}
+        {/* Authors and file upload logic can be expanded as needed */}
         <Form.Item>
           <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>Save</Button>
         </Form.Item>
