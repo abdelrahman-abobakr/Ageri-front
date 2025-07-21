@@ -160,7 +160,7 @@ export const PERMISSIONS = {
   },
   ACCESS_ADMIN_PANEL: {
     [USER_ROLES.ADMIN]: true,
-    [USER_ROLES.MODERATOR]: false,
+    [USER_ROLES.MODERATOR]: true,
     [USER_ROLES.RESEARCHER]: false,
     [USER_ROLES.GUEST]: false,
   },
