@@ -283,9 +283,14 @@ const handleApiError = (error) => {
   rules={[{ required: true, message: 'يرجى اختيار الفئة' }]}
 >
   <Select>
-    <Option value="medical">تحاليل طبية</Option>
+    <Option value="testing">اختبارات وتحاليل</Option>
     <Option value="consultation">استشارات</Option>
-    <Option value="inspection">فحوصات</Option>
+    <Option value="equipment_access">الوصول إلى المعدات</Option>
+    <Option value="sample_analysis">تحليل العينات</Option>
+    <Option value="calibration">خدمات المعايرة</Option>
+    <Option value="training">تدريب تقني</Option>
+    <Option value="research_support">دعم البحث</Option>
+    <Option value="other">خدمات أخرى</Option>
   </Select>
 </Form.Item>
 
@@ -334,20 +339,21 @@ const handleApiError = (error) => {
             </Form.Item>
           </div>
 
-          <Form.Item
+          {/* <Form.Item
             name="description"
             label="الوصف"
           >
             <TextArea rows={3} />
-          </Form.Item>
+          </Form.Item> */}
 
           <Form.Item
-            name="short_description"
+            name="description"
             label="وصف مختصر"
+            rules={[{ required: true, message: 'يرجى إدخال وصف' }]}
           >
             <TextArea rows={2} />
           </Form.Item>
-
+{/* 
           <Form.Item
             name="featured_image"
             label="الصورة الرئيسية"
@@ -377,14 +383,14 @@ const handleApiError = (error) => {
               if (Array.isArray(e)) return e;
               return e?.fileList;
             }}
-          >
+          > */}
             {/* <Upload
               beforeUpload={() => false}
               maxCount={1}
             >
               <Button icon={<UploadOutlined />}>رفع ملف</Button>
             </Upload> */}
-          </Form.Item>
+          {/* </Form.Item> */}
         </Form>
       </Modal>
     </div>
