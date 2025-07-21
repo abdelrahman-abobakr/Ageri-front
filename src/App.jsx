@@ -46,8 +46,7 @@ import ResearchManagementPage from './pages/admin/ResearchManagementPage';
 import ServicesManagementPage from './pages/admin/ServicesManagementPage';
 import TrainingManagementPage from './pages/admin/TrainingManagementPage';
 import OrganizationManagementPage from './pages/admin/OrganizationManagementPage';
-import NotificationsManagementPage from './pages/admin/NotificationsManagementPage';
-
+import  CreateCoursePage from './pages/admin/AddCourseForm.jsx'
 // Import PublicationDetailPage to fix the 'not defined' error
 import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
 import PublicationsPage from './pages/research/PublicationsPage.jsx';
@@ -197,10 +196,10 @@ const AppContent = () => {
             }
           />
           <Route
-            path="notifications"
+            path="AddCourse"
             element={
               <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <NotificationsManagementPage />
+                <CreateCoursePage />
               </ProtectedRoute>
             }
           />

@@ -1,254 +1,195 @@
-import { useState, useEffect } from 'react';
-import { Card, List, Input, Select, Button, Tag, Typography, Row, Col, Pagination } from 'antd';
-import { SearchOutlined, ReadOutlined, CalendarOutlined, UserOutlined, ClockCircleOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { trainingService } from '../../services';
-import { COURSE_STATUS } from '../../constants';
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
-const { Title, Text, Paragraph } = Typography;
-const { Search } = Input;
-const { Option } = Select;
+const PAGE_SIZE = 10;
 
 const CoursesPage = () => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
   const [courses, setCourses] = useState([]);
+  const [count, setCount] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const pageSize = 12;
+  const [error, setError] = useState("");
+  const [page, setPage] = useState(1);
+  const [next, setNext] = useState(null);
+  const [previous, setPrevious] = useState(null);
 
-  const loadCourses = async (page = 1, search = '', status = '') => {
+  const fetchCourses = async (pageNum = 1) => {
+    setLoading(true);
+    setError("");
     try {
-      setLoading(true);
-      const params = {
-        page,
-        page_size: pageSize,
-        status: COURSE_STATUS.PUBLISHED, // Only show published courses to public
-      };
-
-      if (search) params.search = search;
-      if (status) params.status = status;
-
-      const response = await trainingService.getCourses(params);
-      setCourses(response.results || []);
-      setTotal(response.count || 0);
-    } catch (error) {
-      console.error('Failed to load courses:', error);
-      setCourses([]);
+      const res = await axios.get(
+        `http://localhost:8000/api/training/api/courses/?page=${pageNum}`
+      );
+      setCourses(res.data.results || []);
+      setCount(res.data.count || 0);
+      setNext(res.data.next);
+      setPrevious(res.data.previous);
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          err.response?.data?.detail ||
+          "Failed to load courses."
+      );
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadCourses(currentPage, searchTerm, statusFilter);
-  }, [currentPage, searchTerm, statusFilter]);
+    fetchCourses(page);
+    // eslint-disable-next-line
+  }, [page]);
 
-  const handleSearch = (value) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
+  const handleNext = () => {
+    if (next) setPage((p) => p + 1);
   };
-
-  const handleStatusChange = (value) => {
-    setStatusFilter(value);
-    setCurrentPage(1);
-  };
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  const handleEnroll = (courseId) => {
-    // Redirect to login/register for enrollment
-    navigate('/login', {
-      state: {
-        from: `/courses`,
-        message: 'Please login to enroll in courses'
-      }
-    });
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      [COURSE_STATUS.PUBLISHED]: 'green',
-      [COURSE_STATUS.DRAFT]: 'blue',
-      [COURSE_STATUS.ARCHIVED]: 'red',
-    };
-    return colors[status] || 'default';
-  };
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('ar-EG', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
+  const handlePrev = () => {
+    if (previous && page > 1) setPage((p) => p - 1);
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: '24px' }}>
-        <Title level={2}>
-          <ReadOutlined style={{ marginRight: '8px' }} />
-          {t('courses.title')}
-        </Title>
-        <Paragraph type="secondary">
-          {t('courses.description')}
-        </Paragraph>
-      </div>
-
-      {/* Search and Filters */}
-      <Card style={{ marginBottom: '24px' }}>
-        <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={8}>
-            <Search
-              placeholder={t('courses.searchPlaceholder')}
-              allowClear
-              enterButton={<SearchOutlined />}
-              onSearch={handleSearch}
-              style={{ width: '100%' }}
-            />
-          </Col>
-          <Col xs={24} sm={12} md={6}>
-            <Select
-              placeholder="Filter by status"
-              allowClear
-              style={{ width: '100%' }}
-              onChange={handleStatusChange}
-            >
-              <Option value={COURSE_STATUS.PUBLISHED}>Published</Option>
-              <Option value={COURSE_STATUS.ARCHIVED}>Archived</Option>
-            </Select>
-          </Col>
-          <Col xs={24} md={10}>
-            <Text type="secondary">
-              Showing {courses.length} of {total} courses
-            </Text>
-          </Col>
-        </Row>
-      </Card>
-
-      {/* Courses Grid */}
-      <Row gutter={[24, 24]}>
-        {courses.map((course) => (
-          <Col xs={24} sm={12} lg={8} key={course.id}>
-            <Card
-              hoverable
-              style={{ height: '100%' }}
-              cover={
-                course.image ? (
-                  <img
-                    alt={course.title}
-                    src={course.image}
-                    style={{ height: 200, objectFit: 'cover' }}
-                  />
-                ) : (
-                  <div
-                    style={{
-                      height: 200,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <ReadOutlined style={{ fontSize: '48px', color: 'white' }} />
-                  </div>
-                )
-              }
-              actions={[
-                <Button 
-                  type="primary" 
-                  onClick={() => handleEnroll(course.id)}
-                  style={{ width: '90%' }}
-                >
-                  Enroll Now
-                </Button>
-              ]}
-            >
-              <div style={{ marginBottom: '12px' }}>
-                <Title level={4} style={{ marginBottom: '8px' }}>
-                  {course.title}
-                </Title>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                  <Tag color={getStatusColor(course.status)}>
-                    {course.status?.toUpperCase()}
-                  </Tag>
-                  {course.duration && (
-                    <Text type="secondary">
-                      <ClockCircleOutlined style={{ marginRight: '4px' }} />
-                      {course.duration} hours
-                    </Text>
-                  )}
-                </div>
-              </div>
-
-              <Paragraph 
-                ellipsis={{ rows: 3 }}
-                style={{ marginBottom: '16px' }}
-              >
-                {course.description || 'No description available.'}
-              </Paragraph>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  {course.instructor && (
-                    <Text type="secondary">
-                      <UserOutlined style={{ marginRight: '4px' }} />
-                      {course.instructor}
-                    </Text>
-                  )}
-                </div>
-                <div>
-                  {course.start_date && (
-                    <Text type="secondary">
-                      <CalendarOutlined style={{ marginRight: '4px' }} />
-                      {formatDate(course.start_date)}
-                    </Text>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      {/* Pagination */}
-      {total > pageSize && (
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
-          <Pagination
-            current={currentPage}
-            total={total}
-            pageSize={pageSize}
-            onChange={handlePageChange}
-            showSizeChanger={false}
-            showQuickJumper
-            showTotal={(total, range) => 
-              `${range[0]}-${range[1]} of ${total} courses`
-            }
-          />
+    <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem" }}>
+      <h1 style={{ textAlign: "center", marginBottom: 32 }}>Courses</h1>
+      {loading && <div style={{ textAlign: "center" }}>Loading...</div>}
+      {error && (
+        <div
+          style={{ color: "#e53e3e", textAlign: "center", marginBottom: 16 }}
+        >
+          {error}
         </div>
       )}
-
-      {/* Empty State */}
-      {!loading && courses.length === 0 && (
-        <Card style={{ textAlign: 'center', padding: '40px' }}>
-          <ReadOutlined style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }} />
-          <Title level={4} type="secondary">{t('courses.noCourses')}</Title>
-          <Paragraph type="secondary">
-            {searchTerm || statusFilter
-              ? t('courses.tryAdjusting')
-              : t('courses.noCoursesDesc')}
-          </Paragraph>
-          <Button type="primary" onClick={() => navigate('/register')}>
-            {t('courses.registerToAccess')}
-          </Button>
-        </Card>
+      {!loading && !error && courses.length === 0 && (
+        <div style={{ textAlign: "center" }}>No courses found.</div>
       )}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
+          gap: 24,
+        }}
+      >
+        {courses.map((course) => (
+          <div
+            key={course.id}
+            style={{
+              border: "1px solid #eee",
+              borderRadius: 12,
+              background: "#fff",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+              padding: 24,
+              display: "flex",
+              flexDirection: "column",
+              minHeight: 260,
+              position: "relative",
+            }}
+          >
+            {course.featured_image && (
+              <img
+                src={course.featured_image}
+                alt={course.title}
+                style={{
+                  width: "100%",
+                  height: 160,
+                  objectFit: "cover",
+                  borderRadius: 8,
+                  marginBottom: 16,
+                }}
+                onError={(e) => (e.target.style.display = "none")}
+              />
+            )}
+            <h2 style={{ fontSize: 22, margin: "0 0 8px 0", color: "#2c3e50" }}>
+              {course.title}
+            </h2>
+            <div style={{ color: "#888", fontSize: 14, marginBottom: 8 }}>
+              {course.course_code} | {course.training_type}
+            </div>
+            <div style={{ fontWeight: 500, marginBottom: 8 }}>
+              {course.short_description}
+            </div>
+            <div style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>
+              Instructor: <b>{course.instructor_name || "-"}</b> | Department:{" "}
+              <b>{course.department_name || "-"}</b>
+            </div>
+            <div style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>
+              Start: {course.start_date} | End: {course.end_date}
+            </div>
+            <div style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>
+              Credits: {course.credits} | Duration: {course.duration_hours}h
+            </div>
+            <div
+              style={{
+                fontSize: 14,
+                color: course.is_free ? "#38a169" : "#e53e3e",
+                marginBottom: 8,
+              }}
+            >
+              {course.is_free ? "Free" : `Price: ${course.price}`}
+            </div>
+            <div style={{ fontSize: 13, color: "#888" }}>
+              Status: {course.status} | Enrollment: {course.current_enrollment}{" "}
+              / {course.max_participants}
+            </div>
+            {course.is_featured && (
+              <span
+                style={{
+                  position: "absolute",
+                  top: 12,
+                  right: 12,
+                  background: "#4299e1",
+                  color: "#fff",
+                  borderRadius: 6,
+                  padding: "2px 10px",
+                  fontSize: 13,
+                  fontWeight: 600,
+                  letterSpacing: 1,
+                }}
+              >
+                Featured
+              </span>
+            )}
+          </div>
+        ))}
+      </div>
+      {/* Pagination */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          marginTop: 32,
+          gap: 16,
+        }}
+      >
+        <button
+          onClick={handlePrev}
+          disabled={!previous || page === 1 || loading}
+          style={{
+            padding: "8px 18px",
+            borderRadius: 6,
+            border: "1px solid #eee",
+            background: previous && page > 1 ? "#f7fafc" : "#e2e8f0",
+            color: "#2c3e50",
+            cursor: previous && page > 1 ? "pointer" : "not-allowed",
+          }}
+        >
+          Previous
+        </button>
+        <span style={{ alignSelf: "center", fontWeight: 500 }}>
+          Page {page} / {Math.ceil(count / PAGE_SIZE) || 1}
+        </span>
+        <button
+          onClick={handleNext}
+          disabled={!next || loading}
+          style={{
+            padding: "8px 18px",
+            borderRadius: 6,
+            border: "1px solid #eee",
+            background: next ? "#f7fafc" : "#e2e8f0",
+            color: "#2c3e50",
+            cursor: next ? "pointer" : "not-allowed",
+          }}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 };

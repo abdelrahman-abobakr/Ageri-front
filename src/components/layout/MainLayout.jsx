@@ -23,7 +23,7 @@ import { logoutUser } from '../../store/slices/authSlice';
 import { toggleSidebar } from '../../store/slices/uiSlice';
 import { MENU_ITEMS, USER_ROLES } from '../../constants';
 import LanguageSwitcher from '../common/LanguageSwitcher';
-import { notificationService } from '../../services';
+// import { notificationService } from '../../services';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -55,8 +55,8 @@ const MainLayout = () => {
   } = theme.useToken();
 
   // Notification state
-  const [notifications, setNotifications] = useState([]);
-  const [notificationLoading, setNotificationLoading] = useState(false);
+  // const [notifications, setNotifications] = useState([]);
+  // const [notificationLoading, setNotificationLoading] = useState(false);
 
   // Mobile responsive state
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -76,39 +76,39 @@ const MainLayout = () => {
   }, [dispatch, sidebarCollapsed]);
 
   // Load notifications on component mount
-  useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        setNotificationLoading(true);
-        const response = await notificationService.getNotifications({ page_size: 10 });
-        setNotifications(response.results || []);
-      } catch (error) {
-        console.error('Failed to load notifications:', error);
-      } finally {
-        setNotificationLoading(false);
-      }
-    };
+  // useEffect(() => {
+  //   const loadNotifications = async () => {
+  //     try {
+  //       setNotificationLoading(true);
+  //       const response = await notificationService.getNotifications({ page_size: 10 });
+  //       setNotifications(response.results || []);
+  //     } catch (error) {
+  //       console.error('Failed to load notifications:', error);
+  //     } finally {
+  //       setNotificationLoading(false);
+  //     }
+  //   };
 
-    if (user) {
-      loadNotifications();
-    }
-  }, [user]);
+  //   if (user) {
+  //     loadNotifications();
+  //   }
+  // }, [user]);
 
   const handleLogout = () => {
     dispatch(logoutUser());
     navigate('/login');
   };
 
-  const handleNotificationClick = async (notification) => {
-    try {
-      await notificationService.markAsRead(notification.id);
-      setNotifications(prev =>
-        prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-      );
-    } catch (error) {
-      console.error('Failed to mark notification as read:', error);
-    }
-  };
+  // const handleNotificationClick = async (notification) => {
+  //   try {
+  //     await notificationService.markAsRead(notification.id);
+  //     setNotifications(prev =>
+  //       prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+  //     );
+  //   } catch (error) {
+  //     console.error('Failed to mark notification as read:', error);
+  //   }
+  // };
 
   const handleMenuClick = ({ key }) => {
     // Ensure we navigate within the app context
@@ -201,68 +201,68 @@ const MainLayout = () => {
   };
 
   // Notification dropdown content
-  const notificationDropdown = (
-    <div style={{ width: 300, maxHeight: 400, overflow: 'auto' }}>
-      <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
-        <Text strong>Notifications</Text>
-        {notifications.filter(n => !n.read).length > 0 && (
-          <Badge
-            count={notifications.filter(n => !n.read).length}
-            style={{ marginLeft: 8 }}
-          />
-        )}
-      </div>
+  // const notificationDropdown = (
+  //   <div style={{ width: 300, maxHeight: 400, overflow: 'auto' }}>
+  //     <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
+  //       <Text strong>Notifications</Text>
+  //       {notifications.filter(n => !n.read).length > 0 && (
+  //         <Badge
+  //           count={notifications.filter(n => !n.read).length}
+  //           style={{ marginLeft: 8 }}
+  //         />
+  //       )}
+  //     </div>
 
-      {notificationLoading ? (
-        <div style={{ padding: 16, textAlign: 'center' }}>
-          <Text type="secondary">Loading...</Text>
-        </div>
-      ) : notifications.length === 0 ? (
-        <div style={{ padding: 16, textAlign: 'center' }}>
-          <Text type="secondary">No notifications</Text>
-        </div>
-      ) : (
-        <List
-          size="small"
-          dataSource={notifications}
-          renderItem={(notification) => (
-            <List.Item
-              style={{
-                padding: '8px 16px',
-                cursor: 'pointer',
-                backgroundColor: notification.read ? 'transparent' : '#f6ffed',
-                borderBottom: '1px solid #f0f0f0',
-              }}
-              onClick={() => handleNotificationClick(notification)}
-            >
-              <List.Item.Meta
-                title={
-                  <Text strong={!notification.read} style={{ fontSize: '13px' }}>
-                    {notification.title || 'Notification'}
-                  </Text>
-                }
-                description={
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                    {notification.message || 'No message'}
-                  </Text>
-                }
-              />
-            </List.Item>
-          )}
-        />
-      )}
+  //     {notificationLoading ? (
+  //       <div style={{ padding: 16, textAlign: 'center' }}>
+  //         <Text type="secondary">Loading...</Text>
+  //       </div>
+  //     ) : notifications.length === 0 ? (
+  //       <div style={{ padding: 16, textAlign: 'center' }}>
+  //         <Text type="secondary">No notifications</Text>
+  //       </div>
+  //     ) : (
+  //       <List
+  //         size="small"
+  //         dataSource={notifications}
+  //         renderItem={(notification) => (
+  //           <List.Item
+  //             style={{
+  //               padding: '8px 16px',
+  //               cursor: 'pointer',
+  //               backgroundColor: notification.read ? 'transparent' : '#f6ffed',
+  //               borderBottom: '1px solid #f0f0f0',
+  //             }}
+  //             onClick={() => handleNotificationClick(notification)}
+  //           >
+  //             <List.Item.Meta
+  //               title={
+  //                 <Text strong={!notification.read} style={{ fontSize: '13px' }}>
+  //                   {notification.title || 'Notification'}
+  //                 </Text>
+  //               }
+  //               description={
+  //                 <Text type="secondary" style={{ fontSize: '12px' }}>
+  //                   {notification.message || 'No message'}
+  //                 </Text>
+  //               }
+  //             />
+  //           </List.Item>
+  //         )}
+  //       />
+  //     )}
 
-      <div style={{ padding: '8px 16px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
-        <Button
-          type="link"
-          size="small"
-          onClick={() => navigate('/app/notifications')}
-        >
-          View All Notifications
-        </Button>
-      </div>
-    </div>
-  );
+  //     <div style={{ padding: '8px 16px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
+  //       <Button
+  //         type="link"
+  //         size="small"
+  //         onClick={() => navigate('/app/notifications')}
+  //       >
+  //         View All Notifications
+  //       </Button>
+  //     </div>
+  //   </div>
+  // );
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -359,7 +359,7 @@ const MainLayout = () => {
             <LanguageSwitcher size="small" />
 
             {/* Notification Bell */}
-            <Dropdown
+            {/* <Dropdown
               dropdownRender={() => notificationDropdown}
               placement="bottomRight"
               arrow
@@ -372,7 +372,7 @@ const MainLayout = () => {
                   style={{ cursor: 'pointer' }}
                 />
               </Badge>
-            </Dropdown>
+            </Dropdown> */}
 
             {/* User Profile Dropdown */}
             <Dropdown
