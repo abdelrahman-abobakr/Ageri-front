@@ -246,6 +246,7 @@ export const API_ENDPOINTS = {
     ANNOUNCEMENTS: '/content/announcements/',
     ANNOUNCEMENT_DETAIL: (id) => `/content/announcements/${id}/`,
     POSTS: '/content/posts/',
+    MY_POSTS: '/content/posts/my_posts/',
     POST_DETAIL: (id) => `/content/posts/${id}/`,
     POST_COMMENTS: (id) => `/content/posts/${id}/comments/`,
     COMMENT_DETAIL: (id) => `/content/comments/${id}/`,

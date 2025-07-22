@@ -6,9 +6,6 @@ import { API_ENDPOINTS, API_CONFIG } from '../constants';
 const publicApiClient = axios.create({
   baseURL: API_CONFIG.BASE_URL,
   timeout: API_CONFIG.TIMEOUT,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 export const contentService = {
@@ -29,46 +26,8 @@ export const contentService = {
 
   // Announcements (authenticated)
   getAnnouncements: async (params = {}) => {
-    try {
-      const response = await apiClient.get(API_ENDPOINTS.CONTENT.ANNOUNCEMENTS, { params });
-      return response.data;
-    } catch (error) {
-      console.error('Failed to fetch announcements:', error);
-      // Return mock data as fallback
-      return {
-        results: [
-          {
-            id: 1,
-            title: 'إعلان عن ورشة الزراعة المستدامة',
-            content: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة والممارسات البيئية الصديقة.',
-            excerpt: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة...',
-            status: 'published',
-            author: 'أحمد محمد',
-            created_at: '2024-01-15T10:30:00Z',
-            updated_at: '2024-01-15T10:30:00Z',
-            published_at: '2024-01-15T10:30:00Z',
-            views_count: 1245,
-            type: 'announcement'
-          },
-          {
-            id: 2,
-            title: 'مؤتمر التكنولوجيا الزراعية 2024',
-            content: 'مؤتمر سنوي يجمع خبراء التكنولوجيا الزراعية من جميع أنحاء المنطقة.',
-            excerpt: 'مؤتمر سنوي يجمع خبراء التكنولوجيا الزراعية...',
-            status: 'scheduled',
-            author: 'محمد حسن',
-            created_at: '2024-01-13T09:15:00Z',
-            updated_at: '2024-01-13T09:15:00Z',
-            published_at: '2024-02-01T09:00:00Z',
-            views_count: 0,
-            type: 'event'
-          }
-        ],
-        count: 89,
-        next: null,
-        previous: null
-      };
-    }
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.ANNOUNCEMENTS, { params });
+    return response.data;
   },
 
   createAnnouncement: async (announcementData) => {
@@ -125,17 +84,8 @@ export const contentService = {
 
   // Public Posts (for guests - no auth required)
   getPublicPosts: async (params = {}) => {
-    try {
-      const response = await publicApiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
-      return response.data;
-    } catch (error) {
-      // If public access fails, try with auth (for logged-in users)
-      if (error.response?.status === 401) {
-        const response = await apiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
-        return response.data;
-      }
-      throw error;
-    }
+    const response = await publicApiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
+    return response.data;
   },
 
   // Posts (authenticated)
@@ -144,23 +94,77 @@ export const contentService = {
     return response.data;
   },
 
-  createPost: async (postData) => {
-    const response = await apiClient.post(API_ENDPOINTS.CONTENT.POSTS, postData);
+  // Moderator's own posts
+  getMyPosts: async (params = {}) => {
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.MY_POSTS, { params });
     return response.data;
   },
+// createPost: async (postData) => {
+//   const formData = new FormData();
 
-  getPostById: async (id) => {
-    const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
-    return response.data;
-  },
+//   for (const key in postData) {
+//     const value = postData[key];
+//     if (value instanceof File) {
+//       formData.append(key, value);
+//     } else if (value instanceof Date) {
+//       formData.append(key, value.toISOString());
+//     } else if (Array.isArray(value)) {
+//       formData.append(key, JSON.stringify(value));
+//     } else if (value !== undefined && value !== null) {
+//       formData.append(key, value);
+//     }
+//   }
 
-  updatePost: async (id, postData) => {
-    const response = await apiClient.put(API_ENDPOINTS.CONTENT.POST_DETAIL(id), postData);
-    return response.data;
-  },
+//   const token = localStorage.getItem('access_token'); 
+  
+//   return axios.post('http://localhost:8000/api/content/posts/', formData, {
+//     headers: {
+//       'Authorization': `Bearer ${token}`,
+//     }
+//   });
+// }
+createPost: async (data) => {
+  const token = localStorage.getItem('access_token'); 
 
+  const isFormData = data instanceof FormData;
+
+  return axios.post('http://localhost:8000/api/content/posts/', data, {
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+    }
+  });
+}
+,
+updatePost: async (id, formData) => {
+  const token = localStorage.getItem('access_token');
+
+  return apiClient.patch(API_ENDPOINTS.CONTENT.POST_DETAIL(id), formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      // لا تضف Content-Type → axios يضبطه تلقائيًا عند استخدام FormData
+    },
+  });
+}
+
+
+
+,
+  // Delete post/event
   deletePost: async (id) => {
     const response = await apiClient.delete(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
+    return response.data;
+  },
+
+  // Get events
+  getEvents: async (params = {}) => {
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.EVENTS, { params });
+    return response.data;
+  },
+
+  // Get featured posts for home page
+  getFeaturedPosts: async (params = {}) => {
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.FEATURED, { params });
     return response.data;
   },
 
@@ -293,61 +297,20 @@ export const contentService = {
       };
     } catch (error) {
       console.error('Failed to fetch all content:', error);
-      // Return mock data
       return {
-        results: [
-          {
-            id: 1,
-            title: 'إعلان عن ورشة الزراعة المستدامة',
-            type: 'announcement',
-            status: 'published',
-            author: 'أحمد محمد',
-            publishDate: '2024-01-15',
-            lastModified: '2024-01-15',
-            views: 1245,
-            excerpt: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة...'
-          },
-          {
-            id: 2,
-            title: 'أحدث البحوث في مجال الذكاء الاصطناعي الزراعي',
-            type: 'post',
-            status: 'published',
-            author: 'فاطمة علي',
-            publishDate: '2024-01-14',
-            lastModified: '2024-01-14',
-            views: 987,
-            excerpt: 'مقال شامل حول تطبيقات الذكاء الاصطناعي في الزراعة...'
-          },
-          {
-            id: 3,
-            title: 'مؤتمر التكنولوجيا الزراعية 2024',
-            type: 'event',
-            status: 'scheduled',
-            author: 'محمد حسن',
-            publishDate: '2024-02-01',
-            lastModified: '2024-01-13',
-            views: 0,
-            excerpt: 'مؤتمر سنوي يجمع خبراء التكنولوجيا الزراعية...'
-          },
-          {
-            id: 4,
-            title: 'دليل تحليل التربة المتقدم',
-            type: 'post',
-            status: 'draft',
-            author: 'سارة أحمد',
-            publishDate: null,
-            lastModified: '2024-01-12',
-            views: 0,
-            excerpt: 'دليل شامل لتحليل التربة باستخدام التقنيات الحديثة...'
-          }
-        ],
-        count: 89,
+        results: [],
+        count: 0,
         next: null,
         previous: null
       };
     }
   },
+getPostById: async (id) => {
+  const response = await apiClient.get(`/content/posts/${id}/`);
+  return response.data;
+}
 
+,
   // Content statistics
   getContentStats: async () => {
     try {

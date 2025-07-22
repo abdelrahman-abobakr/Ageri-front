@@ -110,12 +110,6 @@ const MainLayout = () => {
     }
   };
 
-  const handleMenuClick = ({ key }) => {
-    // Ensure we navigate within the app context
-    const appPath = key.startsWith('/app') ? key : `/app${key}`;
-    navigate(appPath);
-  };
-
   // Get translated menu label
   const getMenuLabel = (key) => {
     const labelMap = {
@@ -139,7 +133,9 @@ const MainLayout = () => {
 
   // Get menu items based on user role
   const getMenuItems = () => {
-    const userRole = user?.role || USER_ROLES.RESEARCHER;
+    // Read role from localStorage if available
+    const localRole = localStorage.getItem('role');
+    const userRole = localRole || user?.role || USER_ROLES.RESEARCHER;
     const items = MENU_ITEMS[userRole] || MENU_ITEMS[USER_ROLES.RESEARCHER];
 
     return items.map((item) => {
@@ -150,6 +146,19 @@ const MainLayout = () => {
         label: getMenuLabel(item.key),
       };
     });
+  };
+
+  // Sidebar menu click handler
+  const handleMenuClick = ({ key }) => {
+    // If moderator, always use localStorage role for navigation
+    const localRole = localStorage.getItem('role');
+    if (localRole === USER_ROLES.MODERATOR) {
+      navigate(key);
+      return;
+    }
+    // Default navigation logic
+    const appPath = key.startsWith('/app') ? key : `/app${key}`;
+    navigate(appPath);
   };
 
   // User dropdown menu
@@ -360,7 +369,7 @@ const MainLayout = () => {
 
             {/* Notification Bell */}
             <Dropdown
-              dropdownRender={() => notificationDropdown}
+              popupRender={() => notificationDropdown}
               placement="bottomRight"
               arrow
               trigger={['click']}

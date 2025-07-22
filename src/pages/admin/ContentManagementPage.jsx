@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react';
 import {
   Card,
   Table,
@@ -18,7 +17,10 @@ import {
   Tooltip,
   Spin,
   Upload,
-  DatePicker
+  DatePicker,
+  Divider,
+  Alert,
+  Badge,
 } from 'antd';
 import {
   FileTextOutlined,
@@ -33,14 +35,23 @@ import {
   ExclamationCircleOutlined,
   UploadOutlined,
   CalendarOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  SendOutlined,
+  StarOutlined,
+  StarFilled,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  ExceptionOutlined,
 } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
-import { contentService } from '../../services';
-// import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
-// import RealTimeIndicator from '../../components/admin/RealTimeIndicator';
 
-const { Title, Text } = Typography;
+import { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useSelector } from 'react-redux';
+import moment from 'moment';
+import { contentService } from '../../services';
+
+// من عناصر تايبوغرافي
+const { Title, Paragraph, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 const { TextArea } = Input;
@@ -48,6 +59,7 @@ const { confirm } = Modal;
 
 const ContentManagementPage = () => {
   const { t } = useTranslation();
+  const { user } = useSelector((state) => state.auth);
   const [content, setContent] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -55,73 +67,90 @@ const ContentManagementPage = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [previewContent, setPreviewContent] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [editingContent, setEditingContent] = useState(null);
   const [form] = Form.useForm();
   const pageSize = 10;
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  
+  // Get user data
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
+  const userRole = userData?.role;
+  const userId = userData?.id;
 
-  // Real-time content statistics - temporarily disabled for debugging
-  // const { stats: contentStats, loading: statsLoading, refresh: refreshStats } = useRealTimeStats('content', 30000);
-  const statsLoading = false;
-  const refreshStats = () => {};
+  const handleImageUpload = (info) => {
+  const { file } = info;
+  if (!file) return;
+  setImagePreview(URL.createObjectURL(file));
+  setImageFile(file);
+  form.setFieldsValue({ attachment: file });
+};
 
-  // Animated counters - temporarily disabled for debugging
-  // const totalContentCount = useAnimatedCounter(contentStats?.totalContent || 0);
-  // const publishedContentCount = useAnimatedCounter(contentStats?.publishedContent || 0);
-  // const draftContentCount = useAnimatedCounter(contentStats?.draftContent || 0);
-  // const scheduledContentCount = useAnimatedCounter(contentStats?.scheduledContent || 0);
-  const totalContentCount = { value: 0 };
-  const publishedContentCount = { value: 0 };
-  const draftContentCount = { value: 0 };
-  const scheduledContentCount = { value: 0 };
+const handleRemoveImage = () => {
+  setImageFile(null);
+  setImagePreview(null);
+  form.setFieldsValue({ attachment: null });
+};
 
-  // Mock data for demonstration
-  const mockContent = [
-    {
-      id: 1,
-      title: 'إعلان عن ورشة الزراعة المستدامة',
-      type: 'announcement',
-      status: 'published',
-      author: 'أحمد محمد',
-      publishDate: '2024-01-15',
-      lastModified: '2024-01-15',
-      views: 1245,
-      excerpt: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة...'
-    },
-    {
-      id: 2,
-      title: 'أحدث البحوث في مجال الذكاء الاصطناعي الزراعي',
-      type: 'post',
-      status: 'published',
-      author: 'فاطمة علي',
-      publishDate: '2024-01-14',
-      lastModified: '2024-01-14',
-      views: 987,
-      excerpt: 'مقال شامل حول تطبيقات الذكاء الاصطناعي في الزراعة...'
-    },
-    {
-      id: 3,
-      title: 'مؤتمر التكنولوجيا الزراعية 2024',
-      type: 'event',
-      status: 'scheduled',
-      author: 'محمد حسن',
-      publishDate: '2024-02-01',
-      lastModified: '2024-01-13',
-      views: 0,
-      excerpt: 'مؤتمر سنوي يجمع خبراء التكنولوجيا الزراعية...'
-    },
-    {
-      id: 4,
-      title: 'دليل تحليل التربة المتقدم',
-      type: 'post',
-      status: 'draft',
-      author: 'سارة أحمد',
-      publishDate: null,
-      lastModified: '2024-01-12',
-      views: 0,
-      excerpt: 'دليل شامل لتحليل التربة باستخدام التقنيات الحديثة...'
+
+  const [stats, setStats] = useState({
+    totalContent: 0,
+    publishedContent: 0,
+    draftContent: 0,
+    scheduledContent: 0,
+    pendingContent: 0,
+    rejectedContent: 0,
+    acceptedContent: 0,
+    featuredContent: 0,
+    contentGrowth: 0,
+    viewsThisMonth: 0,
+    engagementRate: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState(null);
+
+  const fetchStats = useCallback(async () => {
+    setStatsLoading(true);
+    setStatsError(null);
+    try {
+      const allContentRes = await contentService.getPosts({ page: 1, page_size: 1000 });
+      const allPosts = allContentRes.results || [];
+      
+      const totalContent = allPosts.length;
+      const publishedContent = allPosts.filter(p => p.status === 'published').length;
+      const draftContent = allPosts.filter(p => p.status === 'draft').length;
+      const scheduledContent = allPosts.filter(p => p.status === 'scheduled').length;
+      const pendingContent = allPosts.filter(p => p.status === 'pending').length;
+      const rejectedContent = allPosts.filter(p => p.status === 'rejected').length;
+      const acceptedContent = allPosts.filter(p => p.status === 'accepted').length;
+      const featuredContent = allPosts.filter(p => p.is_featured === true).length;
+      
+      setStats({
+        totalContent,
+        publishedContent,
+        draftContent,
+        scheduledContent,
+        pendingContent,
+        rejectedContent,
+        acceptedContent,
+        featuredContent,
+        contentGrowth: 0,
+        viewsThisMonth: 0,
+        engagementRate: 0
+      });
+    } catch (err) {
+      setStatsError('فشل في تحميل الإحصائيات');
+    } finally {
+      setStatsLoading(false);
     }
-  ];
+  }, []);
+
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   useEffect(() => {
     loadContent();
@@ -131,76 +160,81 @@ const ContentManagementPage = () => {
     try {
       setLoading(true);
 
-      // Build API parameters
       const params = {
         page: currentPage,
-        page_size: pageSize
+        page_size: pageSize,
+        search: searchTerm || undefined,
+        category: typeFilter || undefined,
+        status: statusFilter || undefined,
       };
 
-      if (searchTerm) {
-        params.search = searchTerm;
+      const response = await contentService.getPosts(params);
+      console.log('getPosts response:', response);
+      const allPosts = response.results || [];
+
+      let filtered = [];
+
+      if (userRole === "admin") {
+        filtered = allPosts;
+      } else {
+        filtered = allPosts.filter(post => post.author?.id === userId);
       }
 
-      if (typeFilter) {
-        params.type = typeFilter;
-      }
-
-      if (statusFilter) {
-        params.status = statusFilter;
-      }
-
-      // Fetch content from API
-      const response = await contentService.getAllContent(params);
-
-      let filteredContent = response.results || [];
-
-      // Apply client-side filtering if needed (for demo purposes)
-      if (searchTerm) {
-        filteredContent = filteredContent.filter(item =>
-          item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.excerpt.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-
-      if (typeFilter) {
-        filteredContent = filteredContent.filter(item => item.type === typeFilter);
-      }
-
-      if (statusFilter) {
-        filteredContent = filteredContent.filter(item => item.status === statusFilter);
-      }
-
-      setContent(filteredContent);
-      setTotal(response.count || filteredContent.length);
+      setContent(filtered);
+      setTotal(filtered.length); 
     } catch (error) {
-      console.error('Failed to load content:', error);
-      message.error('فشل في تحميل المحتوى');
-      // Fallback to mock data
-      setContent(mockContent);
-      setTotal(mockContent.length);
+      console.error('Failed to load posts:', error);
+      message.error('فشل في تحميل المنشورات');
+      setContent([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
   };
 
-
-
   const handleCreateContent = () => {
     setEditingContent(null);
     form.resetFields();
+    setImageFile(null);
+    setImagePreview(null);
     setModalVisible(true);
   };
 
-  const handleEditContent = (contentItem) => {
-    setEditingContent(contentItem);
-    form.setFieldsValue({
-      title: contentItem.title,
-      type: contentItem.type,
-      status: contentItem.status,
-      excerpt: contentItem.excerpt,
-      content: contentItem.content || '',
-    });
-    setModalVisible(true);
+  const handleEditContent = async (contentItem) => {
+    try {
+      console.log("🔥 Editing post:", contentItem);
+
+      const detail = await contentService.getPostById(contentItem.id);
+      console.log("✅ Full detail:", detail);
+
+      setEditingContent(detail);
+      
+      setImageFile(null);
+      setImagePreview(detail.attachment || null);
+            
+      form.setFieldsValue({
+        title: detail.title,
+        type: detail.category || '',
+        status: detail.status || 'draft',
+        excerpt: detail.excerpt,
+        category: detail.category || '',
+        content: detail.content || '', 
+        publishDate: detail.publish_at ? moment(detail.publish_at) : null,
+        event_date: detail.event_date ? moment(detail.event_date) : null,
+        event_location: detail.event_location || '',
+        registration_required: detail.registration_required || false,
+        registration_deadline: detail.registration_deadline ? moment(detail.registration_deadline) : null,
+        max_participants: detail.max_participants || undefined,
+        featured_image: detail.featured_image || '',
+        attachment: detail.attachment || '',
+        isPublic: typeof detail.is_public === 'boolean' ? detail.is_public : false,
+        isFeatured: typeof detail.is_featured === 'boolean' ? detail.is_featured : false,
+      });
+
+      setModalVisible(true);
+    } catch (error) {
+      console.error("❌ Failed to load content details:", error);
+    }
   };
 
   const handleDeleteContent = async (contentItem) => {
@@ -209,28 +243,176 @@ const ContentManagementPage = () => {
       icon: <ExclamationCircleOutlined />,
       onOk: async () => {
         try {
-          await contentService.deleteContent(contentItem.id, contentItem.type);
-          message.success(t('admin.contentManagement.contentDeleted'));
-          loadContent();
-          refreshStats();
+          const res = await contentService.deleteContent(contentItem.id, 'post');
+
+          if (!res || res.success === true || res.status === 204) {
+            message.success(t('admin.contentManagement.contentDeleted'));
+            setContent((prev) => prev.filter((post) => post.id !== contentItem.id));
+            loadContent();
+            fetchStats();
+          } else {
+            message.error(res?.message || 'فشل في حذف المحتوى (backend)');
+          }
         } catch (error) {
-          message.error('فشل في حذف المحتوى');
+          console.error('Delete error:', error, error?.response);
+          if (error?.response?.status === 403 || error?.response?.status === 401) {
+            message.error('ليس لديك صلاحية حذف هذا المحتوى');
+          } else if (error?.response?.data?.detail) {
+            message.error(error.response.data.detail);
+          } else {
+            message.error(error?.message || 'فشل في حذف المحتوى');
+          }
         }
       },
     });
   };
 
-  const handlePublishContent = async (contentItem) => {
+  const handlePreviewContent = async (contentItem) => {
+    try {
+      setLoading(true);
+      const post = await contentService.getPostById(contentItem.id);
+      setPreviewContent(post);
+      setPreviewVisible(true);
+    } catch (err) {
+      console.error('Preview error:', err);
+      message.error('فشل في تحميل المعاينة');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitForReview = async (contentItem) => {
     confirm({
-      title: t('admin.contentManagement.confirmPublish'),
-      icon: <ExclamationCircleOutlined />,
+      title: 'إرسال للمراجعة',
+      content: 'هل أنت متأكد من إرسال هذا المنشور للمراجعة؟ سيتم إرساله للأدمن للموافقة عليه.',
+      icon: <SendOutlined />,
+      okText: 'إرسال للمراجعة',
+      cancelText: 'إلغاء',
       onOk: async () => {
         try {
-          await contentService.publishContent(contentItem.id, contentItem.type);
-          message.success(t('admin.contentManagement.contentPublished'));
+          await contentService.updatePost(contentItem.id, { status: 'pending' });
+          message.success('تم إرسال المنشور للمراجعة بنجاح');
           loadContent();
-          refreshStats();
+          fetchStats();
         } catch (error) {
+          console.error('Submit for review error:', error);
+          message.error('فشل في إرسال المنشور للمراجعة');
+        }
+      },
+    });
+  };
+
+  const handleAcceptContent = async (contentItem) => {
+    confirm({
+      title: 'موافقة على المنشور',
+      content: 'هل أنت متأكد من الموافقة على هذا المنشور؟ سيصبح مرئياً للضيوف في الموقع.',
+      icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+      okText: 'موافقة ونشر',
+      okButtonProps: { type: 'primary', style: { backgroundColor: '#52c41a' } },
+      cancelText: 'إلغاء',
+      onOk: async () => {
+        try {
+          await contentService.updatePost(contentItem.id, { 
+            status: 'published', 
+            approved_by: userId,
+            approved_at: new Date().toISOString()
+          });
+          message.success('تمت الموافقة على المنشور ونشره للضيوف');
+          loadContent();
+          fetchStats();
+        } catch (error) {
+          console.error('Accept content error:', error);
+          message.error('فشل في الموافقة على المنشور');
+        }
+      },
+    });
+  };
+
+  const handleRejectContent = async (contentItem) => {
+    let rejectionReason = '';
+    
+    Modal.confirm({
+      title: 'رفض المنشور',
+      content: (
+        <div style={{ marginTop: 16 }}>
+          <p>هل أنت متأكد من رفض هذا المنشور؟</p>
+          <Input.TextArea
+            placeholder="سبب الرفض (اختياري)"
+            onChange={(e) => rejectionReason = e.target.value}
+            rows={3}
+          />
+        </div>
+      ),
+      icon: <ExceptionOutlined style={{ color: '#ff4d4f' }} />,
+      okText: 'رفض',
+      okButtonProps: { danger: true },
+      cancelText: 'إلغاء',
+      onOk: async () => {
+        try {
+          await contentService.updatePost(contentItem.id, { 
+            status: 'rejected',
+            rejection_reason: rejectionReason,
+            rejected_by: userId,
+            rejected_at: new Date().toISOString()
+          });
+          message.success('تم رفض المنشور');
+          loadContent();
+          fetchStats();
+        } catch (error) {
+          console.error('Reject content error:', error);
+          message.error('فشل في رفض المنشور');
+        }
+      },
+    });
+  };
+
+  const handleToggleFeatured = async (contentItem) => {
+    const newFeaturedStatus = !contentItem.is_featured;
+    const actionText = newFeaturedStatus ? 'جعل المنشور مميز' : 'إلغاء تمييز المنشور';
+    const contentText = newFeaturedStatus 
+      ? 'المنشور المميز سيظهر في الصفحة الرئيسية (Home) للموقع' 
+      : 'سيظهر المنشور في صفحة المنشورات العادية فقط';
+    const successText = newFeaturedStatus ? 'تم جعل المنشور مميز وسيظهر في الصفحة الرئيسية' : 'تم إلغاء تمييز المنشور';
+    
+    confirm({
+      title: actionText,
+      content: contentText,
+      icon: newFeaturedStatus ? <StarFilled style={{ color: '#faad14' }} /> : <StarOutlined />,
+      okText: 'تأكيد',
+      cancelText: 'إلغاء',
+      onOk: async () => {
+  try {
+    const formData = new FormData();
+    formData.append('is_featured', newFeaturedStatus); // نفس اسم الحقل في السيرفر
+
+    await contentService.updatePost(contentItem.id, formData); // ابعت formData بدل object
+    message.success(successText);
+    loadContent();
+    fetchStats();
+  } catch (error) {
+    console.error('Toggle featured error:', error);
+    message.error('فشل في تحديث حالة التمييز');
+  }
+},
+    });
+  };
+
+  const handlePublishContent = async (contentItem) => {
+    confirm({
+      title: 'نشر المحتوى',
+      content: 'هل أنت متأكد من نشر هذا المحتوى؟ سيصبح مرئياً للضيوف.',
+      icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+      okText: 'نشر',
+      okButtonProps: { type: 'primary', style: { backgroundColor: '#52c41a' } },
+      cancelText: 'إلغاء',
+      onOk: async () => {
+        try {
+          await contentService.updatePost(contentItem.id, { status: 'published' });
+          message.success('تم نشر المحتوى بنجاح');
+          loadContent();
+          fetchStats();
+        } catch (error) {
+          console.error('Publish error:', error);
           message.error('فشل في نشر المحتوى');
         }
       },
@@ -239,55 +421,175 @@ const ContentManagementPage = () => {
 
   const handleUnpublishContent = async (contentItem) => {
     confirm({
-      title: t('admin.contentManagement.confirmUnpublish'),
+      title: 'إلغاء نشر المحتوى',
+      content: 'هل أنت متأكد من إلغاء نشر هذا المحتوى؟ سيصبح غير مرئي للضيوف.',
       icon: <ExclamationCircleOutlined />,
+      okText: 'إلغاء النشر',
+      okButtonProps: { danger: true },
+      cancelText: 'إلغاء',
       onOk: async () => {
         try {
-          await contentService.unpublishContent(contentItem.id, contentItem.type);
-          message.success(t('admin.contentManagement.contentUnpublished'));
+         await contentService.updatePost(contentItem.id, {
+    status: 'draft',
+    published_at: null
+  });
+          message.success('تم إلغاء نشر المحتوى بنجاح');
           loadContent();
-          refreshStats();
+          fetchStats();
         } catch (error) {
+          console.error('Unpublish error:', error);
           message.error('فشل في إلغاء نشر المحتوى');
         }
       },
     });
   };
 
-  const handleSaveContent = async (values) => {
+const handleSaveContent = async (values) => {
     try {
+      // إنشاء FormData للتعامل مع رفع الملفات
+      const formData = new FormData();
+      
+      // إضافة البيانات الأساسية
+      const payload = {
+        ...values,
+        category: values.type,
+        publish_at: values.publishDate ? values.publishDate.toISOString() : null,
+      };
+      
+      if (userRole === 'moderator' && values.status === 'published') {
+        payload.status = 'pending';
+      } else if (values.status === 'scheduled') {
+        payload.status = 'draft';
+      }
+      
+      delete payload.type;
+      delete payload.publishDate;
+
+      // معالجة بيانات الأحداث
+      if (payload.category === 'event') {
+        payload.event_date = values.event_date ? values.event_date.toISOString() : null;
+        payload.event_location = values.event_location || '';
+        payload.registration_required = values.registration_required || false;
+        payload.registration_deadline = values.registration_deadline ? values.registration_deadline.toISOString() : null;
+        payload.max_participants = values.max_participants || null;
+        // لا نضع attachment في payload للـ events - سيتم التعامل معه بشكل منفصل
+      } else {
+        delete payload.event_date;
+        delete payload.event_location;
+        delete payload.registration_required;
+        delete payload.registration_deadline;
+        delete payload.max_participants;
+      }
+
+      // إزالة attachment من payload - سنتعامل معه بشكل منفصل
+      delete payload.attachment;
+
+      // صلاحيات الأدمن فقط
+      if (userRole !== 'admin') {
+        delete payload.isPublic;
+        delete payload.isFeatured;
+      }
+
+      // التحقق من البيانات المطلوبة
+      if (!payload.title || !payload.content || !payload.category || !payload.status) {
+        message.error('يرجى تعبئة جميع الحقول المطلوبة');
+        return;
+      }
+
+      // إضافة البيانات الأساسية إلى FormData
+      Object.keys(payload).forEach(key => {
+        if (payload[key] !== null && payload[key] !== undefined && payload[key] !== '') {
+          formData.append(key, payload[key]);
+        }
+      });
+
+      // معالجة الملف المرفق
+      if (imageFile && imageFile instanceof File) {
+        formData.append('attachment', imageFile);
+      } else if (editingContent?.attachment && !imageFile) {
+        // إذا كان هناك مرفق سابق ولم يتم تغييره، نبقيه كما هو
+        formData.append('attachment', editingContent.attachment);
+      }
+      
+      console.log('FormData entries:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+      
+      let response;
       if (editingContent) {
-        if (editingContent.type === 'announcement') {
-          await contentService.updateAnnouncement(editingContent.id, values);
+        // للتحديث - استخدم updatePost مع FormData أو البيانات العادية حسب وجود ملف
+        if (imageFile) {
+          response = await contentService.updatePost(editingContent.id, formData);
         } else {
-          await contentService.updatePost(editingContent.id, values);
+          // تحويل FormData إلى object عادي
+          const updateData = {};
+          for (let [key, value] of formData.entries()) {
+            updateData[key] = value;
+          }
+          response = await contentService.updatePost(editingContent.id, updateData);
         }
       } else {
-        if (values.type === 'announcement') {
-          await contentService.createAnnouncement(values);
+        // للإنشاء - استخدم createPost
+        if (imageFile) {
+          response = await contentService.createPost(formData);
         } else {
-          await contentService.createPost(values);
+          // تحويل FormData إلى object عادي
+          const createData = {};
+          for (let [key, value] of formData.entries()) {
+            createData[key] = value;
+          }
+          response = await contentService.createPost(createData);
         }
       }
-      message.success(t('admin.contentManagement.contentSaved'));
+
+      let successMessage;
+      if (userRole === 'moderator' && values.status === 'published') {
+        successMessage = 'تم إرسال المنشور للمراجعة وانتظار الموافقة من الإدارة';
+      } else if (userRole === 'moderator' && values.status === 'draft') {
+        successMessage = 'تم حفظ المنشور كمسودة';
+      } else {
+        successMessage = t('admin.contentManagement.contentSaved');
+      }
+      
+      message.success(successMessage);
       setModalVisible(false);
+      
+      // إعادة تعيين الصورة
+      setImageFile(null);
+      setImagePreview(null);
+      
       loadContent();
-      refreshStats();
+      fetchStats();
     } catch (error) {
-      message.error('فشل في حفظ المحتوى');
+      console.error('Save content error:', error);
+      
+      if (error?.response?.data?.attachment) {
+        message.error('خطأ في رفع الصورة: ' + error.response.data.attachment[0]);
+      } else if (error?.response?.data?.detail) {
+        message.error(error.response.data.detail);
+      } else {
+        message.error('فشل في حفظ المحتوى');
+      }
     }
-  };
+};
 
   const getStatusTag = (status) => {
     const statusConfig = {
-      published: { color: 'green', text: t('admin.contentManagement.published') },
+      published: { color: 'green', text: 'منشور (مرئي للضيوف)' },
       draft: { color: 'orange', text: t('admin.contentManagement.draft') },
-      archived: { color: 'red', text: t('admin.contentManagement.archived') },
       scheduled: { color: 'blue', text: t('admin.contentManagement.scheduled') },
+      archived: { color: 'red', text: t('admin.contentManagement.archived') },
+      pending: { color: 'gold', text: 'انتظار موافقة الإدارة', icon: <ClockCircleOutlined /> },
+      rejected: { color: 'volcano', text: 'مرفوض من الإدارة', icon: <ExceptionOutlined /> },
     };
-    
+
     const config = statusConfig[status] || { color: 'default', text: status };
-    return <Tag color={config.color}>{config.text}</Tag>;
+    return (
+      <Tag color={config.color} icon={config.icon}>
+        {config.text}
+      </Tag>
+    );
   };
 
   const getTypeTag = (type) => {
@@ -296,6 +598,14 @@ const ContentManagementPage = () => {
       post: { color: 'blue', text: t('admin.contentManagement.post') },
       news: { color: 'green', text: t('admin.contentManagement.news') },
       event: { color: 'orange', text: t('admin.contentManagement.event') },
+      general: { color: 'default', text: t('admin.contentManagement.general', 'General') },
+      activity: { color: 'default', text: t('admin.contentManagement.activity', 'Activity') },
+      workshop: { color: 'default', text: t('admin.contentManagement.workshop', 'Workshop') },
+      seminar: { color: 'default', text: t('admin.contentManagement.seminar', 'Seminar') },
+      conference: { color: 'default', text: t('admin.contentManagement.conference', 'Conference') },
+      training: { color: 'default', text: t('admin.contentManagement.training', 'Training') },
+      collaboration: { color: 'default', text: t('admin.contentManagement.collaboration', 'Collaboration') },
+      achievement: { color: 'default', text: t('admin.contentManagement.achievement', 'Achievement') },
     };
     
     const config = typeConfig[type] || { color: 'default', text: type };
@@ -311,53 +621,110 @@ const ContentManagementPage = () => {
     });
   };
 
-  const getActionMenuItems = (contentItem) => [
-    {
-      key: 'view',
-      icon: <EyeOutlined />,
-      label: t('admin.contentManagement.preview'),
-      onClick: () => {
-        // Navigate to content preview
-        console.log('View content:', contentItem.id);
+  const getActionMenuItems = (contentItem) => {
+    let items = [
+      {
+        key: 'view',
+        icon: <EyeOutlined />,
+        label: t('admin.contentManagement.preview'),
+        onClick: () => handlePreviewContent(contentItem)
+      },
+      {
+        key: 'edit',
+        icon: <EditOutlined />,
+        label: t('admin.contentManagement.editContent'),
+        onClick: () => handleEditContent(contentItem)
+      },
+      {
+        type: 'divider'
       }
-    },
-    {
-      key: 'edit',
-      icon: <EditOutlined />,
-      label: t('admin.contentManagement.editContent'),
-      onClick: () => handleEditContent(contentItem)
-    },
-    {
-      key: 'publish',
-      icon: <CheckOutlined />,
-      label: contentItem.status === 'published'
-        ? t('admin.contentManagement.unpublishContent')
-        : t('admin.contentManagement.publishContent'),
-      onClick: () => contentItem.status === 'published'
-        ? handleUnpublishContent(contentItem)
-        : handlePublishContent(contentItem)
-    },
-    {
-      type: 'divider'
-    },
-    {
+    ];
+
+    if (userRole === 'admin') {
+      if (contentItem.status === 'pending') {
+        items.unshift({
+          key: 'accept',
+          icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
+          label: 'موافقة',
+          onClick: () => handleAcceptContent(contentItem),
+          style: { color: '#52c41a' }
+        });
+        items.unshift({
+          key: 'reject',
+          icon: <ExceptionOutlined style={{ color: '#ff4d4f' }} />,
+          label: 'رفض',
+          onClick: () => handleRejectContent(contentItem),
+          danger: true
+        });
+        items.unshift({ type: 'divider' });
+      }
+
+      items.unshift({
+        key: 'toggle-featured',
+        icon: contentItem.is_featured ? 
+          <StarFilled style={{ color: '#faad14' }} /> : 
+          <StarOutlined />,
+        label: contentItem.is_featured ? 'إلغاء التمييز' : 'جعل مميز',
+        onClick: () => handleToggleFeatured(contentItem)
+      });
+
+      if (contentItem.status !== 'pending') {
+        items.unshift({
+          key: 'publish-toggle',
+          icon: contentItem.status === 'published' ? <CloseOutlined /> : <CheckOutlined />,
+          label: contentItem.status === 'published' ? 'إلغاء النشر' : 'نشر',
+          onClick: () => contentItem.status === 'published'
+            ? handleUnpublishContent(contentItem)
+            : handlePublishContent(contentItem)
+        });
+      }
+      
+      items.unshift({ type: 'divider' });
+    }
+
+    // مودريتر: إرسال للمراجعة
+    if (userRole === 'moderator' && contentItem.status === 'draft') {
+      items.unshift({
+        key: 'submit-review',
+        icon: <SendOutlined />,
+        label: 'إرسال للمراجعة',
+        onClick: () => handleSubmitForReview(contentItem)
+      });
+      items.unshift({ type: 'divider' });
+    }
+
+    // حذف (للجميع)
+    items.push({
       key: 'delete',
       icon: <DeleteOutlined />,
       label: t('admin.contentManagement.deleteContent'),
       onClick: () => handleDeleteContent(contentItem),
       danger: true
-    }
-  ];
+    });
+
+    return items;
+  };
 
   const columns = [
     {
-      title: "العنوان",
+      title: t('admin.contentManagement.title'),
       dataIndex: 'title',
       key: 'title',
       ellipsis: true,
       render: (text, record) => (
         <div>
-          <div style={{ fontWeight: 500, marginBottom: '4px' }}>{text}</div>
+          <div style={{ 
+            fontWeight: 500, 
+            marginBottom: '4px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            {text}
+            {record.is_featured && (
+              <StarFilled style={{ color: '#faad14', fontSize: '14px' }} />
+            )}
+          </div>
           <Text type="secondary" style={{ fontSize: '12px' }}>
             {record.excerpt}
           </Text>
@@ -365,80 +732,112 @@ const ContentManagementPage = () => {
       ),
     },
     {
-      title: "النوع",
-      dataIndex: 'type',
-      key: 'type',
-      render: (type) => getTypeTag(type),
+      title: t('admin.contentManagement.type'),
+      dataIndex: 'category',
+      key: 'category',
+      render: (category) => getTypeTag(category),
     },
     {
-      title: "الحالة",
+      title: t('admin.contentManagement.status'),
       dataIndex: 'status',
       key: 'status',
-      render: (status) => getStatusTag(status),
+      render: (status, record) => (
+        <div>
+          {getStatusTag(status)}
+          {record.status === 'pending' && (
+            <Badge count="!" style={{ backgroundColor: '#faad14', marginLeft: 8 }} />
+          )}
+        </div>
+      ),
     },
     {
-      title: "المؤلف",
+      title: t('admin.contentManagement.author'),
       dataIndex: 'author',
       key: 'author',
+      render: (author) => author?.full_name || '-',
     },
     {
-      title: "تاريخ النشر",
-      dataIndex: 'publishDate',
-      key: 'publishDate',
+      title: t('admin.contentManagement.publishDate'),
+      dataIndex: 'publish_at',
+      key: 'publish_at',
       render: (date) => formatDate(date),
     },
     {
-      title: "المشاهدات",
-      dataIndex: 'views',
-      key: 'views',
+      title: t('admin.contentManagement.views'),
+      dataIndex: 'view_count',
+      key: 'view_count',
       render: (views) => (views || 0).toLocaleString(),
     },
     {
-      title: "الإجراءات",
+      title: t('admin.contentManagement.actions'),
       key: 'actions',
-      render: (_, record) => (
-        <Space>
-          <Tooltip title={t('admin.contentManagement.editContent')}>
-            <Button
-              type="primary"
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => handleEditContent(record)}
-            />
-          </Tooltip>
-          {record.status === 'draft' && (
-            <Tooltip title={t('admin.contentManagement.publishContent')}>
+      render: (_, record) => {
+        return (
+          <Space>
+            <Tooltip title={t('admin.contentManagement.editContent')}>
               <Button
-                type="default"
+                type="primary"
                 size="small"
-                icon={<CheckOutlined />}
-                onClick={() => handlePublishContent(record)}
+                icon={<EditOutlined />}
+                onClick={() => handleEditContent(record)}
               />
             </Tooltip>
-          )}
-          <Dropdown
-            menu={{ items: getActionMenuItems(record) }}
-            trigger={['click']}
-          >
-            <Button size="small" icon={<MoreOutlined />} />
-          </Dropdown>
-        </Space>
-      ),
+            
+            {/* أزرار سريعة للأدمن للمنشورات المعلقة */}
+            {userRole === 'admin' && record.status === 'pending' && (
+              <>
+                <Tooltip title="موافقة">
+                  <Button
+                    size="small"
+                    icon={<CheckCircleOutlined />}
+                    style={{ color: '#52c41a', borderColor: '#52c41a' }}
+                    onClick={() => handleAcceptContent(record)}
+                  />
+                </Tooltip>
+                <Tooltip title="رفض">
+                  <Button
+                    size="small"
+                    danger
+                    icon={<ExceptionOutlined />}
+                    onClick={() => handleRejectContent(record)}
+                  />
+                </Tooltip>
+              </>
+            )}
+
+            {/* زر إرسال للمراجعة للمودريتر */}
+            {userRole === 'moderator' && record.status === 'draft' && (
+              <Tooltip title="إرسال للمراجعة">
+                <Button
+                  size="small"
+                  icon={<SendOutlined />}
+                  style={{ color: '#1890ff', borderColor: '#1890ff' }}
+                  onClick={() => handleSubmitForReview(record)}
+                />
+              </Tooltip>
+            )}
+            
+            <Dropdown
+              menu={{ items: getActionMenuItems(record) }}
+              trigger={['click']}
+            >
+              <Button size="small" icon={<MoreOutlined />} />
+            </Dropdown>
+          </Space>
+        );
+      },
     },
   ];
-
   return (
     <div>
-      {/* Page Header */}
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <FileTextOutlined style={{ marginRight: '8px' }} />
-          إدارة المحتوى
+          {t('admin.contentManagement.title')}
         </Title>
         <Text type="secondary">
-          إنشاء وتحرير وإدارة الإعلانات والمنشورات والمحتوى
+          {t('admin.contentManagement.description')}
         </Text>
-        {/* <RealTimeIndicator /> */}
       </div>
 
       {/* Statistics Cards */}
@@ -446,19 +845,16 @@ const ContentManagementPage = () => {
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic
-              title="إجمالي المحتوى"
-              value={totalContentCount.value}
+              title={t('admin.contentManagement.totalContent')}
+              value={stats.totalContent}
               prefix={<FileTextOutlined />}
-              valueStyle={{
-                color: '#1890ff',
-                transition: 'all 0.3s ease'
-              }}
+              valueStyle={{ color: '#1890ff', transition: 'all 0.3s ease' }}
               suffix={
                 <Button
                   type="text"
                   size="small"
-                  icon={<ReloadOutlined spin={totalContentCount.isAnimating} />}
-                  onClick={refreshStats}
+                  icon={<ReloadOutlined spin={statsLoading} />}
+                  onClick={fetchStats}
                   style={{ marginLeft: '8px' }}
                 />
               }
@@ -468,43 +864,35 @@ const ContentManagementPage = () => {
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic
-              title="المحتوى المنشور"
-              value={publishedContentCount.value}
+              title={t('admin.contentManagement.publishedContent')}
+              value={stats.publishedContent}
               prefix={<CheckOutlined />}
-              valueStyle={{
-                color: '#52c41a',
-                transition: 'all 0.3s ease'
-              }}
+              valueStyle={{ color: '#52c41a', transition: 'all 0.3s ease' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic
-              title="المسودات"
-              value={draftContentCount.value}
+              title={t('admin.contentManagement.draftContent')}
+              value={stats.draftContent}
               prefix={<EditOutlined />}
-              valueStyle={{
-                color: '#faad14',
-                transition: 'all 0.3s ease'
-              }}
+              valueStyle={{ color: '#faad14', transition: 'all 0.3s ease' }}
             />
           </Card>
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic
-              title="المحتوى المجدول"
-              value={scheduledContentCount.value}
+              title={t('admin.contentManagement.scheduledContent')}
+              value={stats.scheduledContent}
               prefix={<CalendarOutlined />}
-              valueStyle={{
-                color: '#722ed1',
-                transition: 'all 0.3s ease'
-              }}
+              valueStyle={{ color: '#722ed1', transition: 'all 0.3s ease' }}
             />
           </Card>
         </Col>
       </Row>
+      {statsError && <Text type="danger">{statsError}</Text>}
 
       {/* Filters and Actions */}
       <Card style={{ marginBottom: '16px' }}>
@@ -528,26 +916,36 @@ const ContentManagementPage = () => {
               onChange={setTypeFilter}
             >
               <Option value="">{t('admin.contentManagement.allTypes')}</Option>
-              <Option value="announcement">{t('admin.contentManagement.announcement')}</Option>
+              <Option value="general">{t('admin.contentManagement.general')}</Option>
+              <Option value="event">{t('admin.contentManagement.event')}</Option>
+              <Option value="activity">{t('admin.contentManagement.activity')}</Option>
+              <Option value="workshop">{t('admin.contentManagement.workshop')}</Option>
+              <Option value="seminar">{t('admin.contentManagement.seminar')}</Option>
+              <Option value="conference">{t('admin.contentManagement.conference')}</Option>
+              <Option value="training">{t('admin.contentManagement.training')}</Option>
+              <Option value="collaboration">{t('admin.contentManagement.collaboration')}</Option>
+              <Option value="achievement">{t('admin.contentManagement.achievement')}</Option>
               <Option value="post">{t('admin.contentManagement.post')}</Option>
               <Option value="news">{t('admin.contentManagement.news')}</Option>
-              <Option value="event">{t('admin.contentManagement.event')}</Option>
+              <Option value="announcement">{t('admin.contentManagement.announcement')}</Option>
             </Select>
           </Col>
           <Col xs={24} sm={6} md={4}>
-            <Select
-              placeholder={t('admin.contentManagement.filterByStatus')}
-              allowClear
-              style={{ width: '100%' }}
-              value={statusFilter}
-              onChange={setStatusFilter}
-            >
-              <Option value="">{t('admin.contentManagement.allStatuses')}</Option>
-              <Option value="published">{t('admin.contentManagement.published')}</Option>
-              <Option value="draft">{t('admin.contentManagement.draft')}</Option>
-              <Option value="scheduled">{t('admin.contentManagement.scheduled')}</Option>
-              <Option value="archived">{t('admin.contentManagement.archived')}</Option>
-            </Select>
+       <Select
+            placeholder={t('admin.contentManagement.filterByStatus')}
+            allowClear
+            style={{ width: '100%' }}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          >
+            <Option value="">{t('admin.contentManagement.allStatuses')}</Option>
+            <Option value="published">منشور</Option>
+            <Option value="draft">{t('admin.contentManagement.draft')}</Option>
+            <Option value="scheduled">{t('admin.contentManagement.scheduled')}</Option>
+            <Option value="archived">{t('admin.contentManagement.archived')}</Option>
+            <Option value="pending">قيد المراجعة</Option>
+            <Option value="rejected">مرفوض</Option>
+          </Select>
           </Col>
           <Col xs={24} sm={12} md={8} style={{ textAlign: 'right' }}>
             <Button
@@ -587,102 +985,332 @@ const ContentManagementPage = () => {
       </Card>
 
       {/* Create/Edit Content Modal */}
-      <Modal
-        title={editingContent ? t('admin.contentManagement.editContent') : t('admin.contentManagement.createNew')}
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={null}
-        width={800}
-        destroyOnClose
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSaveContent}
+    <Modal
+  title={editingContent ? t('admin.contentManagement.editContent') : t('admin.contentManagement.createNew')}
+  open={modalVisible}
+  onCancel={() => {
+    setModalVisible(false);
+    setImageFile(null);
+    setImagePreview(null);
+  }}
+  footer={null}
+  width={800}
+  destroyOnHidden
+>
+  <Form
+    form={form}
+    layout="vertical"
+    onFinish={handleSaveContent}
+    initialValues={editingContent ? {
+      title: editingContent.title,
+      type: editingContent.category || '',
+      status: editingContent.status || 'published',
+      excerpt: editingContent.excerpt,
+      content: editingContent.content || editingContent.body || editingContent.description || '',
+      publishDate: editingContent.publish_at ? (typeof editingContent.publish_at === 'string' ? moment(editingContent.publish_at) : editingContent.publish_at) : null,
+      event_date: editingContent.event_date ? moment(editingContent.event_date) : null,
+      event_location: editingContent.event_location || '',
+      registration_required: editingContent.registration_required || false,
+      registration_deadline: editingContent.registration_deadline ? moment(editingContent.registration_deadline) : null,
+      max_participants: editingContent.max_participants || undefined,
+      featured_image: editingContent.featured_image || '',
+      attachment: editingContent.attachment || '',
+      isPublic: editingContent.is_public,
+      isFeatured: editingContent.is_featured,
+    } : { status: 'published' }}
+  >
+    <Row gutter={16}>
+      <Col xs={24} md={16}>
+        <Form.Item
+          name="title"
+          label={t('admin.contentManagement.title')}
+          rules={[{ required: true, message: t('validation.required') }]}
         >
-          <Row gutter={16}>
-            <Col xs={24} md={16}>
-              <Form.Item
-                name="title"
-                label={t('admin.contentManagement.title')}
-                rules={[{ required: true, message: 'العنوان مطلوب' }]}
-              >
-                <Input placeholder="أدخل عنوان المحتوى" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item
-                name="type"
-                label={t('common.type')}
-                rules={[{ required: true, message: 'النوع مطلوب' }]}
-              >
-                <Select placeholder="اختر نوع المحتوى">
-                  <Option value="announcement">{t('admin.contentManagement.announcement')}</Option>
-                  <Option value="post">{t('admin.contentManagement.post')}</Option>
-                  <Option value="news">{t('admin.contentManagement.news')}</Option>
-                  <Option value="event">{t('admin.contentManagement.event')}</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+          <Input placeholder={t('admin.contentManagement.title')} />
+        </Form.Item>
+      </Col>
+      <Col xs={24} md={8}>
+        <Form.Item
+          name="type"
+          label={t('admin.contentManagement.type')}
+          rules={[{ required: true, message: t('validation.required') }]}
+        >
+          <Select placeholder={t('admin.contentManagement.type')} onChange={() => form.validateFields()}>
+            <Option value="general">{t('admin.contentManagement.general')}</Option>
+            <Option value="event">{t('admin.contentManagement.event')}</Option>
+            <Option value="activity">{t('admin.contentManagement.activity')}</Option>
+            <Option value="workshop">{t('admin.contentManagement.workshop')}</Option>
+            <Option value="seminar">{t('admin.contentManagement.seminar')}</Option>
+            <Option value="conference">{t('admin.contentManagement.conference')}</Option>
+            <Option value="training">{t('admin.contentManagement.training')}</Option>
+            <Option value="collaboration">{t('admin.contentManagement.collaboration')}</Option>
+            <Option value="achievement">{t('admin.contentManagement.achievement')}</Option>
+          </Select>
+        </Form.Item>
+      </Col>
+    </Row>
 
-          <Form.Item
-            name="excerpt"
-            label={t('admin.contentManagement.excerpt')}
+    <Form.Item
+      name="excerpt"
+      label={t('admin.contentManagement.excerpt')}
+    >
+      <TextArea rows={2} placeholder={t('admin.contentManagement.excerpt')} />
+    </Form.Item>
+
+     <Form.Item
+  name="attachment"
+  label="الصورة المرفقة (ستُعرض كصورة مميزة)"
+>
+  <div>
+    <Upload
+      name="image"
+      listType="picture-card"
+      showUploadList={false}
+      accept="image/*"
+      beforeUpload={() => false} // منع الرفع التلقائي
+      onChange={handleImageUpload}
+    >
+      {imagePreview || (editingContent?.attachment && !imagePreview) ? (
+        <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+          <img
+            src={imagePreview || editingContent?.attachment}
+            alt="صورة مرفقة"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              borderRadius: '6px'
+            }}
+          />
+          <Button
+            type="text"
+            danger
+            size="small"
+            icon={<DeleteOutlined />}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveImage();
+            }}
+            style={{
+              position: 'absolute',
+              top: '4px',
+              right: '4px',
+              backgroundColor: 'rgba(255, 255, 255, 0.8)'
+            }}
+          />
+        </div>
+      ) : (
+        <div>
+          <UploadOutlined />
+          <div style={{ marginTop: 8 }}>تحميل صورة</div>
+        </div>
+      )}
+    </Upload>
+
+    <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px', display: 'block' }}>
+      يُفضل استخدام صور بمقاس 16:9 وحجم أقل من 5 ميجا
+    </Text>
+  </div>
+</Form.Item>
+
+
+    <Form.Item
+      name="content"
+      label={t('admin.contentManagement.content')}
+      rules={[{ required: true, message: t('validation.required') }]}
+    >
+      <TextArea rows={8} placeholder={t('admin.contentManagement.content')} />
+    </Form.Item>
+
+    <Row gutter={16}>
+      <Col xs={24} md={12}>
+        <Form.Item
+          name="status"
+          label={t('admin.contentManagement.status')}
+          rules={[{ required: true, message: t('validation.required') }]}
+        >
+          <Select
+            value={form.getFieldValue('status') || undefined}
+            onChange={val => form.setFieldsValue({ status: val })}
+            disabled={
+              // للأدمن: إذا كان المحتوى منشور، نعطل الفيلد بدل ما نخفيه
+              JSON.parse(localStorage.getItem("user") || "{}").role === 'admin' && 
+              editingContent && 
+              editingContent.status === 'published'
+            }
           >
-            <TextArea rows={2} placeholder="مقتطف قصير عن المحتوى" />
-          </Form.Item>
+            <Option value="draft">{t('admin.contentManagement.draft')}</Option>
+            <Option value="scheduled">{t('admin.contentManagement.scheduled')}</Option>
+            <Option value="published">{t('admin.contentManagement.published')}</Option>
+          </Select>
+        </Form.Item>
+        
+        {/* رسالة توضيحية للأدمن */}
+        {JSON.parse(localStorage.getItem("user") || "{}").role === 'admin' && 
+        editingContent && 
+        editingContent.status === 'published' && (
+          <Text type="secondary" style={{ fontSize: '12px' }}>
+            * لا يمكن تغيير حالة المحتوى المنشور. استخدم أزرار النشر/إلغاء النشر من الجدول.
+          </Text>
+        )}
+      </Col>
+      <Col xs={24} md={12}>
+        <Form.Item
+          name="publishDate"
+          label={t('admin.contentManagement.publishDate')}
+          rules={[
+            ({ getFieldValue }) => ({
+              validator(_, value) {
+                if (getFieldValue('status') === 'scheduled' && !value) {
+                  return Promise.reject(new Error('يرجى تحديد موعد النشر'));
+                }
+                return Promise.resolve();
+              },
+            }),
+          ]}
+        >
+          <DatePicker style={{ width: '100%' }} showTime />
+        </Form.Item>
+      </Col>
+    </Row>
 
+    {/* باقي الحقول كما هي... */}
+    {form.getFieldValue('type') === 'event' && (
+      <>
+        <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <Form.Item name="event_date" label="تاريخ الفعالية">
+              <DatePicker style={{ width: '100%' }} showTime />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item name="event_location" label="مكان الفعالية">
+              <Input placeholder="مكان الفعالية" />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <Form.Item name="registration_required" label={t('admin.contentManagement.registrationRequired')}>
+              <Select>
+                <Option value={true}>{t('common.yes')}</Option>
+                <Option value={false}>{t('common.no')}</Option>
+              </Select>
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item name="registration_deadline" label="آخر موعد للتسجيل">
+              <DatePicker style={{ width: '100%' }} showTime />
+            </Form.Item>
+          </Col>
+        </Row>
+        <Row gutter={16}>
+          <Col xs={24} md={12}>
+            <Form.Item name="max_participants" label="الحد الأقصى للمشاركين">
+              <Input type="number" placeholder="عدد المشاركين" />
+            </Form.Item>
+          </Col>
+          <Col xs={24} md={12}>
+            <Form.Item name="attachment" label="مرفق">
+              <Input placeholder="رابط أو اسم الملف" />
+            </Form.Item>
+          </Col>
+        </Row>
+      </>
+    )}
+
+    {JSON.parse(localStorage.getItem("user") || "{}").role === 'admin' && (
+      <Row gutter={16}>
+        <Col xs={24} md={12}>
           <Form.Item
-            name="content"
-            label={t('admin.contentManagement.content')}
-            rules={[{ required: true, message: 'المحتوى مطلوب' }]}
+            name="isPublic"
+            label={t('admin.contentManagement.isPublic')}
           >
-            <TextArea rows={8} placeholder="اكتب محتوى المقال هنا..." />
+            <Select>
+              <Option value={true}>{t('common.yes')}</Option>
+              <Option value={false}>{t('common.no')}</Option>
+            </Select>
           </Form.Item>
-
-          <Row gutter={16}>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="status"
-                label={t('admin.contentManagement.status')}
-                initialValue="draft"
-              >
-                <Select>
-                  <Option value="draft">{t('admin.contentManagement.draft')}</Option>
-                  <Option value="published">{t('admin.contentManagement.published')}</Option>
-                  <Option value="scheduled">{t('admin.contentManagement.scheduled')}</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="publishDate"
-                label={t('admin.contentManagement.publishDate')}
-              >
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                {t('admin.contentManagement.saveDraft')}
-              </Button>
-              <Button onClick={() => {
-                form.setFieldsValue({ status: 'published' });
-                form.submit();
-              }}>
-                {t('admin.contentManagement.publishNow')}
-              </Button>
-              <Button onClick={() => setModalVisible(false)}>
-                {t('common.cancel')}
-              </Button>
-            </Space>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item
+            name="isFeatured"
+            label={t('admin.contentManagement.isFeatured')}
+          >
+            <Select>
+              <Option value={true}>{t('common.yes')}</Option>
+              <Option value={false}>{t('common.no')}</Option>
+            </Select>
           </Form.Item>
-        </Form>
-      </Modal>
+        </Col>
+      </Row>
+    )}
+
+    {userRole === 'moderator' && (
+      <Alert
+        message="ملاحظة للمحررين"
+        description="عند اختيار 'منشور'، سيتم إرسال المحتوى للإدارة للمراجعة والموافقة قبل ظهوره للضيوف."
+        type="info"
+        showIcon
+        style={{ marginBottom: 16 }}
+      />
+    )}
+
+    <Form.Item>
+      <Space>
+        <Button type="primary" htmlType="submit">
+          {userRole === 'moderator' && form.getFieldValue('status') === 'published' 
+            ? 'إرسال للمراجعة' 
+            : userRole === 'moderator' && form.getFieldValue('status') === 'draft'
+            ? 'حفظ كمسودة'
+            : t('admin.contentManagement.publishNow')
+          }
+        </Button>
+        <Button onClick={() => setModalVisible(false)}>
+          {t('common.cancel')}
+        </Button>
+      </Space>
+    </Form.Item>
+  </Form>
+</Modal>
+    <Modal
+      open={previewVisible}
+      onCancel={() => setPreviewVisible(false)}
+      footer={null}
+      width={800}
+      title={previewContent?.title || 'معاينة المحتوى'}
+    >
+      {previewContent ? (
+        <Typography>
+          <Paragraph type="secondary">{previewContent.excerpt}</Paragraph>
+
+          <Divider />
+          <Paragraph>
+            <Text strong>التصنيف: </Text> {previewContent.category}
+          </Paragraph>
+
+          {previewContent.author && (
+            <Paragraph>
+              <Text strong>الكاتب: </Text> {previewContent.author.full_name}
+            </Paragraph>
+          )}
+
+          {previewContent.approved_by && (
+            <Paragraph>
+              <Text strong>تمت الموافقة بواسطة: </Text> {previewContent.approved_by.full_name}
+            </Paragraph>
+          )}
+
+          <Divider />
+          <div
+            dangerouslySetInnerHTML={{ __html: previewContent.content || previewContent.body || '' }}
+            style={{ lineHeight: 1.8, marginTop: 16 }}
+          />
+        </Typography>
+      ) : (
+        <Spin />
+      )}
+    </Modal>
     </div>
   );
 };

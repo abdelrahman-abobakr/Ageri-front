@@ -6,13 +6,15 @@ import {
   PlusOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
+import { ToolOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { USER_ROLES } from '../../constants';
 import { useResearcherStats } from '../../hooks/useResearcherStats';
 import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
 import { contentService } from '../../services';
-
+import { EyeOutlined } from '@ant-design/icons';
+import { ReadOutlined } from '@ant-design/icons';
 const { Title, Paragraph } = Typography;
 
 const DashboardPage = () => {

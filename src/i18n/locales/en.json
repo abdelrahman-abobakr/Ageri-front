@@ -25,7 +25,9 @@
     "previous": "Previous",
     "close": "Close",
     "welcome": "Welcome",
-    "language": "Language"
+    "language": "Language",
+    "yes": "Yes",
+    "no": "No"
   },
   "navigation": {
     "myResearch": "My Research",
@@ -282,7 +284,6 @@
       "draft": "Draft",
       "archived": "Archived",
       "scheduled": "Scheduled",
-      "title": "Title",
       "content": "Content",
       "author": "Author",
       "publishDate": "Publish Date",
@@ -310,7 +311,19 @@
       "publishNow": "Publish Now",
       "saveDraft": "Save Draft",
       "schedule": "Schedule",
-      "preview": "Preview"
+      "preview": "Preview",
+      "general": "General",
+      "activity": "Activity",
+      "workshop": "Workshop",
+      "seminar": "Seminar",
+      "conference": "Conference",
+      "training": "Training",
+      "collaboration": "Collaboration",
+      "achievement": "Achievement",
+      "isPublic": "Is Public?",
+      "isFeatured": "Is Featured?",
+      "type": "Type",
+      "status": "Status"
     },
     "systemSettings": {
       "title": "System Settings",

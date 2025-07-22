@@ -191,7 +191,7 @@ const AppContent = () => {
           <Route
             path="content"
             element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+              <ProtectedRoute requiredPermission="CONTENT_MODERATION">
                 <ContentManagementPage />
               </ProtectedRoute>
             }

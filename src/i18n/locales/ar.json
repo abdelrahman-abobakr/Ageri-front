@@ -25,7 +25,9 @@
     "previous": "السابق",
     "close": "إغلاق",
     "welcome": "مرحباً",
-    "language": "اللغة"
+    "language": "اللغة",
+    "yes": "نعم",
+    "no": "لا"
   },
   "navigation": {
     "myResearch": "أبحاثي",
@@ -282,7 +284,6 @@
       "draft": "مسودة",
       "archived": "مؤرشف",
       "scheduled": "مجدول",
-      "title": "العنوان",
       "content": "المحتوى",
       "author": "المؤلف",
       "publishDate": "تاريخ النشر",
@@ -310,7 +311,19 @@
       "publishNow": "نشر الآن",
       "saveDraft": "حفظ كمسودة",
       "schedule": "جدولة",
-      "preview": "معاينة"
+      "preview": "معاينة",
+      "general": "عام",
+      "activity": "نشاط",
+      "workshop": "ورشة عمل",
+      "seminar": "ندوة",
+      "conference": "مؤتمر",
+      "training": "تدريب",
+      "collaboration": "تعاون",
+      "achievement": "إنجاز",
+      "type": "النوع",
+      "status": "الحالة",
+      "isPublic": "عام؟",
+      "isFeatured": "مميز؟"
     },
     "systemSettings": {
       "title": "إعدادات النظام",
