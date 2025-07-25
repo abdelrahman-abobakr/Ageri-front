@@ -36,6 +36,7 @@ import PostDetailPage from './pages/public/PostDetailPage';
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ProfilePage from './pages/profile/ProfilePage';
+import CreateProfilePage from './pages/profile/CreateProfilePage';
 
 // Admin Pages
 import UserManagementPage from './pages/admin/UserManagementPage';
@@ -130,6 +131,7 @@ const AppContent = () => {
           <Route index element={<Navigate to="dashboard" replace />} />
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="create-profile" element={<CreateProfilePage />} />
           <Route path="research/publications" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationsPage /></ProtectedRoute>} />
           <Route path="research/publications/new" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm /></ProtectedRoute>} />
           <Route path="research/publications/:id" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationDetailPage /></ProtectedRoute>} />

@@ -39,9 +39,13 @@ const researchService = {
 
   createPublication: async (publicationData) => {
     // publicationData should be a FormData object if it includes a file
-    const response = await apiClient.post(API_ENDPOINTS.RESEARCH.PUBLICATIONS, publicationData, {
-      headers: { 'Content-Type': 'multipart/form-data' }, // Essential for file uploads
-    });
+    // ✅ Do NOT manually set Content-Type for FormData - let Axios handle it automatically
+    const config = {};
+    if (publicationData instanceof FormData) {
+      // Axios will automatically set Content-Type: multipart/form-data with proper boundary
+      console.log('📤 ResearchService: Using FormData - Axios will auto-set Content-Type with boundary');
+    }
+    const response = await apiClient.post(API_ENDPOINTS.RESEARCH.PUBLICATIONS, publicationData, config);
     return response.data;
   },
 
@@ -52,17 +56,25 @@ const researchService = {
 
   updatePublication: async (id, publicationData) => {
     // publicationData should be a FormData object if it includes a file
-    const response = await apiClient.put(API_ENDPOINTS.RESEARCH.PUBLICATION_DETAIL(id), publicationData, {
-      headers: { 'Content-Type': 'multipart/form-data' }, // Essential for file uploads
-    });
+    // ✅ Do NOT manually set Content-Type for FormData - let Axios handle it automatically
+    const config = {};
+    if (publicationData instanceof FormData) {
+      // Axios will automatically set Content-Type: multipart/form-data with proper boundary
+      console.log('📤 ResearchService: Using FormData - Axios will auto-set Content-Type with boundary');
+    }
+    const response = await apiClient.put(API_ENDPOINTS.RESEARCH.PUBLICATION_DETAIL(id), publicationData, config);
     return response.data;
   },
 
   partialUpdatePublication: async (id, publicationData) => {
     // publicationData should be a FormData object if it includes a file
-    const response = await apiClient.patch(API_ENDPOINTS.RESEARCH.PUBLICATION_DETAIL(id), publicationData, {
-      headers: { 'Content-Type': 'multipart/form-data' }, // Essential for file uploads
-    });
+    // ✅ Do NOT manually set Content-Type for FormData - let Axios handle it automatically
+    const config = {};
+    if (publicationData instanceof FormData) {
+      // Axios will automatically set Content-Type: multipart/form-data with proper boundary
+      console.log('📤 ResearchService: Using FormData - Axios will auto-set Content-Type with boundary');
+    }
+    const response = await apiClient.patch(API_ENDPOINTS.RESEARCH.PUBLICATION_DETAIL(id), publicationData, config);
     return response.data;
   },
 

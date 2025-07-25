@@ -84,6 +84,8 @@ const MainLayout = () => {
         setNotifications(response.results || []);
       } catch (error) {
         console.error('Failed to load notifications:', error);
+        // Set empty notifications array on error to prevent UI issues
+        setNotifications([]);
       } finally {
         setNotificationLoading(false);
       }
@@ -102,11 +104,16 @@ const MainLayout = () => {
   const handleNotificationClick = async (notification) => {
     try {
       await notificationService.markAsRead(notification.id);
+      // Update local state to mark as read
       setNotifications(prev =>
         prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
       );
     } catch (error) {
       console.error('Failed to mark notification as read:', error);
+      // Still update local state even if API call fails (for better UX)
+      setNotifications(prev =>
+        prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+      );
     }
   };
 
@@ -360,7 +367,7 @@ const MainLayout = () => {
 
             {/* Notification Bell */}
             <Dropdown
-              dropdownRender={() => notificationDropdown}
+              popupRender={() => notificationDropdown}
               placement="bottomRight"
               arrow
               trigger={['click']}
