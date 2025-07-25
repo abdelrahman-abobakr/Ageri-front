@@ -220,6 +220,8 @@ export const API_ENDPOINTS = {
   TRAINING: {
     COURSES: '/training/courses/',
     COURSE_DETAIL: (id) => `/training/courses/${id}/`,
+    FEATURED_COURSES: '/training/courses/featured/',
+    UPCOMING_COURSES: '/training/courses/upcoming/',
     ENROLL: (id) => `/training/courses/${id}/enroll/`,
     UNENROLL: (id) => `/training/courses/${id}/unenroll/`,
     COURSE_ENROLLMENTS: (id) => `/training/courses/${id}/enrollments/`,

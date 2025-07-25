@@ -2,7 +2,7 @@
 export { authService } from './authService';
 export { researchService } from './researchService';
 export { organizationService } from './organizationService';
-export { trainingService } from './trainingService';
+export { trainingService, CourseService } from './trainingService';
 export { servicesService } from './servicesService';
 export { contentService } from './contentService';
 export { searchService } from './searchService';

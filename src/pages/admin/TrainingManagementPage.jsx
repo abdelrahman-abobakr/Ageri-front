@@ -41,16 +41,16 @@ import {
   BookOutlined
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import { trainingService } from '../../services';
+import { trainingService, CourseService } from '../../services';
 import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
 import RealTimeIndicator from '../../components/admin/RealTimeIndicator';
+import CourseForm from '../../components/forms/CourseForm';
 import moment from 'moment';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
 const { TextArea } = Input;
-const { confirm } = Modal;
 const { TabPane } = Tabs;
 const { RangePicker } = DatePicker;
 
@@ -68,6 +68,8 @@ const TrainingManagementPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [form] = Form.useForm();
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState([]);
   const pageSize = 10;
 
   // Real-time training statistics
@@ -106,45 +108,51 @@ const TrainingManagementPage = () => {
         params.status = statusFilter;
       }
 
-      const response = await trainingService.getCourses(params);
+      console.log('📚 Loading courses with params:', params);
+      const response = await CourseService.getCourses(params);
       setCourses(response.results || []);
       setTotal(response.count || 0);
+      console.log('✅ Courses loaded:', response.results?.length || 0);
     } catch (error) {
-      console.error('Failed to load courses:', error);
+      console.error('❌ Failed to load courses:', error);
       message.error('فشل في تحميل الدورات');
-      // Fallback to mock data
+      // Fallback to mock data with guide field structure
       setCourses([
         {
           id: 1,
-          title: 'أساسيات الزراعة المستدامة',
+          course_name: 'أساسيات الزراعة المستدامة',
+          course_code: 'AGR101',
           description: 'دورة شاملة حول مبادئ وتقنيات الزراعة المستدامة',
-          category: 'agriculture',
-          level: 'beginner',
-          duration: 40,
-          price: 500.00,
+          type: 'course',
+          training_hours: 40,
+          cost: 500.00,
           instructor: 'د. أحمد محمد',
-          status: 'active',
-          enrollment_count: 25,
-          max_enrollment: 30,
+          status: 'published',
+          current_enrollment: 25,
+          max_participants: 30,
           start_date: '2024-02-01',
           end_date: '2024-02-28',
-          created_at: '2024-01-10T10:00:00Z'
+          registration_deadline: '2024-01-25',
+          is_featured: true,
+          is_public: true
         },
         {
           id: 2,
-          title: 'تقنيات الري الحديثة',
+          course_name: 'تقنيات الري الحديثة',
+          course_code: 'IRR201',
           description: 'تعلم أحدث تقنيات الري وإدارة المياه في الزراعة',
-          category: 'irrigation',
-          level: 'intermediate',
-          duration: 30,
-          price: 400.00,
+          type: 'workshop',
+          training_hours: 30,
+          cost: 400.00,
           instructor: 'د. فاطمة علي',
-          status: 'upcoming',
-          enrollment_count: 15,
-          max_enrollment: 25,
+          status: 'draft',
+          current_enrollment: 15,
+          max_participants: 25,
           start_date: '2024-03-01',
           end_date: '2024-03-20',
-          created_at: '2024-01-08T14:30:00Z'
+          registration_deadline: '2024-02-25',
+          is_featured: false,
+          is_public: true
         }
       ]);
       setTotal(2);
@@ -265,60 +273,106 @@ const TrainingManagementPage = () => {
 
   const handleEditCourse = (course) => {
     setEditingItem(course);
-    form.setFieldsValue({
-      title: course.title,
-      description: course.description,
-      category: course.category,
-      level: course.level,
-      duration: course.duration,
-      price: course.price,
-      instructor: course.instructor,
-      max_enrollment: course.max_enrollment,
-      start_date: course.start_date ? moment(course.start_date) : null,
-      end_date: course.end_date ? moment(course.end_date) : null,
-    });
     setModalVisible(true);
   };
 
   const handleDeleteCourse = async (course) => {
-    confirm({
-      title: 'تأكيد الحذف',
-      content: 'هل أنت متأكد من حذف هذه الدورة؟',
-      icon: <ExclamationCircleOutlined />,
-      onOk: async () => {
-        try {
-          await trainingService.deleteCourse(course.id);
-          message.success('تم حذف الدورة بنجاح');
-          loadCourses();
-          refreshStats();
-        } catch (error) {
-          message.error('فشل في حذف الدورة');
+    console.log('🗑️ Delete clicked for course:', course);
+
+    // Direct DELETE request - no modal
+    try {
+      console.log(`🔄 Sending DELETE to: http://localhost:8000/api/training/courses/${course.id}/`);
+
+      const response = await fetch(`http://localhost:8000/api/training/courses/${course.id}/`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+          'Content-Type': 'application/json',
         }
-      },
-    });
+      });
+
+      console.log('📡 API Response Status:', response.status);
+      console.log('📡 API Response:', response);
+
+      // Try to get response text
+      let responseText = '';
+      try {
+        responseText = await response.text();
+        console.log('📡 Response Text:', responseText);
+      } catch (e) {
+        console.log('📡 No response text');
+      }
+
+      // Show API response to user
+      if (response.ok) {
+        message.success(`✅ تم حذف الدورة بنجاح - Status: ${response.status}`);
+        loadCourses(); // Refresh list
+        refreshStats();
+      } else {
+        message.error(`❌ فشل الحذف - Status: ${response.status} - Response: ${responseText}`);
+      }
+
+    } catch (error) {
+      console.error('❌ Network Error:', error);
+      message.error(`❌ خطأ في الشبكة: ${error.message}`);
+    }
   };
 
-  const handleSaveCourse = async (values) => {
-    try {
-      const courseData = {
-        ...values,
-        start_date: values.start_date ? values.start_date.format('YYYY-MM-DD') : null,
-        end_date: values.end_date ? values.end_date.format('YYYY-MM-DD') : null,
-      };
+  const handleCourseSuccess = (course) => {
+    setModalVisible(false);
+    setEditingItem(null);
+    loadCourses();
+    refreshStats();
+  };
 
-      if (editingItem) {
-        await trainingService.updateCourse(editingItem.id, courseData);
-        message.success('تم تحديث الدورة بنجاح');
-      } else {
-        await trainingService.createCourse(courseData);
-        message.success('تم إنشاء الدورة بنجاح');
-      }
-      setModalVisible(false);
-      loadCourses();
-      refreshStats();
-    } catch (error) {
-      message.error('فشل في حفظ الدورة');
+  const handleCourseCancel = () => {
+    setModalVisible(false);
+    setEditingItem(null);
+  };
+
+  // Handle bulk delete
+  const handleBulkDelete = () => {
+    if (selectedCourses.length === 0) {
+      message.warning('يرجى اختيار دورة واحدة على الأقل للحذف');
+      return;
     }
+
+    Modal.confirm({
+      title: 'تأكيد حذف الدورات',
+      content: `هل أنت متأكد من حذف ${selectedCourses.length} دورة؟`,
+      okText: 'نعم، احذف الكل',
+      cancelText: 'إلغاء',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          // Delete each course
+          for (const course of selectedCourses) {
+            const response = await fetch(`http://localhost:8000/api/training/courses/${course.id}/`, {
+              method: 'DELETE',
+              headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+                'Content-Type': 'application/json',
+              }
+            });
+
+            if (!response.ok) {
+              throw new Error(`Failed to delete course ${course.course_name}`);
+            }
+          }
+
+          // Success
+          message.success(`تم حذف ${selectedCourses.length} دورة بنجاح`);
+          setSelectedRowKeys([]);
+          setSelectedCourses([]);
+          loadCourses();
+          refreshStats();
+
+        } catch (error) {
+          console.error('Bulk delete error:', error);
+          message.error('فشل في حذف بعض الدورات');
+        }
+      }
+    });
   };
 
   const getStatusTag = (status) => {
@@ -468,65 +522,152 @@ const TrainingManagementPage = () => {
                   </Select>
                 </Col>
                 <Col xs={24} sm={12} md={8} style={{ textAlign: 'right' }}>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleCreateCourse}
-                  >
-                    إضافة دورة جديدة
-                  </Button>
+                  <Space>
+                    <Button
+                      type="primary"
+                      icon={<PlusOutlined />}
+                      onClick={handleCreateCourse}
+                    >
+                      إضافة دورة جديدة
+                    </Button>
+
+                    {/* Simple Test Delete Button */}
+                    {courses.length > 0 && (
+                      <Button
+                        danger
+                        onClick={() => handleDeleteCourse(courses[0])}
+                        style={{ marginLeft: '8px' }}
+                      >
+                        حذف أول دورة (اختبار)
+                      </Button>
+                    )}
+
+
+                    {selectedRowKeys.length > 0 && (
+                      <>
+                        <Button
+                          danger
+                          onClick={handleBulkDelete}
+                          icon={<DeleteOutlined />}
+                        >
+                          حذف المحدد ({selectedRowKeys.length})
+                        </Button>
+                        <Button
+                          onClick={() => {
+                            setSelectedRowKeys([]);
+                            setSelectedCourses([]);
+                          }}
+                        >
+                          إلغاء التحديد
+                        </Button>
+                      </>
+                    )}
+                  </Space>
                 </Col>
               </Row>
             </div>
 
+            {/* Selection Summary */}
+            {selectedRowKeys.length > 0 && (
+              <div style={{
+                marginBottom: '16px',
+                padding: '12px',
+                background: '#e6f7ff',
+                border: '1px solid #91d5ff',
+                borderRadius: '6px'
+              }}>
+                <Text>
+                  تم تحديد <strong>{selectedRowKeys.length}</strong> دورة من أصل <strong>{courses.length}</strong>
+                </Text>
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => {
+                    setSelectedRowKeys([]);
+                    setSelectedCourses([]);
+                  }}
+                  style={{ marginLeft: '8px' }}
+                >
+                  إلغاء التحديد
+                </Button>
+              </div>
+            )}
+
             {/* Courses Table */}
             <Spin spinning={loading}>
               <Table
+                rowSelection={{
+                  selectedRowKeys,
+                  onChange: (selectedKeys, selectedRows) => {
+                    setSelectedRowKeys(selectedKeys);
+                    setSelectedCourses(selectedRows);
+                  },
+                  getCheckboxProps: (record) => ({
+                    disabled: false,
+                    name: record.course_name,
+                  }),
+                }}
                 columns={[
                   {
                     title: 'عنوان الدورة',
-                    dataIndex: 'title',
-                    key: 'title',
+                    dataIndex: 'course_name',
+                    key: 'course_name',
                     ellipsis: true,
                     render: (text, record) => (
                       <div>
                         <div style={{ fontWeight: 500, marginBottom: '4px' }}>{text}</div>
                         <Text type="secondary" style={{ fontSize: '12px' }}>
-                          المدرب: {record.instructor}
+                          كود: {record.course_code} | المدرب: {record.instructor}
                         </Text>
                       </div>
                     ),
                   },
                   {
-                    title: 'المستوى',
-                    dataIndex: 'level',
-                    key: 'level',
-                    render: (level) => getLevelTag(level),
+                    title: 'نوع الدورة',
+                    dataIndex: 'type',
+                    key: 'type',
+                    render: (type) => {
+                      const typeConfig = {
+                        course: { color: 'blue', text: 'دورة' },
+                        workshop: { color: 'green', text: 'ورشة عمل' },
+                        seminar: { color: 'purple', text: 'ندوة' },
+                        summer_training: { color: 'orange', text: 'تدريب صيفي' },
+                      };
+                      const config = typeConfig[type] || { color: 'default', text: type };
+                      return <Tag color={config.color}>{config.text}</Tag>;
+                    },
                   },
                   {
-                    title: 'المدة',
-                    dataIndex: 'duration',
-                    key: 'duration',
-                    render: (duration) => formatDuration(duration),
+                    title: 'ساعات التدريب',
+                    dataIndex: 'training_hours',
+                    key: 'training_hours',
+                    render: (hours) => `${hours} ساعة`,
                   },
                   {
-                    title: 'السعر',
-                    dataIndex: 'price',
-                    key: 'price',
-                    render: (price) => `${price} جنيه`,
+                    title: 'التكلفة',
+                    dataIndex: 'cost',
+                    key: 'cost',
+                    render: (cost, record) => (
+                      <div>
+                        <span>{cost} جنيه</span>
+                        {record.is_featured && (
+                          <Tag color="gold" style={{ marginLeft: '4px' }}>مميز</Tag>
+                        )}
+                      </div>
+                    ),
                   },
                   {
-                    title: 'التسجيلات',
-                    key: 'enrollments',
+                    title: 'المشاركون',
+                    key: 'participants',
                     render: (_, record) => (
                       <div>
                         <Progress
-                          percent={Math.round((record.enrollment_count / record.max_enrollment) * 100)}
+                          percent={Math.round((record.current_enrollment / record.max_participants) * 100)}
                           size="small"
                           showInfo={false}
                         />
                         <Text style={{ fontSize: '12px' }}>
-                          {record.enrollment_count}/{record.max_enrollment}
+                          {record.current_enrollment || 0}/{record.max_participants}
                         </Text>
                       </div>
                     ),
@@ -561,7 +702,11 @@ const TrainingManagementPage = () => {
                             danger
                             size="small"
                             icon={<DeleteOutlined />}
-                            onClick={() => handleDeleteCourse(record)}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              console.log('🗑️ Table delete button clicked for:', record);
+                              handleDeleteCourse(record);
+                            }}
                           />
                         </Tooltip>
                       </Space>
@@ -741,133 +886,16 @@ const TrainingManagementPage = () => {
       <Modal
         title={editingItem ? 'تعديل الدورة' : 'إضافة دورة جديدة'}
         open={modalVisible}
-        onCancel={() => setModalVisible(false)}
+        onCancel={handleCourseCancel}
         footer={null}
-        width={800}
+        width={1000}
         destroyOnClose
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSaveCourse}
-        >
-          <Form.Item
-            name="title"
-            label="عنوان الدورة"
-            rules={[{ required: true, message: 'عنوان الدورة مطلوب' }]}
-          >
-            <Input placeholder="أدخل عنوان الدورة" />
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label="وصف الدورة"
-            rules={[{ required: true, message: 'وصف الدورة مطلوب' }]}
-          >
-            <TextArea rows={3} placeholder="أدخل وصف تفصيلي للدورة" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="category"
-                label="فئة الدورة"
-                rules={[{ required: true, message: 'فئة الدورة مطلوبة' }]}
-              >
-                <Select placeholder="اختر فئة الدورة">
-                  <Option value="agriculture">الزراعة</Option>
-                  <Option value="irrigation">الري</Option>
-                  <Option value="soil_science">علوم التربة</Option>
-                  <Option value="plant_protection">وقاية النبات</Option>
-                  <Option value="technology">التكنولوجيا الزراعية</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="level"
-                label="مستوى الدورة"
-                rules={[{ required: true, message: 'مستوى الدورة مطلوب' }]}
-              >
-                <Select placeholder="اختر مستوى الدورة">
-                  <Option value="beginner">مبتدئ</Option>
-                  <Option value="intermediate">متوسط</Option>
-                  <Option value="advanced">متقدم</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} md={8}>
-              <Form.Item
-                name="duration"
-                label="المدة (ساعات)"
-                rules={[{ required: true, message: 'المدة مطلوبة' }]}
-              >
-                <Input type="number" placeholder="40" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item
-                name="price"
-                label="السعر (جنيه)"
-                rules={[{ required: true, message: 'السعر مطلوب' }]}
-              >
-                <Input type="number" placeholder="500.00" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={8}>
-              <Form.Item
-                name="max_enrollment"
-                label="الحد الأقصى للتسجيل"
-                rules={[{ required: true, message: 'الحد الأقصى مطلوب' }]}
-              >
-                <Input type="number" placeholder="30" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item
-            name="instructor"
-            label="المدرب"
-            rules={[{ required: true, message: 'اسم المدرب مطلوب' }]}
-          >
-            <Input placeholder="أدخل اسم المدرب" />
-          </Form.Item>
-
-          <Row gutter={16}>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="start_date"
-                label="تاريخ البداية"
-                rules={[{ required: true, message: 'تاريخ البداية مطلوب' }]}
-              >
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="end_date"
-                label="تاريخ النهاية"
-                rules={[{ required: true, message: 'تاريخ النهاية مطلوب' }]}
-              >
-                <DatePicker style={{ width: '100%' }} />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                {editingItem ? 'تحديث' : 'إنشاء'}
-              </Button>
-              <Button onClick={() => setModalVisible(false)}>
-                إلغاء
-              </Button>
-            </Space>
-          </Form.Item>
-        </Form>
+        <CourseForm
+          courseId={editingItem?.id}
+          onSuccess={handleCourseSuccess}
+          onCancel={handleCourseCancel}
+        />
       </Modal>
     </div>
   );

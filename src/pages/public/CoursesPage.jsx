@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
+import { Button, Card, Row, Col, Tag, Typography, Input, Select, Spin, message } from 'antd';
+import { SearchOutlined, BookOutlined, ClockCircleOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
+import { trainingService } from '../../services';
+
+const { Title, Text, Paragraph } = Typography;
+const { Search } = Input;
+const { Option } = Select;
 
 const PAGE_SIZE = 10;
 
@@ -9,187 +15,267 @@ const CoursesPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [page, setPage] = useState(1);
-  const [next, setNext] = useState(null);
-  const [previous, setPrevious] = useState(null);
+  const [filters, setFilters] = useState({
+    search: '',
+    type: '',
+    status: 'published'
+  });
 
-  const fetchCourses = async (pageNum = 1) => {
+  const fetchCourses = async (pageNum = 1, currentFilters = filters) => {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get(
-        `http://localhost:8000/api/training/api/courses/?page=${pageNum}`
-      );
-      setCourses(res.data.results || []);
-      setCount(res.data.count || 0);
-      setNext(res.data.next);
-      setPrevious(res.data.previous);
+      console.log('🔄 Fetching courses with filters:', { page: pageNum, ...currentFilters });
+
+      const params = {
+        page: pageNum,
+        page_size: PAGE_SIZE,
+        ...currentFilters
+      };
+
+      const response = await trainingService.getCourses(params);
+      setCourses(response.results || []);
+      setCount(response.count || 0);
+
+      console.log('✅ Courses loaded:', response.results?.length || 0);
     } catch (err) {
+      console.error('❌ Failed to load courses:', err);
       setError(
         err.response?.data?.message ||
           err.response?.data?.detail ||
           "Failed to load courses."
       );
+      message.error('فشل في تحميل الدورات');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCourses(page);
+    fetchCourses(page, filters);
     // eslint-disable-next-line
   }, [page]);
 
+  const handleFilterChange = (key, value) => {
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    setPage(1);
+    fetchCourses(1, newFilters);
+  };
+
+  const handleSearch = (value) => {
+    handleFilterChange('search', value);
+  };
+
   const handleNext = () => {
-    if (next) setPage((p) => p + 1);
+    if (count > page * PAGE_SIZE) {
+      setPage((p) => p + 1);
+    }
   };
+
   const handlePrev = () => {
-    if (previous && page > 1) setPage((p) => p - 1);
+    if (page > 1) {
+      setPage((p) => p - 1);
+    }
   };
+
+  const getTrainingTypeTag = (type) => {
+    const typeConfig = {
+      course: { color: 'blue', text: 'دورة' },
+      workshop: { color: 'green', text: 'ورشة عمل' },
+      seminar: { color: 'purple', text: 'ندوة' },
+      summer_training: { color: 'orange', text: 'تدريب صيفي' },
+    };
+    const config = typeConfig[type] || { color: 'default', text: type };
+    return <Tag color={config.color}>{config.text}</Tag>;
+  };
+
+
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem" }}>
-      <h1 style={{ textAlign: "center", marginBottom: 32 }}>Courses</h1>
-      {loading && <div style={{ textAlign: "center" }}>Loading...</div>}
-      {error && (
-        <div
-          style={{ color: "#e53e3e", textAlign: "center", marginBottom: 16 }}
-        >
-          {error}
+      {/* Page Header */}
+      <div style={{ textAlign: "center", marginBottom: "2rem" }}>
+        <Title level={1}>
+          <BookOutlined style={{ marginRight: "8px" }} />
+          الدورات التدريبية
+        </Title>
+        <Paragraph type="secondary">
+          اكتشف مجموعة متنوعة من الدورات التدريبية المتخصصة في المجال الزراعي
+        </Paragraph>
+      </div>
+
+      {/* Filters Section */}
+      <Card style={{ marginBottom: "2rem" }}>
+        <Row gutter={[16, 16]} align="middle">
+          <Col xs={24} sm={12} md={8}>
+            <Search
+              placeholder="البحث في الدورات..."
+              allowClear
+              enterButton={<SearchOutlined />}
+              value={filters.search}
+              onChange={(e) => setFilters({ ...filters, search: e.target.value })}
+              onSearch={handleSearch}
+            />
+          </Col>
+          <Col xs={24} sm={6} md={4}>
+            <Select
+              placeholder="نوع الدورة"
+              allowClear
+              style={{ width: '100%' }}
+              value={filters.type}
+              onChange={(value) => handleFilterChange('type', value)}
+            >
+              <Option value="course">دورة</Option>
+              <Option value="workshop">ورشة عمل</Option>
+              <Option value="seminar">ندوة</Option>
+              <Option value="summer_training">تدريب صيفي</Option>
+            </Select>
+          </Col>
+        </Row>
+      </Card>
+
+      {/* Loading and Error States */}
+      {loading && (
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <Spin size="large" />
+          <div style={{ marginTop: "1rem" }}>جاري تحميل الدورات...</div>
         </div>
       )}
-      {!loading && !error && courses.length === 0 && (
-        <div style={{ textAlign: "center" }}>No courses found.</div>
+
+      {error && (
+        <Card style={{ textAlign: "center", marginBottom: "2rem" }}>
+          <Text type="danger">{error}</Text>
+        </Card>
       )}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))",
-          gap: 24,
-        }}
-      >
-        {courses.map((course) => (
-          <div
-            key={course.id}
-            style={{
-              border: "1px solid #eee",
-              borderRadius: 12,
-              background: "#fff",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-              padding: 24,
-              display: "flex",
-              flexDirection: "column",
-              minHeight: 260,
-              position: "relative",
-            }}
-          >
-            {course.featured_image && (
-              <img
-                src={course.featured_image}
-                alt={course.title}
-                style={{
-                  width: "100%",
-                  height: 160,
-                  objectFit: "cover",
-                  borderRadius: 8,
-                  marginBottom: 16,
-                }}
-                onError={(e) => (e.target.style.display = "none")}
-              />
-            )}
-            <h2 style={{ fontSize: 22, margin: "0 0 8px 0", color: "#2c3e50" }}>
-              {course.title}
-            </h2>
-            <div style={{ color: "#888", fontSize: 14, marginBottom: 8 }}>
-              {course.course_code} | {course.training_type}
-            </div>
-            <div style={{ fontWeight: 500, marginBottom: 8 }}>
-              {course.short_description}
-            </div>
-            <div style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>
-              Instructor: <b>{course.instructor_name || "-"}</b> | Department:{" "}
-              <b>{course.department_name || "-"}</b>
-            </div>
-            <div style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>
-              Start: {course.start_date} | End: {course.end_date}
-            </div>
-            <div style={{ fontSize: 14, color: "#666", marginBottom: 8 }}>
-              Credits: {course.credits} | Duration: {course.duration_hours}h
-            </div>
-            <div
-              style={{
-                fontSize: 14,
-                color: course.is_free ? "#38a169" : "#e53e3e",
-                marginBottom: 8,
-              }}
-            >
-              {course.is_free ? "Free" : `Price: ${course.price}`}
-            </div>
-            <div style={{ fontSize: 13, color: "#888" }}>
-              Status: {course.status} | Enrollment: {course.current_enrollment}{" "}
-              / {course.max_participants}
-            </div>
-            {course.is_featured && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: 12,
-                  right: 12,
-                  background: "#4299e1",
-                  color: "#fff",
-                  borderRadius: 6,
-                  padding: "2px 10px",
-                  fontSize: 13,
-                  fontWeight: 600,
-                  letterSpacing: 1,
-                }}
+
+      {!loading && !error && courses.length === 0 && (
+        <Card style={{ textAlign: "center" }}>
+          <Text type="secondary">لا توجد دورات متاحة حالياً</Text>
+        </Card>
+      )}
+      {/* Courses Grid */}
+      {!loading && !error && courses.length > 0 && (
+        <Row gutter={[24, 24]}>
+          {courses.map((course) => (
+            <Col xs={24} sm={12} lg={8} key={course.id}>
+              <Card
+                hoverable
+                style={{ height: '100%' }}
+                cover={
+                  course.featured_image && (
+                    <img
+                      alt={course.title}
+                      src={course.featured_image}
+                      style={{ height: 200, objectFit: 'cover' }}
+                      onError={(e) => (e.target.style.display = "none")}
+                    />
+                  )
+                }
+                actions={[
+                  <Button type="primary" size="small">
+                    عرض التفاصيل
+                  </Button>,
+                  <Button size="small">
+                    التسجيل
+                  </Button>
+                ]}
               >
-                Featured
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
+                <Card.Meta
+                  title={
+                    <div>
+                      <div style={{ marginBottom: '8px' }}>
+                        {course.course_name}
+                        {course.is_featured && (
+                          <Tag color="gold" style={{ marginLeft: '8px' }}>
+                            مميز
+                          </Tag>
+                        )}
+                      </div>
+                      <div style={{ fontSize: '12px', fontWeight: 'normal', color: '#666' }}>
+                        كود: {course.course_code}
+                      </div>
+                    </div>
+                  }
+                  description={
+                    <div>
+                      <Paragraph ellipsis={{ rows: 2 }} style={{ marginBottom: '12px' }}>
+                        {course.description}
+                      </Paragraph>
+
+                      <div style={{ marginBottom: '8px' }}>
+                        {getTrainingTypeTag(course.type)}
+                      </div>
+
+                      <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                        <UserOutlined style={{ marginRight: '4px' }} />
+                        المدرب: {course.instructor || 'غير محدد'}
+                      </div>
+
+                      <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                        <ClockCircleOutlined style={{ marginRight: '4px' }} />
+                        {course.training_hours} ساعة تدريبية
+                      </div>
+
+                      <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                        <CalendarOutlined style={{ marginRight: '4px' }} />
+                        من {course.start_date} إلى {course.end_date}
+                      </div>
+
+                      <div style={{
+                        fontSize: '14px',
+                        fontWeight: 'bold',
+                        color: course.cost === 0 ? '#52c41a' : '#1890ff',
+                        marginBottom: '8px'
+                      }}>
+                        {course.cost === 0 ? 'مجاني' : `${course.cost} جنيه`}
+                      </div>
+
+                      <div style={{ fontSize: '12px', color: '#999' }}>
+                        المشاركون: {course.current_enrollment || 0} / {course.max_participants}
+                      </div>
+                    </div>
+                  }
+                />
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      )}
       {/* Pagination */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          marginTop: 32,
-          gap: 16,
-        }}
-      >
-        <button
-          onClick={handlePrev}
-          disabled={!previous || page === 1 || loading}
-          style={{
-            padding: "8px 18px",
-            borderRadius: 6,
-            border: "1px solid #eee",
-            background: previous && page > 1 ? "#f7fafc" : "#e2e8f0",
-            color: "#2c3e50",
-            cursor: previous && page > 1 ? "pointer" : "not-allowed",
-          }}
-        >
-          Previous
-        </button>
-        <span style={{ alignSelf: "center", fontWeight: 500 }}>
-          Page {page} / {Math.ceil(count / PAGE_SIZE) || 1}
-        </span>
-        <button
-          onClick={handleNext}
-          disabled={!next || loading}
-          style={{
-            padding: "8px 18px",
-            borderRadius: 6,
-            border: "1px solid #eee",
-            background: next ? "#f7fafc" : "#e2e8f0",
-            color: "#2c3e50",
-            cursor: next ? "pointer" : "not-allowed",
-          }}
-        >
-          Next
-        </button>
-      </div>
+      {!loading && !error && courses.length > 0 && (
+        <div style={{ textAlign: 'center', marginTop: '2rem' }}>
+          <Row justify="center" align="middle" gutter={16}>
+            <Col>
+              <Button
+                onClick={handlePrev}
+                disabled={page === 1 || loading}
+                type={page > 1 ? "default" : "default"}
+              >
+                السابق
+              </Button>
+            </Col>
+            <Col>
+              <Text strong>
+                صفحة {page} من {Math.ceil(count / PAGE_SIZE) || 1}
+              </Text>
+              <br />
+              <Text type="secondary" style={{ fontSize: '12px' }}>
+                إجمالي {count} دورة
+              </Text>
+            </Col>
+            <Col>
+              <Button
+                onClick={handleNext}
+                disabled={count <= page * PAGE_SIZE || loading}
+                type={count > page * PAGE_SIZE ? "default" : "default"}
+              >
+                التالي
+              </Button>
+            </Col>
+          </Row>
+        </div>
+      )}
     </div>
   );
 };
