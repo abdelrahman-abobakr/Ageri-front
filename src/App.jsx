@@ -33,6 +33,7 @@ import LabDetailPage from './pages/public/LabDetailPage';
 import AnnouncementDetailPage from './pages/public/AnnouncementDetailPage';
 import AnnouncementsPage from './pages/public/AnnouncementsPage';
 import PostDetailPage from './pages/public/PostDetailPage';
+import EnrollmentLookupPage from './pages/public/EnrollmentLookupPage';
 
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -114,6 +115,7 @@ const AppContent = () => {
           <Route path="/researchers/:id" element={<ResearcherProfilePage />} />
           <Route path="/labs/:id" element={<LabDetailPage />} />
           <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
+          <Route path="/enrollment/lookup" element={<EnrollmentLookupPage />} />
           <Route path="/test" element={<TestPage />} />
           <Route path="/test/courses" element={<CourseTestPage />} />
           <Route path="/posts/:id" element={<PostDetailPage />} />

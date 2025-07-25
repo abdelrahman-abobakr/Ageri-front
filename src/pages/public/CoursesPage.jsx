@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Button, Card, Row, Col, Tag, Typography, Input, Select, Spin, message } from 'antd';
-import { SearchOutlined, BookOutlined, ClockCircleOutlined, UserOutlined, CalendarOutlined } from '@ant-design/icons';
+import { Button, Card, Row, Col, Tag, Typography, Input, Select, Spin, message, Modal } from 'antd';
+import { SearchOutlined, BookOutlined, ClockCircleOutlined, UserOutlined, CalendarOutlined, FormOutlined } from '@ant-design/icons';
 import { trainingService } from '../../services';
+import GuestEnrollmentForm from '../../components/enrollment/GuestEnrollmentForm';
+import EnrollmentSuccess from '../../components/enrollment/EnrollmentSuccess';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -20,6 +22,12 @@ const CoursesPage = () => {
     type: '',
     status: 'published'
   });
+
+  // Enrollment modal states
+  const [enrollmentModalVisible, setEnrollmentModalVisible] = useState(false);
+  const [successModalVisible, setSuccessModalVisible] = useState(false);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [enrollmentResult, setEnrollmentResult] = useState(null);
 
   const fetchCourses = async (pageNum = 1, currentFilters = filters) => {
     setLoading(true);
@@ -90,7 +98,46 @@ const CoursesPage = () => {
     return <Tag color={config.color}>{config.text}</Tag>;
   };
 
+  // Enrollment handlers
+  const handleEnrollClick = (course) => {
+    // Check if enrollment is still open
+    const registrationDeadline = new Date(course.registration_deadline);
+    const now = new Date();
 
+    if (registrationDeadline < now) {
+      message.error('انتهت فترة التسجيل لهذه الدورة');
+      return;
+    }
+
+    // Check if course is full
+    if (course.current_enrollment >= course.max_participants) {
+      message.error('الدورة مكتملة العدد');
+      return;
+    }
+
+    setSelectedCourse(course);
+    setEnrollmentModalVisible(true);
+  };
+
+  const handleEnrollmentSuccess = (result) => {
+    setEnrollmentResult(result);
+    setEnrollmentModalVisible(false);
+    setSuccessModalVisible(true);
+
+    // Refresh courses to update enrollment count
+    fetchCourses(page);
+  };
+
+  const handleEnrollmentCancel = () => {
+    setEnrollmentModalVisible(false);
+    setSelectedCourse(null);
+  };
+
+  const handleSuccessClose = () => {
+    setSuccessModalVisible(false);
+    setEnrollmentResult(null);
+    setSelectedCourse(null);
+  };
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "2rem" }}>
@@ -176,8 +223,21 @@ const CoursesPage = () => {
                   <Button type="primary" size="small">
                     عرض التفاصيل
                   </Button>,
-                  <Button size="small">
-                    التسجيل
+                  <Button
+                    size="small"
+                    icon={<FormOutlined />}
+                    onClick={() => handleEnrollClick(course)}
+                    disabled={
+                      course.current_enrollment >= course.max_participants ||
+                      new Date(course.registration_deadline) < new Date()
+                    }
+                  >
+                    {course.current_enrollment >= course.max_participants
+                      ? 'مكتملة العدد'
+                      : new Date(course.registration_deadline) < new Date()
+                      ? 'انتهت فترة التسجيل'
+                      : 'التسجيل'
+                    }
                   </Button>
                 ]}
               >
@@ -276,6 +336,42 @@ const CoursesPage = () => {
           </Row>
         </div>
       )}
+
+      {/* Enrollment Modal */}
+      <Modal
+        title="التسجيل في الدورة"
+        open={enrollmentModalVisible}
+        onCancel={handleEnrollmentCancel}
+        footer={null}
+        width={800}
+        destroyOnClose
+      >
+        {selectedCourse && (
+          <GuestEnrollmentForm
+            course={selectedCourse}
+            onSuccess={handleEnrollmentSuccess}
+            onCancel={handleEnrollmentCancel}
+          />
+        )}
+      </Modal>
+
+      {/* Success Modal */}
+      <Modal
+        title="تم التسجيل بنجاح!"
+        open={successModalVisible}
+        onCancel={handleSuccessClose}
+        footer={null}
+        width={1000}
+        destroyOnClose
+      >
+        {enrollmentResult && selectedCourse && (
+          <EnrollmentSuccess
+            enrollment={enrollmentResult.enrollment}
+            course={selectedCourse}
+            onBackToCourses={handleSuccessClose}
+          />
+        )}
+      </Modal>
     </div>
   );
 };

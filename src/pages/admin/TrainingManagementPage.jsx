@@ -45,6 +45,7 @@ import { trainingService, CourseService } from '../../services';
 import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
 import RealTimeIndicator from '../../components/admin/RealTimeIndicator';
 import CourseForm from '../../components/forms/CourseForm';
+import EnrollmentManagement from '../../components/admin/EnrollmentManagement';
 import moment from 'moment';
 
 const { Title, Text } = Typography;
@@ -809,75 +810,8 @@ const TrainingManagementPage = () => {
             </Spin>
           </TabPane>
 
-          <TabPane tab="التسجيلات" key="enrollments">
-            {/* Enrollments Table */}
-            <Spin spinning={loading}>
-              <Table
-                columns={[
-                  {
-                    title: 'الدورة',
-                    dataIndex: 'course_title',
-                    key: 'course_title',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'الطالب',
-                    dataIndex: 'student_name',
-                    key: 'student_name',
-                    render: (name, record) => (
-                      <div>
-                        <div style={{ fontWeight: 500 }}>{name}</div>
-                        <Text type="secondary" style={{ fontSize: '12px' }}>
-                          {record.student_email}
-                        </Text>
-                      </div>
-                    ),
-                  },
-                  {
-                    title: 'تاريخ التسجيل',
-                    dataIndex: 'enrollment_date',
-                    key: 'enrollment_date',
-                    render: (date) => formatDate(date),
-                  },
-                  {
-                    title: 'التقدم',
-                    dataIndex: 'progress',
-                    key: 'progress',
-                    render: (progress) => (
-                      <Progress percent={progress} size="small" />
-                    ),
-                  },
-                  {
-                    title: 'الحالة',
-                    dataIndex: 'status',
-                    key: 'status',
-                    render: (status) => getStatusTag(status),
-                  },
-                  {
-                    title: 'تاريخ الإكمال',
-                    dataIndex: 'completion_date',
-                    key: 'completion_date',
-                    render: (date) => formatDate(date),
-                  },
-                ]}
-                dataSource={enrollments}
-                rowKey="id"
-                pagination={{
-                  current: currentPage,
-                  pageSize: pageSize,
-                  total: total,
-                  onChange: setCurrentPage,
-                  showSizeChanger: false,
-                  showQuickJumper: true,
-                  showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} من ${total} تسجيل`,
-                }}
-                locale={{
-                  emptyText: 'لا توجد تسجيلات',
-                }}
-                scroll={{ x: 800 }}
-              />
-            </Spin>
+          <TabPane tab="إدارة التسجيلات" key="enrollments">
+            <EnrollmentManagement />
           </TabPane>
         </Tabs>
       </Card>
