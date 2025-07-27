@@ -5,6 +5,7 @@ import {
   BookOutlined,
   PlusOutlined,
   ReloadOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
 import { ToolOutlined } from '@ant-design/icons';
 import { useSelector } from 'react-redux';
@@ -15,11 +16,13 @@ import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeSta
 import { contentService } from '../../services';
 import { EyeOutlined } from '@ant-design/icons';
 import { ReadOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 const { Title, Paragraph } = Typography;
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
+  const { t } = useTranslation();
 
   // Get dynamic researcher stats
   const { stats: researcherStats, loading: statsLoading, refetch: refetchStats } = useResearcherStats();
@@ -75,32 +78,40 @@ const DashboardPage = () => {
 
   const getQuickActions = () => {
     const userRole = user?.role || USER_ROLES.RESEARCHER;
+    const baseActions = [
+      { label: t('navigation.home'), icon: <HomeOutlined />, path: '/', type: 'default' },
+    ];
+    
     if (userRole === USER_ROLES.RESEARCHER) {
       return [
-        { label: 'Submit Publication', icon: <PlusOutlined />, path: '/research/publications/new', type: 'primary' },
-        { label: 'My Publications', icon: <BookOutlined />, path: '/research/publications', type: 'default' },
-        { label: 'Profile', icon: <UserOutlined />, path: '/profile', type: 'default' },
+        ...baseActions,
+        { label: t('dashboard.submitPublication'), icon: <PlusOutlined />, path: '/research/publications/new', type: 'primary' },
+        { label: t('dashboard.myPublications'), icon: <BookOutlined />, path: '/research/publications', type: 'default' },
+        { label: t('dashboard.profile'), icon: <UserOutlined />, path: '/profile', type: 'default' },
       ];
     }
     
     switch (userRole) {
       case USER_ROLES.ADMIN:
         return [
-          { label: 'Manage Users', icon: <UserOutlined />, path: '/users', type: 'primary' },
-          { label: 'Review Publications', icon: <BookOutlined />, path: '/research', type: 'default' },
-          { label: 'System Settings', icon: <ToolOutlined />, path: '/settings', type: 'default' },
+          ...baseActions,
+          { label: t('dashboard.manageUsers'), icon: <UserOutlined />, path: '/users', type: 'primary' },
+          { label: t('dashboard.reviewPublications'), icon: <BookOutlined />, path: '/research', type: 'default' },
+          { label: t('dashboard.systemSettings'), icon: <ToolOutlined />, path: '/settings', type: 'default' },
         ];
       case USER_ROLES.MODERATOR:
         return [
-          { label: 'Review Publications', icon: <BookOutlined />, path: '/research', type: 'primary' },
-          { label: 'Manage Content', icon: <EyeOutlined />, path: '/content', type: 'default' },
-          { label: 'Service Requests', icon: <ToolOutlined />, path: '/services', type: 'default' },
+          ...baseActions,
+          { label: t('dashboard.reviewPublications'), icon: <BookOutlined />, path: '/research', type: 'primary' },
+          { label: t('dashboard.manageContent'), icon: <EyeOutlined />, path: '/content', type: 'default' },
+          { label: t('dashboard.serviceRequests'), icon: <ToolOutlined />, path: '/services', type: 'default' },
         ];
-      default: // RESEARCHER
+      default:
         return [
-          { label: 'Submit Publication', icon: <PlusOutlined />, path: '/research/submit', type: 'primary' },
-          { label: 'My Publications', icon: <BookOutlined />, path: '/research/my-publications', type: 'default' },
-          { label: 'Browse Courses', icon: <ReadOutlined />, path: '/training', type: 'default' },
+          ...baseActions,
+          { label: t('dashboard.submitPublication'), icon: <PlusOutlined />, path: '/research/submit', type: 'primary' },
+          { label: t('dashboard.myPublications'), icon: <BookOutlined />, path: '/research/my-publications', type: 'default' },
+          { label: t('dashboard.browseCourses'), icon: <ReadOutlined />, path: '/training', type: 'default' },
         ];
     }
   };
@@ -143,18 +154,18 @@ const DashboardPage = () => {
     switch (userRole) {
       case USER_ROLES.ADMIN:
         return {
-          title: `Welcome back, ${name}!`,
-          description: 'Manage the Ageri Research Platform and oversee all system operations.',
+          title: t('dashboard.welcomeBack') + `, ${name}!`,
+          description: t('dashboard.adminDescription'),
         };
       case USER_ROLES.MODERATOR:
         return {
-          title: `Welcome back, ${name}!`,
-          description: 'Review publications, manage content, and support the research community.',
+          title: t('dashboard.welcomeBack') + `, ${name}!`,
+          description: t('dashboard.moderatorDescription'),
         };
       default:
         return {
-          title: `Welcome back, ${name}!`,
-          description: 'Explore research opportunities, submit publications, and advance your academic journey.',
+          title: t('dashboard.welcomeBack') + `, ${name}!`,
+          description: t('dashboard.researcherDescription'),
         };
     }
   };

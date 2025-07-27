@@ -82,18 +82,29 @@ const ContentManagementPage = () => {
   const userId = userData?.id;
 
   const handleImageUpload = (info) => {
-  const { file } = info;
-  if (!file) return;
-  setImagePreview(URL.createObjectURL(file));
-  setImageFile(file);
-  form.setFieldsValue({ attachment: file });
-};
+    const { file } = info;
+    if (!file) return;
 
-const handleRemoveImage = () => {
-  setImageFile(null);
-  setImagePreview(null);
-  form.setFieldsValue({ attachment: null });
-};
+    // Ensure we have a proper File object
+    const actualFile = file.originFileObj || file;
+    
+    console.log('🔍 Image upload:', {
+      name: actualFile.name,
+      size: actualFile.size,
+      type: actualFile.type,
+      isFile: actualFile instanceof File
+    });
+    
+    setImagePreview(URL.createObjectURL(actualFile));
+    setImageFile(actualFile);
+    form.setFieldsValue({ attachment: actualFile });
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    form.setFieldsValue({ attachment: null });
+  };
 
 
   const [stats, setStats] = useState({
@@ -119,14 +130,23 @@ const handleRemoveImage = () => {
       const allContentRes = await contentService.getPosts({ page: 1, page_size: 1000 });
       const allPosts = allContentRes.results || [];
       
-      const totalContent = allPosts.length;
-      const publishedContent = allPosts.filter(p => p.status === 'published').length;
-      const draftContent = allPosts.filter(p => p.status === 'draft').length;
-      const scheduledContent = allPosts.filter(p => p.status === 'scheduled').length;
-      const pendingContent = allPosts.filter(p => p.status === 'pending').length;
-      const rejectedContent = allPosts.filter(p => p.status === 'rejected').length;
-      const acceptedContent = allPosts.filter(p => p.status === 'accepted').length;
-      const featuredContent = allPosts.filter(p => p.is_featured === true).length;
+      // Filter posts based on user role
+      let filteredPosts = [];
+      if (userRole === "admin") {
+        filteredPosts = allPosts;
+      } else {
+        // For moderators, only show their own posts
+        filteredPosts = allPosts.filter(post => post.author?.id === userId);
+      }
+      
+      const totalContent = filteredPosts.length;
+      const publishedContent = filteredPosts.filter(p => p.status === 'published').length;
+      const draftContent = filteredPosts.filter(p => p.status === 'draft').length;
+      const scheduledContent = filteredPosts.filter(p => p.status === 'scheduled').length;
+      const pendingContent = filteredPosts.filter(p => p.status === 'pending').length;
+      const rejectedContent = filteredPosts.filter(p => p.status === 'rejected').length;
+      const acceptedContent = filteredPosts.filter(p => p.status === 'accepted').length;
+      const featuredContent = filteredPosts.filter(p => p.is_featured === true).length;
       
       setStats({
         totalContent,
@@ -146,7 +166,7 @@ const handleRemoveImage = () => {
     } finally {
       setStatsLoading(false);
     }
-  }, []);
+  }, [userRole, userId]);
 
   useEffect(() => {
     fetchStats();
@@ -211,7 +231,8 @@ const handleRemoveImage = () => {
       
       setImageFile(null);
       setImagePreview(detail.attachment || null);
-            
+      
+      // Fix: Set the attachment field properly
       form.setFieldsValue({
         title: detail.title,
         type: detail.category || '',
@@ -226,7 +247,7 @@ const handleRemoveImage = () => {
         registration_deadline: detail.registration_deadline ? moment(detail.registration_deadline) : null,
         max_participants: detail.max_participants || undefined,
         featured_image: detail.featured_image || '',
-        attachment: detail.attachment || '',
+        attachment: null, // Don't set the URL here, keep it null for new uploads
         isPublic: typeof detail.is_public === 'boolean' ? detail.is_public : false,
         isFeatured: typeof detail.is_featured === 'boolean' ? detail.is_featured : false,
       });
@@ -290,7 +311,7 @@ const handleRemoveImage = () => {
       cancelText: 'إلغاء',
       onOk: async () => {
         try {
-          await contentService.updatePost(contentItem.id, { status: 'pending' });
+          await contentService.patchPost(contentItem.id, { status: 'pending' });
           message.success('تم إرسال المنشور للمراجعة بنجاح');
           loadContent();
           fetchStats();
@@ -305,14 +326,14 @@ const handleRemoveImage = () => {
   const handleAcceptContent = async (contentItem) => {
     confirm({
       title: 'موافقة على المنشور',
-      content: 'هل أنت متأكد من الموافقة على هذا المنشور؟ سيصبح مرئياً للضيوف في الموقع.',
+      content: 'هل أنت متأكد من الموافقة على هذا المنشور؟ سيصبح مرئي للضيوف في الموقع.',
       icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
       okText: 'موافقة ونشر',
       okButtonProps: { type: 'primary', style: { backgroundColor: '#52c41a' } },
       cancelText: 'إلغاء',
       onOk: async () => {
         try {
-          await contentService.updatePost(contentItem.id, { 
+          await contentService.patchPost(contentItem.id, { 
             status: 'published', 
             approved_by: userId,
             approved_at: new Date().toISOString()
@@ -349,7 +370,7 @@ const handleRemoveImage = () => {
       cancelText: 'إلغاء',
       onOk: async () => {
         try {
-          await contentService.updatePost(contentItem.id, { 
+          await contentService.patchPost(contentItem.id, { 
             status: 'rejected',
             rejection_reason: rejectionReason,
             rejected_by: userId,
@@ -381,33 +402,33 @@ const handleRemoveImage = () => {
       okText: 'تأكيد',
       cancelText: 'إلغاء',
       onOk: async () => {
-  try {
-    const formData = new FormData();
-    formData.append('is_featured', newFeaturedStatus); // نفس اسم الحقل في السيرفر
-
-    await contentService.updatePost(contentItem.id, formData); // ابعت formData بدل object
-    message.success(successText);
-    loadContent();
-    fetchStats();
-  } catch (error) {
-    console.error('Toggle featured error:', error);
-    message.error('فشل في تحديث حالة التمييز');
-  }
-},
+        try {
+          // Use patchPost method instead of updatePost
+          await contentService.patchPost(contentItem.id, { 
+            is_featured: newFeaturedStatus 
+          });
+          message.success(successText);
+          loadContent();
+          fetchStats();
+        } catch (error) {
+          console.error('Toggle featured error:', error);
+          message.error('فشل في تحديث حالة التمييز');
+        }
+      },
     });
   };
 
   const handlePublishContent = async (contentItem) => {
     confirm({
       title: 'نشر المحتوى',
-      content: 'هل أنت متأكد من نشر هذا المحتوى؟ سيصبح مرئياً للضيوف.',
+      content: 'هل أنت متأكد من نشر هذا المحتوى؟ سيصبح مرئي للضيوف.',
       icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
       okText: 'نشر',
       okButtonProps: { type: 'primary', style: { backgroundColor: '#52c41a' } },
       cancelText: 'إلغاء',
       onOk: async () => {
         try {
-          await contentService.updatePost(contentItem.id, { status: 'published' });
+          await contentService.patchPost(contentItem.id, { status: 'published' });
           message.success('تم نشر المحتوى بنجاح');
           loadContent();
           fetchStats();
@@ -429,10 +450,10 @@ const handleRemoveImage = () => {
       cancelText: 'إلغاء',
       onOk: async () => {
         try {
-         await contentService.updatePost(contentItem.id, {
-    status: 'draft',
-    published_at: null
-  });
+          await contentService.patchPost(contentItem.id, {
+            status: 'draft',
+            published_at: null
+          });
           message.success('تم إلغاء نشر المحتوى بنجاح');
           loadContent();
           fetchStats();
@@ -444,118 +465,142 @@ const handleRemoveImage = () => {
     });
   };
 
-const handleSaveContent = async (values) => {
+  const handleSaveContent = async (values) => {
     try {
-      // إنشاء FormData للتعامل مع رفع الملفات
-      const formData = new FormData();
-      
-      // إضافة البيانات الأساسية
-      const payload = {
-        ...values,
-        category: values.type,
-        publish_at: values.publishDate ? values.publishDate.toISOString() : null,
-      };
-      
-      if (userRole === 'moderator' && values.status === 'published') {
-        payload.status = 'pending';
-      } else if (values.status === 'scheduled') {
-        payload.status = 'draft';
-      }
-      
-      delete payload.type;
-      delete payload.publishDate;
-
-      // معالجة بيانات الأحداث
-      if (payload.category === 'event') {
-        payload.event_date = values.event_date ? values.event_date.toISOString() : null;
-        payload.event_location = values.event_location || '';
-        payload.registration_required = values.registration_required || false;
-        payload.registration_deadline = values.registration_deadline ? values.registration_deadline.toISOString() : null;
-        payload.max_participants = values.max_participants || null;
-        // لا نضع attachment في payload للـ events - سيتم التعامل معه بشكل منفصل
-      } else {
-        delete payload.event_date;
-        delete payload.event_location;
-        delete payload.registration_required;
-        delete payload.registration_deadline;
-        delete payload.max_participants;
-      }
-
-      // إزالة attachment من payload - سنتعامل معه بشكل منفصل
-      delete payload.attachment;
-
-      // صلاحيات الأدمن فقط
-      if (userRole !== 'admin') {
-        delete payload.isPublic;
-        delete payload.isFeatured;
-      }
-
-      // التحقق من البيانات المطلوبة
-      if (!payload.title || !payload.content || !payload.category || !payload.status) {
-        message.error('يرجى تعبئة جميع الحقول المطلوبة');
-        return;
-      }
-
-      // إضافة البيانات الأساسية إلى FormData
-      Object.keys(payload).forEach(key => {
-        if (payload[key] !== null && payload[key] !== undefined && payload[key] !== '') {
-          formData.append(key, payload[key]);
-        }
-      });
-
-      // معالجة الملف المرفق
-      if (imageFile && imageFile instanceof File) {
-        formData.append('attachment', imageFile);
-      } else if (editingContent?.attachment && !imageFile) {
-        // إذا كان هناك مرفق سابق ولم يتم تغييره، نبقيه كما هو
-        formData.append('attachment', editingContent.attachment);
-      }
-      
-      console.log('FormData entries:');
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
+      console.log('🔍 Form values:', values);
+      console.log('🔍 Image file:', imageFile);
+      console.log('🔍 Editing content:', editingContent);
       
       let response;
+      
       if (editingContent) {
-        // للتحديث - استخدم updatePost مع FormData أو البيانات العادية حسب وجود ملف
-        if (imageFile) {
+        // Update existing post
+        if (imageFile instanceof File && imageFile.size > 0) {
+          // Validate file size (5MB limit)
+          if (imageFile.size > 5 * 1024 * 1024) {
+            message.error('حجم الصورة كبير<|im_start|>. الحد الأقصى 5 ميجا');
+            return;
+          }
+          
+          // Validate file type
+          if (!imageFile.type.startsWith('image/')) {
+            message.error('يجب أن يكون الملف صورة');
+            return;
+          }
+          
+          // Create FormData for file upload
+          const formData = new FormData();
+          
+          // Add all form fields except attachment
+          Object.keys(values).forEach(key => {
+            if (key !== 'attachment' && values[key] !== null && values[key] !== undefined && values[key] !== '') {
+              if (key === 'publishDate' && values[key]) {
+                formData.append('publish_at', values[key].toISOString());
+              } else if (key === 'type') {
+                formData.append('category', values[key]);
+              } else if (key === 'event_date' && values[key]) {
+                formData.append('event_date', values[key].format('YYYY-MM-DD'));
+              } else if (key === 'registration_deadline' && values[key]) {
+                formData.append('registration_deadline', values[key].format('YYYY-MM-DD'));
+              } else if (key === 'isPublic') {
+                formData.append('is_public', values[key]);
+              } else if (key === 'isFeatured') {
+                formData.append('is_featured', values[key]);
+              } else {
+                formData.append(key, values[key]);
+              }
+            }
+          });
+          
+          // Add the new file with proper name and validation
+          formData.append('attachment', imageFile, imageFile.name);
+          
+          console.log('🔍 FormData entries for update:');
+          for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+          }
+          
           response = await contentService.updatePost(editingContent.id, formData);
         } else {
-          // تحويل FormData إلى object عادي
-          const updateData = {};
-          for (let [key, value] of formData.entries()) {
-            updateData[key] = value;
-          }
+          // Update without file - use JSON
+          const updateData = {
+            ...values,
+            category: values.type,
+            is_public: values.isPublic,
+            is_featured: values.isFeatured,
+            publish_at: values.publishDate ? values.publishDate.toISOString() : null,
+            event_date: values.event_date ? values.event_date.format('YYYY-MM-DD') : null,
+            registration_deadline: values.registration_deadline ? values.registration_deadline.format('YYYY-MM-DD') : null,
+          };
+          
+          // Remove fields that shouldn't be sent
+          delete updateData.attachment;
+          delete updateData.type;
+          delete updateData.isPublic;
+          delete updateData.isFeatured;
+          delete updateData.publishDate;
+          
+          console.log('🔍 JSON update data:', updateData);
           response = await contentService.updatePost(editingContent.id, updateData);
         }
       } else {
-        // للإنشاء - استخدم createPost
-        if (imageFile) {
-          response = await contentService.createPost(formData);
-        } else {
-          // تحويل FormData إلى object عادي
-          const createData = {};
-          for (let [key, value] of formData.entries()) {
-            createData[key] = value;
+        // Create new post - use FormData
+        const formData = new FormData();
+        
+        // Add all form fields except attachment
+        Object.keys(values).forEach(key => {
+          if (key !== 'attachment' && values[key] !== null && values[key] !== undefined && values[key] !== '') {
+            if (key === 'publishDate' && values[key]) {
+              formData.append('publish_at', values[key].toISOString());
+            } else if (key === 'type') {
+              formData.append('category', values[key]);
+            } else if (key === 'event_date' && values[key]) {
+              formData.append('event_date', values[key].format('YYYY-MM-DD'));
+            } else if (key === 'registration_deadline' && values[key]) {
+              formData.append('registration_deadline', values[key].format('YYYY-MM-DD'));
+            } else if (key === 'isPublic') {
+              formData.append('is_public', values[key]);
+            } else if (key === 'isFeatured') {
+              formData.append('is_featured', values[key]);
+            } else {
+              formData.append(key, values[key]);
+            }
           }
-          response = await contentService.createPost(createData);
+        });
+        
+        // Add file if exists and is valid
+        if (imageFile instanceof File && imageFile.size > 0) {
+          // Validate file
+          if (imageFile.size > 5 * 1024 * 1024) {
+            message.error('حجم الصورة كبير理解和حذف الملف صورة');
+            return;
+          }
+          
+          if (!imageFile.type.startsWith('image/')) {
+            message.error('يجب أن يكون الملف صورة');
+            return;
+          }
+          
+          formData.append('attachment', imageFile, imageFile.name);
+          console.log('🔍 Adding image file to FormData:', {
+            name: imageFile.name,
+            size: imageFile.size,
+            type: imageFile.type
+          });
         }
-      }
-
-      let successMessage;
-      if (userRole === 'moderator' && values.status === 'published') {
-        successMessage = 'تم إرسال المنشور للمراجعة وانتظار الموافقة من الإدارة';
-      } else if (userRole === 'moderator' && values.status === 'draft') {
-        successMessage = 'تم حفظ المنشور كمسودة';
-      } else {
-        successMessage = t('admin.contentManagement.contentSaved');
+        
+        console.log('🔍 FormData entries for create:');
+        for (let [key, value] of formData.entries()) {
+          console.log(key, value);
+        }
+        
+        response = await contentService.createPost(formData);
       }
       
+      const successMessage = editingContent ? 'تم تحديث المحتوى بنجاح' : 'تم إنشاء المحتوى بنجاح';
       message.success(successMessage);
       setModalVisible(false);
       
-      // إعادة تعيين الصورة
       setImageFile(null);
       setImagePreview(null);
       
@@ -563,16 +608,28 @@ const handleSaveContent = async (values) => {
       fetchStats();
     } catch (error) {
       console.error('Save content error:', error);
+      console.error('Error response:', error?.response?.data);
       
       if (error?.response?.data?.attachment) {
-        message.error('خطأ في رفع الصورة: ' + error.response.data.attachment[0]);
+        const attachmentErrors = error.response.data.attachment;
+        const errorMessage = Array.isArray(attachmentErrors) 
+          ? attachmentErrors.join(', ') 
+          : attachmentErrors;
+        console.error('Attachment validation errors:', errorMessage);
+        message.error('خطأ في رفع الصورة: ' + errorMessage);
       } else if (error?.response?.data?.detail) {
         message.error(error.response.data.detail);
+      } else if (error?.response?.data) {
+        // Show all validation errors
+        const errors = Object.entries(error.response.data).map(([field, msgs]) => 
+          `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`
+        ).join('\n');
+        message.error(`خطأ في البيانات:\n${errors}`);
       } else {
         message.error('فشل في حفظ المحتوى');
       }
     }
-};
+  };
 
   const getStatusTag = (status) => {
     const statusConfig = {
@@ -594,7 +651,6 @@ const handleSaveContent = async (values) => {
 
   const getTypeTag = (type) => {
     const typeConfig = {
-      announcement: { color: 'purple', text: t('admin.contentManagement.announcement') },
       post: { color: 'blue', text: t('admin.contentManagement.post') },
       news: { color: 'green', text: t('admin.contentManagement.news') },
       event: { color: 'orange', text: t('admin.contentManagement.event') },
@@ -927,7 +983,6 @@ const handleSaveContent = async (values) => {
               <Option value="achievement">{t('admin.contentManagement.achievement')}</Option>
               <Option value="post">{t('admin.contentManagement.post')}</Option>
               <Option value="news">{t('admin.contentManagement.news')}</Option>
-              <Option value="announcement">{t('admin.contentManagement.announcement')}</Option>
             </Select>
           </Col>
           <Col xs={24} sm={6} md={4}>
@@ -1108,7 +1163,7 @@ const handleSaveContent = async (values) => {
     </Upload>
 
     <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px', display: 'block' }}>
-      يُفضل استخدام صور بمقاس 16:9 وحجم أقل من 5 ميجا
+      فضل استخدام صور بمقاس 16:9 وحجم أقل من 5 ميجا
     </Text>
   </div>
 </Form.Item>

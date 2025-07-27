@@ -49,9 +49,10 @@ import {
   StarOutlined,
   FireOutlined,
   ThunderboltOutlined,
-  CrownOutlined
+  CrownOutlined,
+  FileTextOutlined
 } from '@ant-design/icons';
-import { contentService, organizationService } from '../../services';
+import { contentService, organizationService, statisticsService } from '../../services';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -65,11 +66,12 @@ const HomePage = () => {
   const [organizationData, setOrganizationData] = useState({});
   const [settingsLoading, setSettingsLoading] = useState(true);
   const [stats, setStats] = useState({
-    researchers: 150,
-    projects: 87,
-    publications: 342,
-    awards: 25
+    researchers: 0,
+    projects: 0,
+    publications: 0,
+    courses: 0
   });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Enhanced CSS animations
   const carouselAnimations = `
@@ -209,22 +211,43 @@ const HomePage = () => {
       left: 100%;
     }
   `;
-
+  const heroImages = [
+    '/2304.w019.n002.1028B.p15.1028.jpg',  
+    '/2304.w019.n002.1028B.p15.1028.jpg',  
+    '/2304.w019.n002.1028B.p15.1028.jpg'   
+  ];
   useEffect(() => {
     const loadHomePageData = async () => {
       try {
         setLoading(true);
+        setStatsLoading(true);
+
+        // Load statistics
+        try {
+          const statisticsData = await statisticsService.getPublicStatistics();
+          console.log('🏠 Homepage received stats:', statisticsData);
+          setStats(statisticsData);
+        } catch (error) {
+          console.error('Failed to load statistics:', error);
+          // Keep default zeros if API fails
+        } finally {
+          setStatsLoading(false);
+        }
 
         // Load organization settings
         try {
           setSettingsLoading(true);
           const orgData = await organizationService.getPublicSettings();
-          setOrganizationData(orgData);
+          // Override the name to Arabic regardless of API response
+          setOrganizationData({
+            ...orgData,
+            name: "منظمة البحث العلمي"
+          });
         } catch (error) {
           console.error('Failed to load organization settings:', error);
           // Default institute data
           setOrganizationData({
-            name: "معهد البحوث العلمية والتطوير التقني",
+            name: "منظمة البحث العلمي",
             vision: "أن نصبح المعهد الرائد في منطقة الشرق الأوسط في مجال البحث العلمي والابتكار التقني، ونساهم في بناء مجتمع المعرفة وتحقيق التنمية المستدامة",
             vision_image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
             mission: "نلتزم بإجراء البحوث العلمية المتقدمة وتطوير الحلول التقنية المبتكرة، وتأهيل الكوادر العلمية المتخصصة، وتقديم الاستشارات العلمية والتقنية لخدمة المجتمع والاقتصاد الوطني",
@@ -256,25 +279,20 @@ const HomePage = () => {
             })
           ]);
 
-          if (announcementsResponse.status === 'fulfilled') {
-            const transformedAnnouncements = announcementsResponse.value.results.map(item => ({
-              id: item.id,
-              title: item.title,
-              content: item.content || item.description || '',
-              date: item.created_at || item.date,
-              category: 'إعلان',
-              priority: item.priority || 'medium',
-              views: item.view_count || 0,
-              type: 'announcement',
-              excerpt: item.excerpt || item.content?.substring(0, 150) + '...'
-            }));
-            setAnnouncements(transformedAnnouncements);
-          }
+          console.log('🔍 Posts Response:', postsResponse);
 
           if (postsResponse.status === 'fulfilled') {
-            const transformedPosts = postsResponse.value.results
-              .filter(item => item.is_featured)
-              .map(item => ({
+            console.log('🔍 All Posts:', postsResponse.value.results);
+            
+            // Show all published posts instead of just featured ones
+            const publishedPosts = postsResponse.value.results.filter(item => 
+              item.status === 'published' && item.is_public
+            );
+            
+            const transformedPosts = publishedPosts.map(item => {
+      
+              
+              return {
                 id: item.id,
                 title: item.title,
                 content: item.content || item.description || '',
@@ -283,85 +301,32 @@ const HomePage = () => {
                 priority: item.priority || 'medium',
                 views: item.view_count || 0,
                 type: 'post',
+                featured_image: item.featured_image || item.attachment || null,
+                attachment: item.attachment || null,
                 excerpt: item.excerpt || item.content?.substring(0, 150) + '...',
                 author: typeof item.author === 'string'
                   ? item.author
-                  : item.author?.full_name || item.author?.email || 'فريق البحث العلمي'
-              }));
-            setPosts(transformedPosts);
+                  : item.author?.full_name || item.author?.email || 'فريق البحث العلمي',
+                is_featured: item.is_featured || false
+              };
+            });
+
+            // Sort posts to show featured ones first
+            const sortedPosts = transformedPosts.sort((a, b) => {
+              if (a.is_featured && !b.is_featured) return -1;
+              if (!a.is_featured && b.is_featured) return 1;
+              return new Date(b.date) - new Date(a.date);
+            });
+
+            console.log('🔍 Final Sorted Posts:', sortedPosts);
+            setPosts(sortedPosts);
+          }
+
+          if (announcementsResponse.status === 'fulfilled') {
+            setAnnouncements(announcementsResponse.value.results || []);
           }
         } catch (error) {
           console.error('Failed to load content:', error);
-          // Institute-specific fallback content
-          setAnnouncements([
-            {
-              id: 1,
-              title: 'إعلان عن منحة البحث العلمي للعام الجديد',
-              content: 'يعلن المعهد عن فتح باب التقديم للحصول على منح البحث العلمي للعام الأكاديمي الجديد في مختلف التخصصات العلمية.',
-              date: new Date().toISOString(),
-              category: 'منح',
-              views: 567,
-              type: 'announcement',
-              excerpt: 'منح بحثية متاحة للباحثين والطلاب المتفوقين في جميع التخصصات العلمية والتقنية.'
-            },
-            {
-              id: 2,
-              title: 'مؤتمر الابتكار التقني الدولي 2024',
-              content: 'ينظم المعهد المؤتمر الدولي للابتكار التقني بمشاركة خبراء من أكثر من 20 دولة.',
-              date: new Date(Date.now() - 86400000).toISOString(),
-              category: 'مؤتمرات',
-              views: 892,
-              type: 'announcement',
-              excerpt: 'مؤتمر دولي يجمع خبراء الابتكار والتكنولوجيا من جميع أنحاء العالم.'
-            }
-          ]);
-
-          setPosts([
-            {
-              id: 1,
-              title: 'اكتشاف جديد في مجال تقنيات النانو للطاقة المتجددة',
-              content: 'فريق البحث بالمعهد يحقق اختراقاً علمياً في تطوير خلايا شمسية بتقنية النانو بكفاءة تصل إلى 45%.',
-              date: new Date().toISOString(),
-              category: 'اكتشافات',
-              views: 1234,
-              type: 'post',
-              excerpt: 'اختراق علمي جديد في تطوير خلايا شمسية عالية الكفاءة باستخدام تقنيات النانو المتقدمة.',
-              author: 'د. أحمد الزهراني - رئيس قسم تقنيات الطاقة'
-            },
-            {
-              id: 2,
-              title: 'براءة اختراع جديدة في مجال الذكاء الاصطناعي',
-              content: 'المعهد يحصل على براءة اختراع لنظام ذكي لتحليل البيانات الضخمة في الوقت الفعلي.',
-              date: new Date(Date.now() - 172800000).toISOString(),
-              category: 'براءات اختراع',
-              views: 987,
-              type: 'post',
-              excerpt: 'نظام ذكي متطور لمعالجة وتحليل البيانات الضخمة بسرعة ودقة عالية.',
-              author: 'د. فاطمة المالكي - قسم الذكاء الاصطناعي'
-            },
-            {
-              id: 3,
-              title: 'شراكة استراتيجية مع جامعة MIT الأمريكية',
-              content: 'توقيع اتفاقية تعاون علمي مع معهد ماساتشوستس للتكنولوجيا لتبادل الخبرات البحثية.',
-              date: new Date(Date.now() - 259200000).toISOString(),
-              category: 'شراكات',
-              views: 756,
-              type: 'post',
-              excerpt: 'اتفاقية تعاون علمي دولية لتطوير البحوث المشتركة وتبادل الخبرات.',
-              author: 'إدارة الشؤون الأكاديمية'
-            },
-            {
-              id: 4,
-              title: 'إطلاق مختبر الروبوتات المتقدمة',
-              content: 'افتتاح أحدث مختبر للروبوتات والأتمتة مجهز بأحدث التقنيات العالمية.',
-              date: new Date(Date.now() - 345600000).toISOString(),
-              category: 'مختبرات',
-              views: 643,
-              type: 'post',
-              excerpt: 'مختبر متطور للروبوتات والأتمتة بأحدث المعدات والتقنيات العالمية.',
-              author: 'د. سعد الغامدي - مدير المختبرات'
-            }
-          ]);
         }
       } catch (error) {
         console.error('Failed to load homepage data:', error);
@@ -371,34 +336,20 @@ const HomePage = () => {
     };
 
     loadHomePageData();
-  }, []);
-
-  // Professional default images for research institute
-  const getDefaultImage = (type) => {
-    const defaultImages = {
-      vision: 'https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Modern research facility
-      mission: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Scientists working
-      about: 'https://images.unsplash.com/photo-1581092160562-40aa08e78837?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Research lab equipment
-      lab1: 'https://images.unsplash.com/photo-1582719471384-894fbb16e074?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      lab2: 'https://images.unsplash.com/photo-1628595351029-c2bf17511435?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
-    };
-    return defaultImages[type];
-  };
-
-  // Enhanced carousel slides
+  }, []); 
   const getCarouselSlides = () => {
     const slides = [];
-
+    const defaultImage = '/2304.w019.n002.1028B.p15.1028.jpg';
+    
     // Vision slide
     if (organizationData.vision) {
       slides.push({
         id: 'vision',
-        title: 'رؤيتنا المستقبلية',
+        title: "منظمة البحث العلمي", // Force Arabic title
         content: organizationData.vision,
-        background: 'hero-overlay',
-        backgroundImage: organizationData.vision_image || getDefaultImage('vision'),
+        backgroundImage: defaultImage,
         icon: <RocketOutlined />,
-        subtitle: 'نحو مستقبل أكثر إشراقاً'
+        subtitle: t('homepage.ourVision')
       });
     }
 
@@ -406,12 +357,11 @@ const HomePage = () => {
     if (organizationData.mission) {
       slides.push({
         id: 'mission',
-        title: 'رسالتنا النبيلة',
+        title: t('homepage.ourMission'),
         content: organizationData.mission,
-        background: 'hero-overlay',
-        backgroundImage: organizationData.mission_image || getDefaultImage('mission'),
+        backgroundImage: defaultImage,
         icon: <BulbOutlined />,
-        subtitle: 'الابتكار في خدمة المجتمع'
+        subtitle: t('homepage.missionSubtitle')
       });
     }
 
@@ -419,23 +369,21 @@ const HomePage = () => {
     if (organizationData.about) {
       slides.push({
         id: 'about',
-        title: 'التميز في البحث العلمي',
+        title: t('homepage.aboutUs'),
         content: organizationData.about,
-        background: 'hero-overlay',
-        backgroundImage: getDefaultImage('about'),
+        backgroundImage: defaultImage,
         icon: <ExperimentOutlined />,
-        subtitle: 'خبرة عقود في خدمة العلم'
+        subtitle: t('homepage.aboutSubtitle')
       });
     }
     
     return slides.length > 0 ? slides : [{
       id: 'default',
-      title: organizationData.name || 'معهد البحوث العلمية',
-      content: 'مرحباً بكم في منصة التميز العلمي والابتكار التقني',
-      background: 'hero-overlay',
-      backgroundImage: getDefaultImage('vision'),
+      title: "منظمة البحث العلمي",
+      content: t('homepage.heroSubtitle'),
+      backgroundImage: defaultImage,
       icon: <StarOutlined />,
-      subtitle: 'رحلة نحو التميز'
+      subtitle: t('homepage.journeyToExcellence')
     }];
   };
 
@@ -450,13 +398,25 @@ const HomePage = () => {
   const getCategoryColor = (category) => {
     const colors = {
       'إعلان': 'purple',
+      'announcement': 'purple',
       'منح': 'gold',
+      'grants': 'gold',
       'مؤتمرات': 'cyan',
+      'conferences': 'cyan',
       'اكتشافات': 'red',
+      'discoveries': 'red',
       'براءات اختراع': 'green',
+      'patents': 'green',
       'شراكات': 'blue',
+      'partnerships': 'blue',
       'مختبرات': 'orange',
-      'أبحاث': 'geekblue'
+      'laboratories': 'orange',
+      'أبحاث': 'geekblue',
+      'research': 'geekblue',
+      'ندوة': 'purple',
+      'seminar': 'purple',
+      'ورشة عمل': 'cyan',
+      'workshop': 'cyan'
     };
     return colors[category] || 'default';
   };
@@ -478,12 +438,61 @@ const HomePage = () => {
   const getCategoryIcon = (category) => {
     const icons = {
       'اكتشافات': <FireOutlined />,
+      'discoveries': <FireOutlined />,
       'براءات اختراع': <TrophyOutlined />,
+      'patents': <TrophyOutlined />,
       'شراكات': <TeamOutlined />,
+      'partnerships': <TeamOutlined />,
       'مختبرات': <ExperimentOutlined />,
-      'أبحاث': <BookOutlined />
+      'laboratories': <ExperimentOutlined />,
+      'أبحاث': <BookOutlined />,
+      'research': <BookOutlined />,
+      'ندوة': <ReadOutlined />,
+      'seminar': <ReadOutlined />,
+      'ورشة عمل': <ToolOutlined />,
+      'workshop': <ToolOutlined />
     };
     return icons[category] || <BookOutlined />;
+  };
+
+  const handleStatCardClick = (type) => {
+    if (isAuthenticated) {
+      // Navigate to authenticated routes
+      switch (type) {
+        case 'researchers':
+          navigate('/app/users');
+          break;
+        case 'publications':
+          navigate('/app/research/publications');
+          break;
+        case 'courses':
+          navigate('/app/training');
+          break;
+        case 'services':
+          navigate('/app/services');
+          break;
+        default:
+          break;
+      }
+    } else {
+      // Navigate to public routes
+      switch (type) {
+        case 'researchers':
+          navigate('/researchers');
+          break;
+        case 'publications':
+          navigate('/research');
+          break;
+        case 'courses':
+          navigate('/courses');
+          break;
+        case 'services':
+          navigate('/services');
+          break;
+        default:
+          break;
+      }
+    }
   };
 
   return (
@@ -504,18 +513,18 @@ const HomePage = () => {
           >
             {getCarouselSlides().map((slide) => (
               <div key={slide.id}>
-                <div style={{
-                  minHeight: '80vh',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  backgroundImage: `url(${slide.backgroundImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat'
-                }}>
+                    <div style={{ 
+                      minHeight: '80vh',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      backgroundImage: `url(${slide.backgroundImage})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat'
+                    }}>
                   {/* Enhanced Background Overlay */}
                   <div className={slide.background} style={{
                     position: 'absolute',
@@ -639,10 +648,10 @@ const HomePage = () => {
         <div style={{ marginTop: '-60px', marginBottom: '80px', position: 'relative', zIndex: 10 }}>
           <Row gutter={[24, 24]} justify="center">
             {[
-              { title: 'الباحثون', value: stats.researchers, icon: <TeamOutlined />, suffix: '+' },
-              { title: 'المشاريع البحثية', value: stats.projects, icon: <ExperimentOutlined />, suffix: '+' },
-              { title: 'المنشورات العلمية', value: stats.publications, icon: <BookOutlined />, suffix: '+' },
-              { title: 'الجوائز والتقديرات', value: stats.awards, icon: <TrophyOutlined />, suffix: '+' }
+              { title: 'الباحثون', value: stats.researchers, icon: <TeamOutlined />, suffix: stats.researchers > 0 ? '+' : '' },
+              { title: 'المشاريع البحثية', value: stats.projects, icon: <ExperimentOutlined />, suffix: stats.projects > 0 ? '+' : '' },
+              { title: 'المنشورات العلمية', value: stats.publications, icon: <BookOutlined />, suffix: stats.publications > 0 ? '+' : '' },
+              { title: 'الدورات التدريبية', value: stats.courses, icon: <FileTextOutlined />, suffix: stats.courses > 0 ? '+' : '' }
             ].map((stat, index) => (
               <Col xs={12} sm={6} key={index}>
                 <Card className="stats-card professional-card" style={{
@@ -774,6 +783,10 @@ const HomePage = () => {
               }}>
                 اطلع على أحدث المقالات والأخبار في مجال البحث العلمي والتطوير التكنولوجي
               </Paragraph>
+              {/* Debug info */}
+              <div style={{ marginTop: '16px', fontSize: '14px', color: '#999' }}>
+                عدد المقالات المميزة: {posts.length}
+              </div>
             </div>
 
             <Row gutter={[32, 32]}>
@@ -792,15 +805,37 @@ const HomePage = () => {
                     }}
                     bodyStyle={{ padding: '24px' }}
                     cover={
-                      <div style={{
-                        height: '220px',
-                        background: getGradientBackground(index + 3),
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative',
-                        overflow: 'hidden'
-                      }}>
+                      <div
+                        style={{
+                          height: '220px',
+                          background: (post.featured_image || post.attachment)
+                            ? `url(${post.featured_image || post.attachment}) center/cover no-repeat`
+                            : getGradientBackground(index + 3),
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          borderBottom: '1px solid #f0f0f0',
+                        }}
+                      >
+                        {/* Debug overlay */}
+                        {!(post.featured_image || post.attachment) && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            left: '8px',
+                            background: 'rgba(0,0,0,0.7)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            zIndex: 3
+                          }}>
+                            لا توجد صورة
+                          </div>
+                        )}
+                        
                         {/* Decorative elements */}
                         <div style={{
                           position: 'absolute',
@@ -840,17 +875,20 @@ const HomePage = () => {
                             {post.category}
                           </Tag>
                         </div>
-                        
-                        <div style={{
-                          color: 'white',
-                          fontSize: '48px',
-                          textShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                          zIndex: 1
-                        }}>
-                          <BookOutlined />
-                        </div>
+
+                        {!(post.featured_image || post.attachment) && (
+                          <div style={{
+                            color: 'white',
+                            fontSize: '48px',
+                            textShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                            zIndex: 1
+                          }}>
+                            <BookOutlined />
+                          </div>
+                        )}
                       </div>
                     }
+
                     onMouseEnter={(e) => {
                       e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
                       e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.15)';
@@ -921,7 +959,7 @@ const HomePage = () => {
                 <Button
                   type="primary"
                   size="large"
-                  onClick={() => navigate('/news')}
+                  onClick={() => navigate('/posts')}
                   style={{
                     height: '56px',
                     padding: '0 40px',
@@ -942,7 +980,7 @@ const HomePage = () => {
                     e.target.style.boxShadow = '0 8px 32px rgba(102, 126, 234, 0.3)';
                   }}
                 >
-                  عرض جميع الأخبار
+                  عرض جميع المنشورات
                 </Button>
               </div>
             )}

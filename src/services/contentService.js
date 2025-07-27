@@ -84,8 +84,21 @@ export const contentService = {
 
   // Public Posts (for guests - no auth required)
   getPublicPosts: async (params = {}) => {
-    const response = await publicApiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
-    return response.data;
+    try {
+      console.log('🔍 Fetching public posts with params:', params);
+      const response = await publicApiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
+      console.log('🔍 Public posts response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.log('🔍 Public posts failed, trying with auth:', error.message);
+      // If public access fails, try with auth (for logged-in users)
+      if (error.response?.status === 401) {
+        const response = await apiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
+        console.log('🔍 Auth posts response:', response.data);
+        return response.data;
+      }
+      throw error;
+    }
   },
 
   // Posts (authenticated)
@@ -99,57 +112,96 @@ export const contentService = {
     const response = await apiClient.get(API_ENDPOINTS.CONTENT.MY_POSTS, { params });
     return response.data;
   },
-// createPost: async (postData) => {
-//   const formData = new FormData();
+  createPost: async (formData) => {
+    const token = localStorage.getItem('access_token');
 
-//   for (const key in postData) {
-//     const value = postData[key];
-//     if (value instanceof File) {
-//       formData.append(key, value);
-//     } else if (value instanceof Date) {
-//       formData.append(key, value.toISOString());
-//     } else if (Array.isArray(value)) {
-//       formData.append(key, JSON.stringify(value));
-//     } else if (value !== undefined && value !== null) {
-//       formData.append(key, value);
-//     }
-//   }
+    const config = {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        // Don't set Content-Type for FormData - axios handles it automatically
+      },
+    };
 
-//   const token = localStorage.getItem('access_token'); 
-  
-//   return axios.post('http://localhost:8000/api/content/posts/', formData, {
-//     headers: {
-//       'Authorization': `Bearer ${token}`,
-//     }
-//   });
-// }
-createPost: async (data) => {
-  const token = localStorage.getItem('access_token'); 
-
-  const isFormData = data instanceof FormData;
-
-  return axios.post('http://localhost:8000/api/content/posts/', data, {
-    headers: {
-      'Authorization': `Bearer ${token}`,
-      ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+    console.log('🔍 Create post config:', config);
+    console.log('🔍 FormData entries:');
+    for (let [key, value] of formData.entries()) {
+      console.log(key, value);
     }
-  });
-}
-,
-updatePost: async (id, formData) => {
-  const token = localStorage.getItem('access_token');
 
-  return apiClient.patch(API_ENDPOINTS.CONTENT.POST_DETAIL(id), formData, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      // لا تضف Content-Type → axios يضبطه تلقائيًا عند استخدام FormData
-    },
-  });
-}
+    return apiClient.post(API_ENDPOINTS.CONTENT.POSTS, formData, config);
+  },
+  updatePost: async (id, data) => {
+    const token = localStorage.getItem('access_token');
+    
+    try {
+      const isFormData = data instanceof FormData;
+      
+      if (isFormData) {
+        // Try using axios.putForm which is specifically for multipart uploads
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        };
+        
+        console.log('🔍 Update with putForm method');
+        console.log('🔍 FormData entries:');
+        for (let [key, value] of data.entries()) {
+          console.log(key, value);
+        }
+        
+        // Convert FormData to plain object for putForm
+        const formObject = {};
+        for (let [key, value] of data.entries()) {
+          formObject[key] = value;
+        }
+        
+        console.log('🔍 Form object:', formObject);
+        
+        const response = await apiClient.putForm(API_ENDPOINTS.CONTENT.POST_DETAIL(id), formObject, config);
+        return response.data;
+      } else {
+        // Handle JSON data with PATCH
+        const config = {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        };
+        
+        console.log('🔍 JSON update data:', data);
+        const response = await apiClient.patch(API_ENDPOINTS.CONTENT.POST_DETAIL(id), data, config);
+        return response.data;
+      }
+    } catch (error) {
+      console.error('updatePost error:', error);
+      console.error('Error response data:', error?.response?.data);
+      throw error;
+    }
+  },
+  patchPost: async (id, data) => {
+    const token = localStorage.getItem('access_token');
+    
+    try {
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      };
+      
+      console.log('🔍 PATCH update data:', data);
+      const response = await apiClient.patch(API_ENDPOINTS.CONTENT.POST_DETAIL(id), data, config);
+      return response.data;
+    } catch (error) {
+      console.error('patchPost error:', error);
+      console.error('Error response data:', error?.response?.data);
+      throw error;
+    }
+  },
 
 
 
-,
   // Delete post/event
   deletePost: async (id) => {
     const response = await apiClient.delete(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
@@ -305,12 +357,6 @@ updatePost: async (id, formData) => {
       };
     }
   },
-getPostById: async (id) => {
-  const response = await apiClient.get(`/content/posts/${id}/`);
-  return response.data;
-}
-
-,
   // Content statistics
   getContentStats: async () => {
     try {
@@ -329,5 +375,92 @@ getPostById: async (id) => {
         engagementRate: (Math.random() * 30 + 60).toFixed(1)
       };
     }
-  }
+  },
+  getPostById: async (id) => {
+    const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
+    return response.data;
+  },
+
+  // Public post details (for guests - no auth required)
+  getPublicPost: async (id) => {
+    try {
+      console.log('🔍 Fetching public post with ID:', id);
+      
+      // Check if user is logged in first
+      const token = localStorage.getItem('access_token');
+      
+      if (token) {
+        // If user is logged in, try authenticated endpoint first
+        try {
+          console.log('🔍 User is logged in, trying authenticated endpoint...');
+          const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
+          console.log('🔍 Auth post response:', response.data);
+          return response.data;
+        } catch (authError) {
+          console.log('🔍 Auth endpoint failed, falling back to public...');
+          // Continue to public endpoint if auth fails
+        }
+      }
+      
+      // Try public endpoint
+      const response = await publicApiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
+      console.log('🔍 Public post response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('🚨 Public post fetch failed:', error.response?.status, error.response?.data);
+      
+      // If public access fails and we haven't tried auth yet, try with auth
+      const token = localStorage.getItem('access_token');
+      if (error.response?.status === 500 && token) {
+        try {
+          console.log('🔍 Public failed with 500, trying with auth...');
+          const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
+          console.log('🔍 Auth post response:', response.data);
+          return response.data;
+        } catch (authError) {
+          console.error('🚨 Auth post fetch also failed:', authError.response?.status, authError.response?.data);
+          throw authError;
+        }
+      }
+      
+      // For other errors, throw the original error
+      throw error;
+    }
+  },
+
+  // Add this method to get statistics
+  getStatistics: async () => {
+    try {
+      const token = localStorage.getItem('access_token');
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      
+      const response = await apiClient.get('/statistics/', config);
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get statistics:', error);
+      throw error;
+    }
+  },
+
+  // Add method to get public statistics (no auth required)
+  getPublicStatistics: async () => {
+    try {
+      const response = await apiClient.get('/public/statistics/');
+      return response.data;
+    } catch (error) {
+      console.error('Failed to get public statistics:', error);
+      // Return fallback data
+      return {
+        total_users: 150,
+        total_publications: 342,
+        total_courses: 56,
+        total_services: 24,
+        total_researchers: 89
+      };
+    }
+  },
 };

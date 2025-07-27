@@ -26,11 +26,11 @@ const AnnouncementDetailPage = () => {
   const loadAnnouncementDetails = async () => {
     try {
       setLoading(true);
-      const response = await contentService.getPublicAnnouncementById(id);
+      const response = await contentService.getPublicPost(id);
       setAnnouncement(response);
     } catch (error) {
-      console.error('Failed to load announcement details:', error);
-      message.error('Failed to load announcement details');
+      console.error('Failed to load post details:', error);
+      message.error('Failed to load post details');
     } finally {
       setLoading(false);
     }

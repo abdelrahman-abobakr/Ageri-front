@@ -1,47 +1,47 @@
 import { useState, useEffect } from 'react';
-import { Card, List, Input, Button, Tag, Typography, Row, Col, Pagination } from 'antd';
-import { SearchOutlined, FileTextOutlined, CalendarOutlined, UserOutlined } from '@ant-design/icons';
+import { Card, List, Input, Typography, Row, Col, Pagination, Spin, Tag, Button, Avatar } from 'antd';
+import { SearchOutlined, CalendarOutlined, UserOutlined, EyeOutlined, BookOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
 import { contentService } from '../../services';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
 
 const AnnouncementsPage = () => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const [announcements, setAnnouncements] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const pageSize = 10;
+  const navigate = useNavigate();
+  const pageSize = 12;
 
-  const loadAnnouncements = async (page = 1, search = '') => {
+  const loadPosts = async (page = 1, search = '') => {
     try {
       setLoading(true);
       const params = {
         page,
         page_size: pageSize,
+        status: 'published', // Only show published posts
+        is_public: true, // Only show public posts
         ordering: '-created_at', // Show newest first
       };
 
       if (search) params.search = search;
 
-      const response = await contentService.getPublicAnnouncements(params);
-      setAnnouncements(response.results || []);
+      const response = await contentService.getPublicPosts(params);
+      setPosts(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {
-      console.error('Failed to load announcements:', error);
-      setAnnouncements([]);
+      console.error('Failed to load posts:', error);
+      setPosts([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadAnnouncements(currentPage, searchTerm);
+    loadPosts(currentPage, searchTerm);
   }, [currentPage, searchTerm]);
 
   const handleSearch = (value) => {
@@ -54,126 +54,198 @@ const AnnouncementsPage = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('ar-EG', {
       year: 'numeric',
       month: 'long',
-      day: 'numeric',
+      day: 'numeric'
     });
   };
 
-  const getPriorityColor = (priority) => {
+  const getCategoryColor = (category) => {
     const colors = {
-      'high': 'red',
-      'medium': 'orange',
-      'low': 'blue',
-      'urgent': 'magenta',
+      'general': 'blue',
+      'event': 'green',
+      'activity': 'orange',
+      'workshop': 'purple',
+      'seminar': 'cyan',
+      'conference': 'red',
+      'training': 'magenta',
+      'collaboration': 'gold',
+      'achievement': 'lime',
+      'post': 'geekblue',
+      'news': 'volcano'
     };
-    return colors[priority] || 'default';
+    return colors[category] || 'default';
+  };
+
+  const getCategoryLabel = (category) => {
+    const labels = {
+      'general': 'عام',
+      'event': 'فعالية',
+      'activity': 'نشاط',
+      'workshop': 'ورشة عمل',
+      'seminar': 'ندوة',
+      'conference': 'مؤتمر',
+      'training': 'تدريب',
+      'collaboration': 'تعاون',
+      'achievement': 'إنجاز',
+      'post': 'منشور',
+      'news': 'أخبار'
+    };
+    return labels[category] || category;
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: '24px' }}>
-        <Title level={2}>
-          <FileTextOutlined style={{ marginRight: '8px' }} />
-          Announcements
-        </Title>
-        <Paragraph type="secondary">
-          Stay updated with the latest news, events, and important announcements.
+    <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
+      <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+        <Title level={1}>المنشورات</Title>
+        <Paragraph style={{ fontSize: '16px', color: '#666' }}>
+          ابق على اطلاع بآخر الأخبار والفعاليات والإعلانات المهمة
         </Paragraph>
       </div>
 
       {/* Search */}
       <Card style={{ marginBottom: '24px' }}>
         <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={12} md={8}>
+          <Col xs={24} md={16}>
             <Search
-              placeholder="Search announcements..."
+              placeholder="البحث في المنشورات..."
               allowClear
               enterButton={<SearchOutlined />}
+              size="large"
               onSearch={handleSearch}
-              style={{ width: '100%' }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </Col>
-          <Col xs={24} md={16}>
-            <Text type="secondary">
-              Showing {announcements.length} of {total} announcements
+          <Col xs={24} md={8}>
+            <Text strong style={{ fontSize: '16px' }}>
+              إجمالي المنشورات: {total}
             </Text>
           </Col>
         </Row>
       </Card>
 
-      {/* Announcements List */}
-      <List
-        loading={loading}
-        dataSource={announcements}
-        renderItem={(announcement) => (
-          <List.Item>
-            <Card
-              style={{ width: '100%' }}
-              bodyStyle={{ padding: '20px' }}
-            >
-              <div style={{ marginBottom: '12px' }}>
-                <Title level={4} style={{ marginBottom: '8px' }}>
-                  {announcement.title}
-                </Title>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
-                  {announcement.priority && (
-                    <Tag color={getPriorityColor(announcement.priority)}>
-                      {announcement.priority?.toUpperCase()}
-                    </Tag>
-                  )}
-                  {announcement.category && (
-                    <Tag color="blue">{announcement.category}</Tag>
-                  )}
-                  {announcement.created_at && (
-                    <Text type="secondary">
-                      <CalendarOutlined style={{ marginRight: '4px' }} />
-                      {formatDate(announcement.created_at)}
-                    </Text>
-                  )}
-                </div>
-              </div>
-
-              <Paragraph 
-                ellipsis={{ rows: 4, expandable: true, symbol: 'more' }}
-                style={{ marginBottom: '16px' }}
-              >
-                {announcement.content || announcement.description || 'No content available.'}
-              </Paragraph>
-
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  {announcement.author && (
-                    <Text type="secondary">
-                      <UserOutlined style={{ marginRight: '4px' }} />
-                      {announcement.author.full_name || announcement.author.username}
-                    </Text>
-                  )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  {announcement.expires_at && (
-                    <Text type="secondary">
-                      Expires: {formatDate(announcement.expires_at)}
-                    </Text>
-                  )}
-                  <Button
-                    type="primary"
-                    size="small"
-                    onClick={() => navigate(`/announcements/${announcement.id}`)}
+      {/* Posts Grid */}
+      <Spin spinning={loading}>
+        <List
+          grid={{
+            gutter: 24,
+            xs: 1,
+            sm: 1,
+            md: 2,
+            lg: 2,
+            xl: 3,
+            xxl: 3,
+          }}
+          dataSource={posts}
+          renderItem={(post) => (
+            <List.Item>
+              <Card
+                hoverable
+                style={{ height: '100%' }}
+                cover={
+                  post.featured_image || post.attachment ? (
+                    <div style={{ height: '200px', overflow: 'hidden' }}>
+                      <img
+                        alt={post.title}
+                        src={post.featured_image || post.attachment}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover'
+                        }}
+                      />
+                    </div>
+                  ) : null
+                }
+                actions={[
+                  <Button 
+                    type="link" 
+                    icon={<EyeOutlined />}
+                    onClick={() => {
+                      try {
+                        navigate(`/posts/${post.id}`);
+                      } catch (error) {
+                        console.error('Navigation error:', error);
+                      }
+                    }}
                   >
-                    View Details
+                    قراءة المزيد
                   </Button>
-                </div>
-              </div>
-            </Card>
-          </List.Item>
-        )}
-      />
+                ]}
+              >
+                <Card.Meta
+                  title={
+                    <div>
+                      <Title level={4} style={{ marginBottom: '8px', lineHeight: '1.3' }}>
+                        {post.title}
+                      </Title>
+                      <div style={{ marginBottom: '12px' }}>
+                        {post.category && (
+                          <Tag color={getCategoryColor(post.category)}>
+                            {getCategoryLabel(post.category)}
+                          </Tag>
+                        )}
+                        {post.is_featured && (
+                          <Tag color="gold">مميز</Tag>
+                        )}
+                      </div>
+                    </div>
+                  }
+                  description={
+                    <div>
+                      {post.excerpt && (
+                        <Paragraph 
+                          ellipsis={{ rows: 3, expandable: false }}
+                          style={{ marginBottom: '16px', color: '#666' }}
+                        >
+                          {post.excerpt}
+                        </Paragraph>
+                      )}
+                      
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Avatar 
+                            size="small" 
+                            icon={<UserOutlined />}
+                            src={post.author?.avatar}
+                          />
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            {post.author?.full_name || post.author?.email || 'المشرف'}
+                          </Text>
+                        </div>
+                        
+                        {post.created_at && (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <CalendarOutlined style={{ fontSize: '12px', color: '#999' }} />
+                            <Text type="secondary" style={{ fontSize: '12px' }}>
+                              {formatDate(post.created_at)}
+                            </Text>
+                          </div>
+                        )}
+                      </div>
+
+                      {post.view_count !== undefined && (
+                        <div style={{ marginTop: '8px', textAlign: 'left' }}>
+                          <Text type="secondary" style={{ fontSize: '11px' }}>
+                            <EyeOutlined style={{ marginRight: '4px' }} />
+                            {post.view_count} مشاهدة
+                          </Text>
+                        </div>
+                      )}
+                    </div>
+                  }
+                />
+              </Card>
+            </List.Item>
+          )}
+        />
+      </Spin>
 
       {/* Pagination */}
       {total > pageSize && (
-        <div style={{ textAlign: 'center', marginTop: '24px' }}>
+        <div style={{ textAlign: 'center', marginTop: '32px' }}>
           <Pagination
             current={currentPage}
             total={total}
@@ -182,25 +254,20 @@ const AnnouncementsPage = () => {
             showSizeChanger={false}
             showQuickJumper
             showTotal={(total, range) => 
-              `${range[0]}-${range[1]} of ${total} announcements`
+              `${range[0]}-${range[1]} من ${total} منشور`
             }
           />
         </div>
       )}
 
       {/* Empty State */}
-      {!loading && announcements.length === 0 && (
-        <Card style={{ textAlign: 'center', padding: '40px' }}>
-          <FileTextOutlined style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }} />
-          <Title level={4} type="secondary">No Announcements Found</Title>
-          <Paragraph type="secondary">
-            {searchTerm 
-              ? 'Try adjusting your search criteria.'
-              : 'No announcements are currently available.'}
-          </Paragraph>
-          <Button type="primary" onClick={() => navigate('/register')}>
-            Register for More Updates
-          </Button>
+      {!loading && posts.length === 0 && (
+        <Card style={{ textAlign: 'center', padding: '48px' }}>
+          <BookOutlined style={{ fontSize: '48px', color: '#ccc', marginBottom: '16px' }} />
+          <Title level={4} type="secondary">لا توجد منشورات</Title>
+          <Text type="secondary">
+            {searchTerm ? 'لم يتم العثور على منشورات تطابق بحثك' : 'لا توجد منشورات منشورة حال<|im_start|>'}
+          </Text>
         </Card>
       )}
     </div>

@@ -9,6 +9,7 @@ export { searchService } from './searchService';
 export { analyticsService } from './analyticsService';
 export { notificationService } from './notificationService';
 export { adminService } from './adminService';
+export { statisticsService } from './statisticsService';
 
 // Export API client for direct use if needed
 export { default as apiClient } from './api';

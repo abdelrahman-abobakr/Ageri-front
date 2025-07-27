@@ -113,20 +113,20 @@ const MainLayout = () => {
   // Get translated menu label
   const getMenuLabel = (key) => {
     const labelMap = {
-      'dashboard': t('common.dashboard'),
+      'dashboard': t('navigation.dashboard'),
       'users': t('navigation.userManagement'),
       'research': t('navigation.myResearch'),
       'organization': t('navigation.organization'),
       'training': t('navigation.training'),
-      'services': t('common.services'),
+      'services': t('navigation.services'),
       'content': t('navigation.content'),
       'analytics': t('navigation.analytics'),
       'notifications': t('navigation.notifications'),
-      'settings': t('common.settings'),
-      'profile': t('common.profile'),
-      'home': t('common.home'),
-      'announcements': t('common.announcements'),
-      'courses': t('common.courses'),
+      'settings': t('navigation.settings'),
+      'profile': t('navigation.profile'),
+      'home': t('navigation.home'),
+      'posts': t('navigation.posts'),
+      'courses': t('navigation.courses'),
     };
     return labelMap[key] || key;
   };

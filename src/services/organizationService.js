@@ -131,7 +131,7 @@ export const organizationService = {
       console.error('Failed to fetch organization settings:', error);
       // Return default settings structure if API fails
       return {
-        name: "منظمة البحث العلمي الزراعي",
+        name: "منظمة البحث العلمي",
         vision: "أن نكون المنظمة الرائدة في البحث العلمي الزراعي والابتكار التكنولوجي في المنطقة",
         vision_image: null,
         mission: "نسعى لتطوير الحلول المبتكرة في مجال الزراعة والبحث العلمي لخدمة المجتمع والبيئة",

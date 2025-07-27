@@ -32,6 +32,8 @@ import LabDetailPage from './pages/public/LabDetailPage';
 import AnnouncementDetailPage from './pages/public/AnnouncementDetailPage';
 import AnnouncementsPage from './pages/public/AnnouncementsPage';
 import PostDetailPage from './pages/public/PostDetailPage';
+import PublicResearchPage from './pages/public/PublicResearchPage';
+import PublicResearchersPage from './pages/public/PublicResearchersPage';
 
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -110,12 +112,13 @@ const AppContent = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/courses" element={<CoursesPage />} />
           <Route path="/services" element={<ServicesPage />} />
-          <Route path="/announcements" element={<AnnouncementsPage />} />
+          <Route path="/posts" element={<AnnouncementsPage />} />
+          <Route path="/research" element={<PublicResearchPage />} />
+          <Route path="/researchers" element={<PublicResearchersPage />} />
           <Route path="/researchers/:id" element={<ResearcherProfilePage />} />
           <Route path="/labs/:id" element={<LabDetailPage />} />
-          <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
-          <Route path="/test" element={<TestPage />} />
           <Route path="/posts/:id" element={<PostDetailPage />} />
+          <Route path="/test" element={<TestPage />} />
         </Route>
 
         {/* Authenticated routes with main layout */}
