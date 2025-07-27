@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntdApp } from 'antd';
 import { useTranslation } from 'react-i18next';
 import arEG from 'antd/locale/ar_EG';
 import enUS from 'antd/locale/en_US';
@@ -54,6 +54,10 @@ import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
 import PublicationsPage from './pages/research/PublicationsPage.jsx';
 import PublicationForm from './pages/research/PublicationForm.jsx';
 
+// Service Request Components
+import ServiceRequestForm from './pages/services/ServiceRequestForm.jsx';
+import MyRequestsPage from './pages/services/MyRequestsPage.jsx';
+
 // Ant Design theme configuration
 const theme = {
   token: {
@@ -94,7 +98,8 @@ const AppContent = () => {
 
   return (
     <ConfigProvider theme={theme} locale={getAntdLocale()}>
-      <Router>
+      <AntdApp>
+        <Router>
         <Routes>
         {/* Auth routes (no layout) */}
         <Route path="/login" element={<LoginPage />} />
@@ -136,6 +141,11 @@ const AppContent = () => {
           <Route path="research/publications/new" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm /></ProtectedRoute>} />
           <Route path="research/publications/:id" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationDetailPage /></ProtectedRoute>} />
           <Route path="research/publications/:id/edit" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm isEdit={true} /></ProtectedRoute>} />
+
+          {/* Service Request routes */}
+          <Route path="services/request/:serviceId" element={<ServiceRequestForm />} />
+          <Route path="services/my-requests" element={<MyRequestsPage />} />
+
           {/* Home page for authenticated users */}
           <Route path="home" element={<HomePage />} />
 
@@ -226,7 +236,8 @@ const AppContent = () => {
           }
         />
         </Routes>
-      </Router>
+        </Router>
+      </AntdApp>
     </ConfigProvider>
   );
 };

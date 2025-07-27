@@ -265,11 +265,11 @@ export const API_ENDPOINTS = {
     SERVICES: '/analytics/services/',
   },
 
-  // Notifications
+  // Notifications - Temporarily disabled until backend implementation
   NOTIFICATIONS: {
-    LIST: '/notifications/',
-    MARK_READ: (id) => `/notifications/${id}/mark-read/`,
-    MARK_ALL_READ: '/notifications/mark-all-read/',
+    LIST: '/content/notifications/', // Will be implemented later
+    MARK_READ: (id) => `/content/notifications/${id}/mark-read/`,
+    MARK_ALL_READ: '/content/notifications/mark-all-read/',
   },
 
   // Admin System Management

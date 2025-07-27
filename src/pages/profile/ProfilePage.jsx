@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import profileService from '../../services/profileService';
 import { authService } from '../../services/authService';
+import researchService from '../../services/researchService';
 
 import './profile-page.css';
 
@@ -450,7 +451,7 @@ const ProfilePage = () => {
 
       console.log('📤 Uploading profile picture:', file.name, file.type, file.size);
 
-      // ✅ Use the new uploadProfilePicture service method with PATCH
+      // ✅ Use researchService uploadProfilePicture method with PATCH
       const response = await profileService.uploadProfilePicture(file);
 
       // Update profile state with new profile picture

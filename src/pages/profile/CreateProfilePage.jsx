@@ -326,7 +326,10 @@ const CreateProfilePage = () => {
               showUploadList={false}
               beforeUpload={async (file) => {
                 try {
-                  const response = await authService.uploadProfilePicture(file);
+                  const formData = new FormData();
+                  formData.append('profile_picture', file);
+      
+                  const response = await profileService.uploadProfilePicture(formData.file);
 
                   // Update profile data with new profile picture
                   setProfileData(prev => ({ ...prev, profile_picture: response.profile_picture }));

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, List, Input, Button, Tag, Typography, Row, Col, Pagination, Modal } from 'antd';
 import { SearchOutlined, ToolOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { servicesService } from '../../services';
 
@@ -11,6 +12,7 @@ const { Search } = Input;
 const ServicesPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,13 +62,26 @@ const ServicesPage = () => {
   };
 
   const handleRequestService = (serviceId) => {
-    // Redirect to login/register for service request
-    navigate('/login', {
-      state: {
-        from: `/services`,
-        message: 'Please login to request services'
-      }
-    });
+    console.log('🔄 Handling service request for service ID:', serviceId);
+    console.log('🔐 User authentication status:', { isAuthenticated, user: user?.email });
+
+    if (isAuthenticated && user) {
+      // Authenticated user - redirect to service request form
+      console.log('✅ User is authenticated, redirecting to service request form');
+      navigate(`/app/services/request/${serviceId}`, {
+        state: { serviceId }
+      });
+    } else {
+      // Not authenticated - redirect to login
+      console.log('❌ User not authenticated, redirecting to login');
+      navigate('/login', {
+        state: {
+          from: `/services`,
+          message: 'Please login to request services',
+          returnTo: `/app/services/request/${serviceId}`
+        }
+      });
+    }
   };
 
   const formatPrice = (price) => {

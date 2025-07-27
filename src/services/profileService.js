@@ -155,7 +155,7 @@ const profileService = {
       // ✅ Try POST first (like updateMyProfile method), then fallback to PATCH if needed
       // ✅ Do NOT manually set Content-Type for FormData - let Axios handle it automatically
       console.log('📤 ProfileService: Using POST for profile picture upload with FormData (matching updateMyProfile pattern)');
-      const response = await apiClient.post('auth/profiles/me/', formData);
+      const response = await apiClient.patch('auth/profiles/me/', formData);
       console.log('📥 ProfileService: Profile picture upload response:', response.data);
       return response.data;
     } catch (error) {
