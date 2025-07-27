@@ -184,7 +184,7 @@ const EnrollmentLookupPage = () => {
               
               <Col xs={24} sm={12}>
                 <Card size="small" className="help-card">
-                  <Title level={5">💾 من الملف المحفوظ</Title>
+                  <Title level={5}>💾 من الملف المحفوظ</Title>
                   <Text>
                     إذا قمت بحفظ معلومات التسجيل، ستجد الرقم في الملف المحفوظ.
                   </Text>

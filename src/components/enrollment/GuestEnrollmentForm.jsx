@@ -295,12 +295,48 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
           style={{ marginBottom: '24px' }}
         />
 
+        {/* Test Backend Button */}
+        <Form.Item>
+          <Button
+            type="default"
+            onClick={async () => {
+              try {
+                console.log('🧪 Testing backend endpoint...');
+                const testUrl = `http://localhost:8000/api/training/courses/${course.id}/enroll/`;
+                console.log('🧪 Test URL:', testUrl);
+
+                // Test with a simple GET first to see if endpoint exists
+                const response = await fetch(testUrl.replace('/enroll/', '/'), {
+                  method: 'GET',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  }
+                });
+
+                console.log('🧪 Course endpoint status:', response.status);
+
+                if (response.status === 200) {
+                  message.success('✅ Backend is reachable');
+                } else {
+                  message.error(`❌ Backend returned: ${response.status}`);
+                }
+              } catch (error) {
+                console.error('🧪 Backend test failed:', error);
+                message.error('❌ Cannot reach backend');
+              }
+            }}
+            style={{ marginBottom: '16px' }}
+          >
+            اختبار الاتصال بالخادم
+          </Button>
+        </Form.Item>
+
         {/* Form Actions */}
         <Form.Item>
           <Row gutter={16} justify="end">
             <Col>
-              <Button 
-                size="large" 
+              <Button
+                size="large"
                 onClick={handleCancel}
                 disabled={loading}
               >
@@ -308,9 +344,9 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
               </Button>
             </Col>
             <Col>
-              <Button 
-                type="primary" 
-                htmlType="submit" 
+              <Button
+                type="primary"
+                htmlType="submit"
                 size="large"
                 loading={loading}
                 disabled={loading}
