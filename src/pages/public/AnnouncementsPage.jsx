@@ -14,7 +14,7 @@ const AnnouncementsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
-  const pageSize = 12;
+  const pageSize = 100;
 
   const loadPosts = async (page = 1, search = '') => {
     try {
