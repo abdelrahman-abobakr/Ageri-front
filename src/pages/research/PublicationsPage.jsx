@@ -1,4 +1,3 @@
-// components/Publications/PublicationsListPage.jsx
 import React, { useState, useCallback, useEffect } from 'react';
 import './PublicationsPage.css';
 import { 
@@ -153,7 +152,6 @@ const PublicationsListPage = () => {
     setFilters(prev => ({ ...prev, search: value }));
     setPagination(prev => ({ ...prev, current: 1 }));
     
-    // ✅ Trigger immediate reload with new search term
     loadPublications({ page: 1, search: value });
   };
 

@@ -414,14 +414,12 @@ const ProfilePage = () => {
   };
 
   const handleCvUpload = async (info) => {
-    // Removed CV upload logic
   };
 
   const handleProfilePictureUpload = async (file) => {
     try {
       setAvatarUploading(true);
 
-      // ✅ Log the exact file object received
       console.log('📤 Raw file object received:', file);
       console.log('📤 File properties:', {
         name: file.name,
@@ -433,7 +431,6 @@ const ProfilePage = () => {
         instanceof_Blob: file instanceof Blob
       });
 
-      // ✅ Check if it's actually a File object
       if (!(file instanceof File)) {
         console.error('❌ Not a File object:', typeof file, file);
         message.error('خطأ في نوع الملف المرسل');
@@ -456,7 +453,6 @@ const ProfilePage = () => {
 
       console.log('✅ File validation passed, uploading...');
       
-      // ✅ Create a fresh File object to ensure it's valid
       const freshFile = new File([file], file.name, {
         type: file.type,
         lastModified: file.lastModified
@@ -473,7 +469,7 @@ const ProfilePage = () => {
       }));
 
       message.success('تم رفع الصورة الشخصية بنجاح');
-      return false; // ✅ Prevent default upload
+      return false; 
     } catch (error) {
       console.error('❌ Upload error:', error);
       
@@ -619,7 +615,6 @@ const ProfilePage = () => {
     ? `${userInfo.first_name} ${userInfo.last_name}`
     : userInfo.first_name || 'الباحث';
 
-  // إذا لم يكن لدى المستخدم بروفايل، اعرض شاشة إنشاء البروفايل
   if (!hasProfile) {
     return (
       <div className="profile-container">
@@ -839,7 +834,6 @@ const ProfilePage = () => {
     );
   }
 
-  // إذا كان لدى المستخدم بروفايل، اعرض البروفايل العادي
   return (
     <div className="profile-container" style={{
       maxWidth: '1200px',
@@ -1329,7 +1323,6 @@ const ProfilePage = () => {
               onValuesChange={(changedValues, allValues) => {
                 console.log('Form values changed:', changedValues, allValues);
                 setFormData(prev => ({ ...prev, ...allValues }));
-                // تحديث نسبة اكتمال البروفايل مباشرة
                 setProfileCompletion(calculateProfileCompletion(allValues));
               }}
               preserve={false}

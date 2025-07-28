@@ -15,8 +15,9 @@ import { useResearcherStats } from '../../hooks/useResearcherStats';
 import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
 import { contentService } from '../../services';
 import { ToolOutlined } from '@ant-design/icons';
+import { FileTextOutlined } from '@ant-design/icons';
 
-const { Title, Paragraph } = Typography;
+const { Title, Paragraph, Text } = Typography;
 
 const DashboardPage = () => {
   const navigate = useNavigate();
@@ -78,9 +79,24 @@ const DashboardPage = () => {
     const userRole = user?.role || USER_ROLES.RESEARCHER;
     if (userRole === USER_ROLES.RESEARCHER) {
       return [
-        { label: 'Submit Publication', icon: <PlusOutlined />, path: '/research/publications/new', type: 'primary' },
-        { label: 'My Publications', icon: <BookOutlined />, path: '/research/publications', type: 'default' },
-        { label: 'Profile', icon: <UserOutlined />, path: '/profile', type: 'default' },
+        { 
+          label: 'Create Publication', 
+          icon: <PlusOutlined />, 
+          path: '/app/research/publications/new', 
+          type: 'primary' 
+        },
+        { 
+          label: 'My Publications', 
+          icon: <BookOutlined />, 
+          path: '/app/research/publications', 
+          type: 'default' 
+        },
+        { 
+          label: 'Profile', 
+          icon: <UserOutlined />, 
+          path: '/app/profile', 
+          type: 'default' 
+        },
       ];
     }
     
@@ -97,11 +113,26 @@ const DashboardPage = () => {
           { label: 'Manage Content', icon: <EyeOutlined />, path: '/content', type: 'default' },
           { label: 'Service Requests', icon: <ToolOutlined />, path: '/services', type: 'default' },
         ];
-      default: // RESEARCHER
+      default: // RESEARCHER fallback
         return [
-          { label: 'Submit Publication', icon: <PlusOutlined />, path: '/research/submit', type: 'primary' },
-          { label: 'My Publications', icon: <BookOutlined />, path: '/research/my-publications', type: 'default' },
-          { label: 'Browse Courses', icon: <ReadOutlined />, path: '/training', type: 'default' },
+          { 
+            label: 'Create Publication', 
+            icon: <PlusOutlined />, 
+            path: '/app/research/publications/new', 
+            type: 'primary' 
+          },
+          { 
+            label: 'My Publications', 
+            icon: <BookOutlined />, 
+            path: '/app/research/publications', 
+            type: 'default' 
+          },
+          { 
+            label: 'Profile', 
+            icon: <UserOutlined />, 
+            path: '/app/profile', 
+            type: 'default' 
+          },
         ];
     }
   };
@@ -164,6 +195,32 @@ const DashboardPage = () => {
   const quickActions = getQuickActions();
   const roleStats = getRoleSpecificStats();
 
+  const [recentPublications, setRecentPublications] = useState([]);
+  const [publicationsLoading, setPublicationsLoading] = useState(false);
+
+  // Load recent approved publications for researcher
+  const loadRecentPublications = async () => {
+    if (user?.role !== USER_ROLES.RESEARCHER) return;
+    
+    try {
+      setPublicationsLoading(true);
+      const response = await researchService.getMyPublications({
+        page_size: 5,
+        status: 'approved',
+        ordering: '-updated_at'
+      });
+      setRecentPublications(response.results || []);
+    } catch (error) {
+      console.error('Failed to load recent publications:', error);
+    } finally {
+      setPublicationsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadRecentPublications();
+  }, [user?.role]);
+
   return (
     <div>
       {/* Welcome Section */}
@@ -189,33 +246,98 @@ const DashboardPage = () => {
         </Space>
       </Card>
 
-      {/* Statistics Cards */}
-      <div style={{ marginBottom: 24 }}>
-        <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
-          My Statistics
-        </Title>
-        <Row gutter={[16, 16]}>
-          {roleStats.map((stat, index) => (
-            <Col xs={24} sm={12} md={6} key={index}>
-              <Card>
-                {statsLoading ? (
-                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                    <Spin size="small" />
-                    <div style={{ marginTop: 8, color: '#666' }}>{stat.title}</div>
+      {/* Recent Approved Publications for Researcher */}
+      {user?.role === USER_ROLES.RESEARCHER && (
+        <div style={{ marginBottom: 24 }}>
+          <Title level={4} style={{ margin: 0, color: '#1890ff', marginBottom: 16 }}>
+            My Recent Approved Publications
+          </Title>
+          <Card loading={publicationsLoading}>
+            {recentPublications.length > 0 ? (
+              <div>
+                {recentPublications.map((pub, index) => (
+                  <div key={pub.id} style={{ 
+                    padding: '12px 0', 
+                    borderBottom: index < recentPublications.length - 1 ? '1px solid #f0f0f0' : 'none' 
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div style={{ flex: 1 }}>
+                        <Text strong style={{ color: '#1890ff', fontSize: '14px' }}>
+                          {pub.title}
+                        </Text>
+                        <div style={{ marginTop: 4 }}>
+                          <Text type="secondary" style={{ fontSize: '12px' }}>
+                            {pub.journal_name} • {new Date(pub.updated_at).toLocaleDateString('ar-EG')}
+                          </Text>
+                        </div>
+                      </div>
+                      <Button 
+                        type="link" 
+                        size="small"
+                        onClick={() => navigate(`/app/research/publications/${pub.id}`)}
+                      >
+                        View
+                      </Button>
+                    </div>
                   </div>
-                ) : (
-                  <Statistic
-                    title={stat.title}
-                    value={stat.value}
-                    prefix={stat.icon}
-                    valueStyle={{ color: stat.color, transition: 'all 0.3s ease' }}
-                  />
-                )}
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </div>
+                ))}
+                <div style={{ textAlign: 'center', marginTop: 16 }}>
+                  <Button 
+                    type="link" 
+                    onClick={() => navigate('/app/research/publications')}
+                  >
+                    View All Publications →
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '40px 0' }}>
+                <FileTextOutlined style={{ fontSize: 48, color: '#d9d9d9', marginBottom: 16 }} />
+                <div style={{ color: '#999', marginBottom: 16 }}>
+                  No approved publications yet
+                </div>
+                <Button 
+                  type="primary" 
+                  icon={<PlusOutlined />}
+                  onClick={() => navigate('/app/research/publications/new')}
+                >
+                  Create Your First Publication
+                </Button>
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
+
+      {/* Statistics for Admin/Moderator only */}
+      {user?.role !== USER_ROLES.RESEARCHER && (
+        <div style={{ marginBottom: 24 }}>
+          <Title level={4} style={{ margin: 0, color: '#1890ff' }}>
+            Statistics
+          </Title>
+          <Row gutter={[16, 16]}>
+            {roleStats.map((stat, index) => (
+              <Col xs={24} sm={12} md={6} key={index}>
+                <Card>
+                  {statsLoading ? (
+                    <div style={{ textAlign: 'center', padding: '20px 0' }}>
+                      <Spin size="small" />
+                      <div style={{ marginTop: 8, color: '#666' }}>{stat.title}</div>
+                    </div>
+                  ) : (
+                    <Statistic
+                      title={stat.title}
+                      value={stat.value}
+                      prefix={stat.icon}
+                      valueStyle={{ color: stat.color, transition: 'all 0.3s ease' }}
+                    />
+                  )}
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      )}
 
       {/* Remove announcements, service requests, enrolled courses, recent activity for researchers */}
     </div>

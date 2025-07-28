@@ -29,24 +29,20 @@ const CreateProfilePage = () => {
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [isCreating, setIsCreating] = useState(true); // Flag to indicate this is creation, not editing
 
-  // حساب نسبة اكتمال البروفايل
   const calculateProfileCompletion = (data) => {
     const coreFields = ['bio', 'research_interests', 'orcid_id', 'website', 'linkedin', 'google_scholar', 'researchgate'];
     const additionalFields = ['phone', 'institution', 'department', 'position', 'academic_degree', 'specialization'];
     const allFields = [...coreFields, ...additionalFields];
 
     const filledFields = allFields.filter(field => data[field] && data[field].trim() !== '');
-    // ✅ شيل الـ CV من حساب النسبة
     return Math.round((filledFields.length / allFields.length) * 100);
   };
 
-  // جلب بيانات المستخدم والبروفايل عند تحميل الصفحة
   useEffect(() => {
     const fetchUserAndProfile = async () => {
       try {
         setInitialLoading(true);
 
-        // جلب بيانات المستخدم الأساسية
         const user = await authService.getCurrentUser();
         setUserInfo({
           first_name: user.first_name || '',
@@ -58,17 +54,14 @@ const CreateProfilePage = () => {
           profile_picture: user.profile_picture || null
         });
 
-        // جلب بيانات البروفايل إذا كانت موجودة
         try {
           const profile = await profileService.getMyProfile();
           const profileData = profile.data || profile;
           setProfileData(profileData);
 
-          // حساب نسبة الاكتمال
           const completion = calculateProfileCompletion(profileData);
           setProfileCompletion(completion);
 
-          // تعبئة الفورم بالبيانات الموجودة (جميع الحقول)
           form.setFieldsValue({
             orcid_id: profileData.orcid_id || '',
             bio: profileData.bio || '',
@@ -77,7 +70,6 @@ const CreateProfilePage = () => {
             linkedin: profileData.linkedin || '',
             google_scholar: profileData.google_scholar || '',
             researchgate: profileData.researchgate || '',
-            // New fields
             phone: profileData.phone || '',
             institution: profileData.institution || '',
             department: profileData.department || '',
@@ -87,12 +79,10 @@ const CreateProfilePage = () => {
             is_public: profileData.is_public !== undefined ? profileData.is_public : true
           });
 
-          // إذا كان هناك ملف CV موجود
           if (profileData.cv_file) {
             setExistingCvFile(profileData.cv_file);
           }
         } catch (profileError) {
-          // البروفايل غير موجود بعد، هذا طبيعي للمستخدمين الجدد
           console.log('Profile not found, creating new one');
           setProfileCompletion(0);
         }
@@ -107,7 +97,6 @@ const CreateProfilePage = () => {
     fetchUserAndProfile();
   }, [form]);
 
-  // تحديث نسبة الاكتمال عند تغيير البيانات
   const handleFormChange = () => {
     const values = form.getFieldsValue();
     const completion = calculateProfileCompletion(values);
@@ -258,16 +247,14 @@ const CreateProfilePage = () => {
 
   const handleFileChange = (file) => {
     setCvFile(file);
-    // تحديث نسبة الاكتمال مؤقت
     const values = form.getFieldsValue();
     const tempCompletion = calculateProfileCompletion({ ...values, cv_file: true });
     setProfileCompletion(tempCompletion);
-    return false; // منع الرفع التلقائي
+    return false; 
   };
 
   const handleRemoveFile = () => {
     setCvFile(null);
-    // تحديث نسبة الاكتمال
     const values = form.getFieldsValue();
     const tempCompletion = calculateProfileCompletion({ ...values, cv_file: existingCvFile });
     setProfileCompletion(tempCompletion);
