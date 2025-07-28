@@ -2,14 +2,14 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import moment from 'moment';
 import {
-  Form, Input, Button, Upload, Select, DatePicker, Card, Typography,
+  Form, Input, Button, Select, DatePicker, Card, Typography,
   Checkbox, Space, Divider, Row, Col, Spin, Steps, Alert, Tooltip, Tag,
   Modal, List, Avatar, Badge, Switch, App
 } from 'antd';
 import { 
-  UploadOutlined, SaveOutlined, PlusOutlined, DeleteOutlined, ArrowLeftOutlined,
-  InfoCircleOutlined, CheckCircleOutlined, UserOutlined, FileTextOutlined,
-  BookOutlined, CalendarOutlined, LinkOutlined, TagsOutlined, TeamOutlined,
+  SaveOutlined, ArrowLeftOutlined,
+  InfoCircleOutlined, CheckCircleOutlined, FileTextOutlined,
+  BookOutlined, CalendarOutlined, LinkOutlined, TagsOutlined,
   SettingOutlined, EyeOutlined
 } from '@ant-design/icons';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -53,9 +53,6 @@ const PublicationFormPage = () => {
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState(0);
-  const [fileList, setFileList] = useState([]);
-  const [availableUsers, setAvailableUsers] = useState([]);
-  const [previewVisible, setPreviewVisible] = useState(false);
   const [formData, setFormData] = useState({});
   const [doiCheckLoading, setDoiCheckLoading] = useState(false);
   const [doiExists, setDoiExists] = useState(false);
@@ -75,7 +72,6 @@ const PublicationFormPage = () => {
       publisher: 'الناشر',
       keywords: 'الكلمات المفتاحية',
       research_area: 'المجال البحثي',
-      authors_data: 'بيانات المؤلفين',
       publication_date: 'تاريخ النشر',
       url: 'الرابط',
       pdf_url: 'رابط PDF'
@@ -119,7 +115,7 @@ const PublicationFormPage = () => {
     return () => clearTimeout(timeoutId);
   }, []);
 
-  // Form steps
+  // Form steps - Updated to remove authors step
   const steps = [
     {
       title: t('basic_information') || 'المعلومات الأساسية',
@@ -132,41 +128,11 @@ const PublicationFormPage = () => {
       description: t('journal_conference_publisher') || 'المجلة والمؤتمر والناشر'
     },
     {
-      title: t('authors_and_identifiers') || 'المؤلفون والمعرفات',
-      icon: <TeamOutlined />,
-      description: t('authors_doi_isbn') || 'المؤلفون و DOI و ISBN'
-    },
-    {
-      title: t('settings_and_files') || 'الإعدادات والملفات',
+      title: t('identifiers_and_settings') || 'المعرفات والإعدادات',
       icon: <SettingOutlined />,
-      description: t('visibility_files_final_settings') || 'الرؤية والملفات والإعدادات النهائية'
+      description: t('doi_isbn_settings') || 'DOI و ISBN والإعدادات'
     }
   ];
-
-  // Load available users - only for admin users
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        // Only fetch users if current user is admin
-        // if (!user?.is_admin && !user?.is_staff) {
-        //   console.log('📝 Non-admin user - skipping user fetch');
-        //   return;
-        // }
-
-        console.log('📤 Fetching available users for authors');
-        const response = await authService.getAllUsers();
-        console.log('📥 Available users loaded:', response);
-        setAvailableUsers(response.results || response);
-      } catch (error) {
-        console.error('❌ Failed to fetch users:', error);
-        // Don't show error message for non-admin users
-        if (user?.is_admin || user?.is_staff) {
-          messageApi.error(t('failed_to_load_users_for_authors') || 'فشل في تحميل المستخدمين للمؤلفين');
-        }
-      }
-    };
-    fetchUsers();
-  }, [t, user]);
 
   // Load publication data for edit mode
   useEffect(() => {
@@ -215,39 +181,14 @@ const PublicationFormPage = () => {
             keywords: data.keywords || '',
             research_area: data.research_area || '',
             
-            // Authors and Corresponding Author
-            corresponding_author: data.corresponding_author || null,
-            
             // Settings
             is_public: data.is_public || false,
             citation_count: data.citation_count || 0,
-            
-            // Authors data (from the authors relationship)
-            authors_data: data.authors?.map(author => ({
-              author: author.author,
-              order: author.order || 1,
-              role: author.role || '',
-              affiliation_at_publication: author.affiliation_at_publication || '',
-              contribution: author.contribution || '',
-              is_corresponding: author.is_corresponding || false,
-              is_first_author: author.is_first_author || false,
-              is_last_author: author.is_last_author || false,
-            })) || [],
           };
 
           console.log('📋 Setting form values:', formattedData);
           form.setFieldsValue(formattedData);
           setFormData(formattedData);
-          
-          // Handle document file
-          if (data.document_file) {
-            setFileList([{
-              uid: '-1',
-              name: data.document_file.split('/').pop() || 'document.pdf',
-              status: 'done',
-              url: data.document_file,
-            }]);
-          }
           
         } catch (error) {
           console.error('❌ Error fetching publication for edit:', error);
@@ -265,8 +206,7 @@ const PublicationFormPage = () => {
   const canEditPublication = (publication) => {
     if (!user) return false;
     if (user.is_admin) return true;
-    return publication.submitted_by === user.id || 
-           (publication.authors && publication.authors.some(a => a.author === user.id));
+    return publication.submitted_by === user.id;
   };
 
   // Data cleaning utility
@@ -342,28 +282,10 @@ const PublicationFormPage = () => {
     try {
       console.log('=== FORM SUBMISSION DEBUG START ===');
       console.log('📤 Raw form submission values:', values);
-      console.log('📤 Values keys:', Object.keys(values));
-      console.log('📤 Title in values:', values.title);
-
-      // Force form validation to ensure all fields are captured
-      try {
-        await form.validateFields();
-        console.log('✅ Form validation passed');
-      } catch (validationError) {
-        console.log('⚠️ Form validation issues:', validationError);
-      }
 
       // Get all form values (including from all steps)
       const allFormValues = form.getFieldsValue();
       console.log('📋 All form values from all steps:', allFormValues);
-      console.log('📋 All form values keys:', Object.keys(allFormValues));
-      console.log('📋 Title in all form values:', allFormValues.title);
-
-      // Check if title exists in form fields using multiple methods
-      const titleFieldValue = form.getFieldValue('title');
-      const titleFromFormData = formData.title;
-      console.log('🔍 Direct title field value:', titleFieldValue);
-      console.log('🔍 Title from formData state:', titleFromFormData);
 
       // Create a comprehensive merged values object
       const mergedValues = {
@@ -372,17 +294,6 @@ const PublicationFormPage = () => {
         ...values              // From onFinish parameter (highest priority)
       };
       console.log('🔄 Merged values:', mergedValues);
-      console.log('🔄 Title in merged values:', mergedValues.title);
-
-      // Final fallback - if title is still missing, try to get it directly
-      if (!mergedValues.title) {
-        console.log('🚨 Title still missing, trying fallback methods...');
-        const fallbackTitle = titleFieldValue || titleFromFormData || allFormValues.title || values.title;
-        if (fallbackTitle) {
-          mergedValues.title = fallbackTitle;
-          console.log('✅ Found title via fallback:', fallbackTitle);
-        }
-      }
 
       // Step 1: Clean and validate data
       const cleanedData = cleanAndValidateData(mergedValues);
@@ -390,9 +301,6 @@ const PublicationFormPage = () => {
       // Step 2: Validate required fields
       if (!cleanedData.title || cleanedData.title.length < 10) {
         console.error('❌ Title validation failed:', {
-          originalTitle: values.title,
-          allFormTitle: allFormValues.title,
-          mergedTitle: mergedValues.title,
           cleanedTitle: cleanedData.title,
           length: cleanedData.title?.length || 0
         });
@@ -450,63 +358,18 @@ const PublicationFormPage = () => {
       console.log('  🔗 DOI:', cleanedData.doi || 'Not provided');
       console.log('  📄 Abstract length:', cleanedData.abstract?.length || 0);
       console.log('  🏷️ Keywords:', cleanedData.keywords || 'Not provided');
-      console.log('  👥 Authors:', (values.authors_data || []).length);
-      console.log('  📁 File attached:', fileList.length > 0 ? 'Yes' : 'No');
 
-      // Step 5: Use cleaned data as payload and add authors data
-      const payload = {
-        ...cleanedData,
-        // Authors Data - format for backend serializer
-        authors_data: (mergedValues.authors_data || []).filter(author => author && author.author).map(author => ({
-          author: parseInt(author.author) || author.author,
-          order: parseInt(author.order) || 1,
-          role: author.role?.trim() || '',
-          affiliation_at_publication: author.affiliation_at_publication?.trim() || '',
-          contribution: author.contribution?.trim() || '',
-          is_corresponding: Boolean(author.is_corresponding),
-          is_first_author: Boolean(author.is_first_author),
-          is_last_author: Boolean(author.is_last_author),
-        }))
-      };
+      const payload = cleanedData;
 
       console.log('📋 Final prepared payload:', payload);
-      console.log('📤 Final cleanedPayload:', payload);
-      console.log('📤 Payload title:', payload.title);
-      console.log('📤 Payload keys:', Object.keys(payload));
 
-      // Handle file upload
-      if (fileList.length > 0 && fileList[0].originFileObj) {
-        console.log('📁 Including file in submission');
-        const formData = new FormData();
-        
-        // Add all payload fields to FormData
-        Object.keys(payload).forEach(key => {
-          if (key === 'authors_data') {
-            // Handle authors_data as JSON string for FormData
-            formData.append('authors_data', JSON.stringify(payload[key]));
-          } else if (payload[key] !== null && payload[key] !== undefined && payload[key] !== '') {
-            formData.append(key, payload[key]);
-          }
-        });
-        
-        // Add file
-        formData.append('document_file', fileList[0].originFileObj);
-        
-        console.log('📤 Sending FormData with file');
-        const response = isEditMode
-          ? await researchService.updatePublication(id, formData)
-          : await researchService.createPublication(formData);
-        
-        console.log('📥 Response with file:', response);
-      } else {
-        // Send JSON payload without file
-        console.log('📤 Sending JSON payload without file');
-        const response = isEditMode
-          ? await researchService.updatePublication(id, payload)
-          : await researchService.createPublication(payload);
-        
-        console.log('📥 Response without file:', response);
-      }
+      // Send JSON payload
+      console.log('📤 Sending JSON payload');
+      const response = isEditMode
+        ? await researchService.updatePublication(id, payload)
+        : await researchService.createPublication(payload);
+      
+      console.log('📥 Response:', response);
 
       messageApi.success(isEditMode ? (t('publication_updated_successfully') || 'تم تحديث المنشور بنجاح') : (t('publication_created_successfully') || 'تم إنشاء المنشور بنجاح'));
       navigate('/app/research/publications');
@@ -611,31 +474,6 @@ const PublicationFormPage = () => {
     }
   };
 
-  // Handle file changes
-  const handleFileChange = ({ fileList: newFileList }) => {
-    console.log('📁 File list changed:', newFileList);
-    setFileList(newFileList);
-  };
-
-  const beforeUpload = (file) => {
-    const isPdfDocDocx = file.type === 'application/pdf' ||
-                         file.type === 'application/msword' ||
-                         file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-    
-    if (!isPdfDocDocx) {
-      messageApi.error(t('you_can_only_upload_pdf_doc_docx_file') || 'يمكنك فقط رفع ملفات PDF أو DOC أو DOCX');
-      return false;
-    }
-
-    const isLt100M = file.size / 1024 / 1024 < 100;
-    if (!isLt100M) {
-      messageApi.error(t('file_must_be_smaller_than_100mb') || 'يجب أن يكون حجم الملف أقل من 100 ميجابايت');
-      return false;
-    }
-    
-    return false; // Prevent auto upload
-  };
-
   // Handle step navigation
   const next = async () => {
     try {
@@ -694,14 +532,7 @@ const PublicationFormPage = () => {
   // Basic Information Step
   const renderBasicInformation = () => (
     <Card title={t('basic_information') || 'المعلومات الأساسية'} className="shadow-sm">
-      <Alert
-        message="Publication Title Required"
-        description="Please enter a descriptive title for your publication (minimum 10 characters)"
-        type="info"
-        showIcon
-        className="mb-4"
-      />
-
+      {/* Alert for publication title removed as requested */}
       <Form.Item
         name="title"
         label={
@@ -896,18 +727,11 @@ const PublicationFormPage = () => {
     </Card>
   );
 
-  const renderAuthorsAndIdentifiers = () => (
+  const renderIdentifiersAndSettings = () => (
     <Space direction="vertical" className="w-full" size="large">
       {/* Identifiers */}
       <Card title={t('identifiers') || 'المعرفات'} className="shadow-sm">
-        <Alert
-          message="DOI Validation"
-          description="سيتم التحقق من DOI تلقائياً للتأكد من عدم تكراره. يمكنك ترك الحقل فارغاً إذا لم يكن متوفراً."
-          type="info"
-          showIcon
-          className="mb-4"
-        />
-
+        {/* Alert for DOI validation removed as requested */}
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
@@ -982,235 +806,6 @@ const PublicationFormPage = () => {
             </Form.Item>
           </Col>
         </Row>
-      </Card>
-
-      {/* Corresponding Author */}
-      <Card title={t('corresponding_author') || 'المؤلف المراسل'} className="shadow-sm">
-        <Form.Item
-          name="corresponding_author"
-          label={t('select_corresponding_author') || 'اختر المؤلف المراسل'}
-          extra={t('corresponding_author_help') || 'المؤلف المسؤول عن المراسلات'}
-        >
-          <Select
-            showSearch
-            placeholder={t('search_and_select_corresponding_author') || 'ابحث واختر المؤلف المراسل'}
-            optionFilterProp="children"
-            allowClear
-            size="large"
-            filterOption={(input, option) =>
-              option.children.toLowerCase().includes(input.toLowerCase())
-            }
-          >
-            {availableUsers.map(userOption => (
-              <Option key={userOption.id} value={userOption.id}>
-                <Space>
-                  <Avatar size="small" icon={<UserOutlined />} />
-                  {userOption.first_name} {userOption.last_name}
-                  <Text type="secondary">({userOption.email})</Text>
-                </Space>
-              </Option>
-            ))}
-          </Select>
-        </Form.Item>
-      </Card>
-
-      {/* Authors */}
-      <Card 
-        title={
-          <Space>
-            <TeamOutlined />
-            {t('authors_information') || 'معلومات المؤلفين'}
-          </Space>
-        } 
-        className="shadow-sm"
-      >
-        <Form.List name="authors_data">
-          {(fields, { add, remove }) => (
-            <>
-              {fields.map(({ key, name, ...restField }) => (
-                <Card 
-                  key={key} 
-                  size="small" 
-                  className="mb-4 border-l-4 border-l-blue-400"
-                  title={
-                    <Space>
-                      <Avatar size="small" icon={<UserOutlined />} />
-                      {t('author') || 'مؤلف'} #{name + 1}
-                    </Space>
-                  }
-                  extra={
-                    <Button 
-                      type="text" 
-                      danger 
-                      icon={<DeleteOutlined />}
-                      onClick={() => remove(name)}
-                      size="small"
-                    >
-                      {t('remove') || 'حذف'}
-                    </Button>
-                  }
-                >
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'author']}
-                        label={t('select_author') || 'اختر المؤلف'}
-                        rules={[{ required: true, message: t('please_select_author') || 'يرجى اختيار مؤلف' }]}
-                      >
-                        <Select
-                          showSearch
-                          placeholder={t('search_and_select_author') || 'ابحث واختر مؤلف'}
-                          optionFilterProp="children"
-                          filterOption={(input, option) =>
-                            option.children.toLowerCase().includes(input.toLowerCase())
-                          }
-                        >
-                          {availableUsers.map(userOption => (
-                            <Option key={userOption.id} value={userOption.id}>
-                              {userOption.first_name} {userOption.last_name}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    </Col>
-                    
-                    <Col span={6}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'order']}
-                        label={t('order') || 'الترتيب'}
-                        rules={[{ required: true, message: t('please_enter_order') || 'يرجى إدخال الترتيب' }]}
-                      >
-                        <Input 
-                          type="number" 
-                          min={1} 
-                          max={100}
-                          placeholder="1" 
-                        />
-                      </Form.Item>
-                    </Col>
-                    
-                    <Col span={6}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'role']}
-                        label={t('role') || 'الدور'}
-                      >
-                        <Input placeholder={t('researcher_supervisor') || 'باحث/مشرف'} />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                  
-                  <Row gutter={16}>
-                    <Col span={12}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'affiliation_at_publication']}
-                        label={t('affiliation_at_time_of_publication') || 'الانتماء وقت النشر'}
-                      >
-                        <Input placeholder={t('university_department') || 'الجامعة/القسم'} />
-                      </Form.Item>
-                    </Col>
-                    
-                    <Col span={12}>
-                      <Form.Item
-                        {...restField}
-                        name={[name, 'contribution']}
-                        label={t('contribution_description') || 'وصف المساهمة'}
-                      >
-                        <TextArea 
-                          rows={2} 
-                          placeholder={t('describe_author_contribution') || 'اوصف مساهمة المؤلف'} 
-                        />
-                      </Form.Item>
-                    </Col>
-                  </Row>
-
-                  <Row gutter={16}>
-                    <Col span={8}>
-                      <Form.Item 
-                        {...restField} 
-                        name={[name, 'is_corresponding']} 
-                        valuePropName="checked"
-                      >
-                        <Checkbox>{t('corresponding_author') || 'مؤلف مراسل'}</Checkbox>
-                      </Form.Item>
-                    </Col>
-                    <Col span={8}>
-                      <Form.Item 
-                        {...restField} 
-                        name={[name, 'is_first_author']} 
-                        valuePropName="checked"
-                      >
-                        <Checkbox>{t('first_author') || 'المؤلف الأول'}</Checkbox>
-                      </Form.Item>
-                    </Col>
-                    <Col span={8}>
-                      <Form.Item 
-                        {...restField} 
-                        name={[name, 'is_last_author']} 
-                        valuePropName="checked"
-                      >
-                        <Checkbox>{t('last_senior_author') || 'المؤلف الأخير/الكبير'}</Checkbox>
-                      </Form.Item>
-                    </Col>
-                  </Row>
-                </Card>
-              ))}
-              
-              {/* <Form.Item>
-                <Button 
-                  type="dashed" 
-                  onClick={() => add()} 
-                  block 
-                  icon={<PlusOutlined />}
-                  size="large"
-                >
-                  {t('add_author') || 'إضافة مؤلف'}
-                </Button>
-              </Form.Item> */}
-            </>
-          )}
-        </Form.List>
-      </Card>
-    </Space>
-  );
-
-  const renderSettingsAndFiles = () => (
-    <Space direction="vertical" className="w-full" size="large">
-      {/* Document File */}
-      <Card title={t('document_file') || 'ملف الوثيقة'} className="shadow-sm">
-        <Form.Item 
-          name="document_file" 
-          label={t('upload_publication_document') || 'رفع وثيقة المنشور'}
-          extra={t('file_upload_help') || 'يمكنك رفع ملف PDF أو DOC أو DOCX'}
-        >
-          <Upload
-            beforeUpload={beforeUpload}
-            fileList={fileList}
-            onRemove={() => setFileList([])}
-            onChange={handleFileChange}
-            maxCount={1}
-            accept=".pdf,.doc,.docx"
-            listType="picture-card"
-          >
-            {fileList.length === 0 && (
-              <div>
-                <UploadOutlined />
-                <div className="mt-2">{t('select_file') || 'اختر ملف'}</div>
-              </div>
-            )}
-          </Upload>
-        </Form.Item>
-        
-        <Alert
-          message={t('file_requirements') || 'متطلبات الملف'}
-          description={t('supported_formats_pdf_doc_docx_max_100mb') || 'الصيغ المدعومة: PDF, DOC, DOCX - الحد الأقصى 100 ميجابايت'}
-          type="info"
-          showIcon
-          className="mb-4"
-        />
       </Card>
 
       {/* Publication Settings */}
@@ -1304,7 +899,6 @@ const PublicationFormPage = () => {
             abstract: '',
             publication_type: 'journal_article',
             is_public: false,
-            authors_data: [],
             citation_count: 0,
             keywords: '',
             research_area: '',
@@ -1333,8 +927,7 @@ const PublicationFormPage = () => {
           {/* Step Content */}
           {currentStep === 0 && renderBasicInformation()}
           {currentStep === 1 && renderPublicationDetails()}
-          {currentStep === 2 && renderAuthorsAndIdentifiers()}
-          {currentStep === 3 && renderSettingsAndFiles()}
+          {currentStep === 2 && renderIdentifiersAndSettings()}
 
           {/* Navigation */}
           <Card className="mt-6">

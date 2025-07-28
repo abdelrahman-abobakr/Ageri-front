@@ -61,8 +61,7 @@ const ProfilePage = () => {
     
     const fields = ['bio', 'research_interests', 'orcid_id', 'website', 'linkedin', 'google_scholar', 'researchgate'];
     const filledFields = fields.filter(field => profileData[field] && profileData[field].trim() !== '');
-    const cvBonus = profileData.cv_file ? 1 : 0;
-    return Math.round(((filledFields.length + cvBonus) / (fields.length + 1)) * 100);
+    return Math.round((filledFields.length / fields.length) * 100);
   };
 
   useEffect(() => {
@@ -155,7 +154,7 @@ const ProfilePage = () => {
         } else if (error.response?.status === 404) {
           setError('لم يتم العثور على بيانات المستخدم. يرجى التواصل مع الدعم الفني.');
         } else if (error.response?.status >= 500) {
-          setError('خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً.');
+          setError('خطأ في الخادم. يرجى المحاولة مرة أخرى لاحق.');
         } else {
           setError(error.message || 'فشل في جلب البيانات. يرجى المحاولة مرة أخرى.');
         }
@@ -415,25 +414,31 @@ const ProfilePage = () => {
   };
 
   const handleCvUpload = async (info) => {
-    if (info.file.status === 'uploading') {
-      setCvUploading(true);
-    }
-    if (info.file.status === 'done') {
-      const updatedProfile = { ...profile, cv_file: info.file.response?.cv_file };
-      setProfile(updatedProfile);
-      const completion = calculateProfileCompletion(updatedProfile);
-      setProfileCompletion(completion);
-      setCvUploading(false);
-      message.success(`تم رفع ${info.file.name} بنجاح`);
-    } else if (info.file.status === 'error') {
-      setCvUploading(false);
-      message.error(`فشل في رفع ${info.file.name}`);
-    }
+    // Removed CV upload logic
   };
 
   const handleProfilePictureUpload = async (file) => {
     try {
       setAvatarUploading(true);
+
+      // ✅ Log the exact file object received
+      console.log('📤 Raw file object received:', file);
+      console.log('📤 File properties:', {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        lastModified: file.lastModified,
+        constructor: file.constructor.name,
+        instanceof_File: file instanceof File,
+        instanceof_Blob: file instanceof Blob
+      });
+
+      // ✅ Check if it's actually a File object
+      if (!(file instanceof File)) {
+        console.error('❌ Not a File object:', typeof file, file);
+        message.error('خطأ في نوع الملف المرسل');
+        return false;
+      }
 
       // Validate file type
       const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
@@ -443,59 +448,47 @@ const ProfilePage = () => {
       }
 
       // Validate file size (max 5MB)
-      const maxSize = 5 * 1024 * 1024; // 5MB
+      const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
-        message.error('حجم الملف كبير جداً. يرجى اختيار صورة أصغر من 5 ميجابايت');
+        message.error('حجم الملف كبير. يرجى اختيار صورة أصغر من 5 ميجابايت');
         return false;
       }
 
-      console.log('📤 Uploading profile picture:', file.name, file.type, file.size);
+      console.log('✅ File validation passed, uploading...');
+      
+      // ✅ Create a fresh File object to ensure it's valid
+      const freshFile = new File([file], file.name, {
+        type: file.type,
+        lastModified: file.lastModified
+      });
+      
+      console.log('📤 Fresh file created:', freshFile);
+      console.log('📤 Fresh file instanceof File:', freshFile instanceof File);
 
-      // ✅ Use researchService uploadProfilePicture method with PATCH
-      const response = await profileService.uploadProfilePicture(file);
+      const response = await profileService.uploadProfilePicture(freshFile);
 
-      // Update profile state with new profile picture
       setProfile(prev => ({
         ...prev,
         profile_picture: response.profile_picture
       }));
 
-      // Refresh profile data to ensure we have the latest data
-      try {
-        const refreshedProfile = await profileService.getMyProfile();
-        setProfile(refreshedProfile);
-        console.log('Profile refreshed after upload:', refreshedProfile);
-      } catch (refreshError) {
-        console.warn('Failed to refresh profile after upload:', refreshError);
-      }
-
-      message.success('تم تحديث الصورة الشخصية بنجاح!');
+      message.success('تم رفع الصورة الشخصية بنجاح');
+      return false; // ✅ Prevent default upload
     } catch (error) {
-      console.error('❌ Profile picture upload failed:', error);
-      console.error('❌ Error response:', error.response);
-      console.error('❌ Error response data:', error.response?.data);
-      console.error('❌ Error response status:', error.response?.status);
-
-      if (error.response?.status === 400) {
-        const errorData = error.response.data;
-        console.error('❌ 400 Bad Request details:', errorData);
-
-        if (errorData.profile_picture) {
-          message.error(`خطأ في الصورة: ${errorData.profile_picture.join(', ')}`);
-        } else if (errorData.detail) {
-          message.error(`خطأ: ${errorData.detail}`);
-        } else {
-          message.error('خطأ في بيانات الصورة. يرجى المحاولة مرة أخرى.');
-        }
-      } else if (error.response?.status === 413) {
-        message.error('حجم الصورة كبير جداً. يرجى اختيار صورة أصغر.');
+      console.error('❌ Upload error:', error);
+      
+      if (error.response?.data?.profile_picture) {
+        const errorMsg = Array.isArray(error.response.data.profile_picture) 
+          ? error.response.data.profile_picture[0] 
+          : error.response.data.profile_picture;
+        message.error(`خطأ في الصورة: ${errorMsg}`);
       } else {
-        message.error('فشل في رفع الصورة الشخصية. يرجى المحاولة مرة أخرى.');
+        message.error('فشل في رفع الصورة الشخصية');
       }
+      return false;
     } finally {
       setAvatarUploading(false);
     }
-    return false; // Prevent default upload behavior
   };
 
   const handleOrcidClick = (orcidId) => {
@@ -871,8 +864,8 @@ const ProfilePage = () => {
         }}>
           <Row gutter={[32, 24]} align="middle">
             <Col xs={24} sm={8} md={6} style={{ textAlign: 'center' }}>
-              {/* Profile Picture */}
-              {isOwner ? (
+              {/* Profile Picture Section */}
+              <div style={{ position: 'relative', display: 'inline-block', marginTop: '24px' }}>
                 <Upload
                   name="profile_picture"
                   showUploadList={false}
@@ -880,7 +873,7 @@ const ProfilePage = () => {
                   accept="image/jpeg,image/jpg,image/png"
                   disabled={avatarUploading}
                 >
-                  <div style={{ cursor: 'pointer', position: 'relative', display: 'inline-block' }}>
+                  <div style={{ cursor: 'pointer', position: 'relative' }}>
                     {profile?.profile_picture ? (
                       <img
                         src={profile.profile_picture}
@@ -894,8 +887,8 @@ const ProfilePage = () => {
                           boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
                           transition: 'transform 0.2s ease-in-out'
                         }}
-                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                        onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
+                        onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                       />
                     ) : (
                       <Avatar
@@ -908,8 +901,8 @@ const ProfilePage = () => {
                           fontSize: '56px',
                           transition: 'transform 0.2s ease-in-out'
                         }}
-                        onMouseEnter={(e) => e.target.style.transform = 'scale(1.05)'}
-                        onMouseLeave={(e) => e.target.style.transform = 'scale(1)'}
+                        onMouseEnter={e => e.target.style.transform = 'scale(1.05)'}
+                        onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                       />
                     )}
                     {avatarUploading && (
@@ -948,35 +941,7 @@ const ProfilePage = () => {
                     </div>
                   </div>
                 </Upload>
-              ) : (
-                <div style={{ display: 'inline-block' }}>
-                  {profile?.profile_picture ? (
-                    <img
-                      src={profile.profile_picture}
-                      alt="Profile"
-                      style={{
-                        width: '160px',
-                        height: '160px',
-                        borderRadius: '50%',
-                        objectFit: 'cover',
-                        border: '4px solid #fff',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
-                      }}
-                    />
-                  ) : (
-                    <Avatar
-                      size={160}
-                      icon={<UserOutlined />}
-                      style={{
-                        backgroundColor: '#4f8cff',
-                        border: '4px solid #fff',
-                        boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-                        fontSize: '56px'
-                      }}
-                    />
-                  )}
-                </div>
-              )}
+              </div>
             </Col>
 
             <Col xs={24} sm={16} md={18}>
@@ -1084,57 +1049,6 @@ const ProfilePage = () => {
               </div>
             </Card>
 
-            {/* CV File */}
-            <Card className="info-card">
-              <Title level={4}>
-                <FileTextOutlined />
-                السيرة الذاتية
-              </Title>
-              {profile?.cv_file ? (
-                <div className="cv-section">
-                  <Text type="success">✓ تم رفع السيرة الذاتية</Text>
-                  <div className="cv-actions">
-                    <a 
-                      href={profile.cv_file} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="cv-link"
-                    >
-                      عرض الملف
-                    </a>
-                  </div>
-                </div>
-              ) : (
-                <Text type="secondary">لم يتم رفع السيرة الذاتية بعد</Text>
-              )}
-              
-              <Upload
-                name="cv_file"
-                showUploadList={false}
-                customRequest={async ({ file, onSuccess, onError }) => {
-                  try {
-                    const formData = new FormData();
-                    formData.append('cv_file', file);
-                    const response = await profileService.updateMyProfile(formData);
-                    setProfile(prev => ({ ...prev, cv_file: response.cv_file || response.data?.cv_file }));
-                    onSuccess(response, file);
-                  } catch (error) {
-                    onError(error);
-                  }
-                }}
-                onChange={handleCvUpload}
-                accept=".pdf,.doc,.docx"
-                disabled={cvUploading}
-              >
-                <Button 
-                  icon={<UploadOutlined />} 
-                  loading={cvUploading} 
-                  className="upload-btn"
-                >
-                  {profile?.cv_file ? 'تحديث السيرة الذاتية' : 'رفع السيرة الذاتية'}
-                </Button>
-              </Upload>
-            </Card>
 
             {/* Action Buttons */}
             <div className="action-buttons">
@@ -1415,6 +1329,8 @@ const ProfilePage = () => {
               onValuesChange={(changedValues, allValues) => {
                 console.log('Form values changed:', changedValues, allValues);
                 setFormData(prev => ({ ...prev, ...allValues }));
+                // تحديث نسبة اكتمال البروفايل مباشرة
+                setProfileCompletion(calculateProfileCompletion(allValues));
               }}
               preserve={false}
             >

@@ -4,16 +4,15 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Button, Spin, Modal, message, Typography, Divider, Form, Select, Upload, 
   Space, Row, Col, Tag, Card, Descriptions, Badge, Alert, Tooltip, 
-  Avatar, List, Statistic, Progress, Tabs, Empty, Input, Drawer
+  Avatar, List, Empty, Input, Drawer, Tabs
 } from 'antd';
 import { 
   EditOutlined, DeleteOutlined, DownloadOutlined, ArrowLeftOutlined, 
   UploadOutlined, UserOutlined, CalendarOutlined, FileOutlined,
   StarOutlined, StarFilled, EyeOutlined, ShareAltOutlined,
-  LinkOutlined, BookOutlined, TeamOutlined, TrophyOutlined,
-  HeartOutlined, MessageOutlined, CheckCircleOutlined,
-  ClockCircleOutlined, ExclamationCircleOutlined, PlusOutlined,
-  MinusOutlined, SettingOutlined, BarChartOutlined
+  LinkOutlined, BookOutlined, TeamOutlined,
+  CheckCircleOutlined, ClockCircleOutlined, ExclamationCircleOutlined, 
+  PlusOutlined, MinusOutlined, SettingOutlined
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useSelector } from 'react-redux';
@@ -35,10 +34,8 @@ const PublicationDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [publication, setPublication] = useState(null);
   const [authors, setAuthors] = useState([]);
-  const [metrics, setMetrics] = useState(null);
   const [error, setError] = useState(null);
   const [authorLoading, setAuthorLoading] = useState(false);
-  const [metricsLoading, setMetricsLoading] = useState(false);
   const [fileUploadLoading, setFileUploadLoading] = useState(false);
   const [availableUsers, setAvailableUsers] = useState([]);
   const [addAuthorVisible, setAddAuthorVisible] = useState(false);
@@ -84,13 +81,6 @@ const PublicationDetailPage = () => {
     }
   }, [publication?.id]);
 
-  // Load metrics
-  useEffect(() => {
-    if (publication?.id) {
-      fetchMetrics();
-    }
-  }, [publication?.id]);
-
   // Load available users for adding authors
   useEffect(() => {
     const fetchUsers = async () => {
@@ -119,21 +109,6 @@ const PublicationDetailPage = () => {
       message.error(t('failed_to_load_authors'));
     } finally {
       setAuthorLoading(false);
-    }
-  };
-
-  const fetchMetrics = async () => {
-    setMetricsLoading(true);
-    try {
-      console.log('📤 Fetching metrics for publication ID:', publication.id);
-      const response = await researchService.getPublicationMetrics(publication.id);
-      console.log('📥 Metrics data received:', response);
-      setMetrics(response.results?.[0] || response);
-    } catch (err) {
-      console.error('❌ Failed to fetch metrics:', err);
-      // Don't show error message for metrics as it's not critical
-    } finally {
-      setMetricsLoading(false);
     }
   };
 
@@ -323,18 +298,6 @@ const PublicationDetailPage = () => {
     return moment(dateString).format('MMMM DD, YYYY');
   };
 
-  const getEngagementLevel = (metrics) => {
-    if (!metrics) return { level: t('no_data'), percent: 0, status: 'normal' };
-    
-    const total = (metrics.view_count || 0) + (metrics.download_count || 0) * 2 + (metrics.citation_count || 0) * 5;
-    
-    if (total >= 1000) return { level: t('very_high'), percent: 100, status: 'success' };
-    if (total >= 500) return { level: t('high'), percent: 80, status: 'success' };
-    if (total >= 100) return { level: t('medium'), percent: 60, status: 'normal' };
-    if (total >= 10) return { level: t('low'), percent: 30, status: 'normal' };
-    return { level: t('very_low'), percent: 10, status: 'exception' };
-  };
-
   // Loading state
   if (loading) {
     return (
@@ -376,7 +339,6 @@ const PublicationDetailPage = () => {
   }
 
   const statusConfig = getStatusConfig(publication.status);
-  const engagementData = getEngagementLevel(metrics);
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -417,6 +379,16 @@ const PublicationDetailPage = () => {
               onClick={() => navigate(`/app/research/publications/${id}/edit`)}
             >
               {t('edit')}
+            </Button>
+          )}
+
+          {canEditPublication() && (
+            <Button
+              danger
+              icon={<DeleteOutlined />}
+              onClick={handleDelete}
+            >
+              {t('delete')}
             </Button>
           )}
         </Space>
@@ -843,105 +815,6 @@ const PublicationDetailPage = () => {
 
         {/* Right Column - Sidebar */}
         <Col span={8}>
-          {/* Metrics Card */}
-          <Card title={t('metrics')} loading={metricsLoading} className="mb-6">
-            {metrics ? (
-              <div>
-                <Row gutter={16} className="mb-4">
-                  <Col span={12}>
-                    <Statistic
-                      title={t('views')}
-                      value={metrics.view_count || 0}
-                      prefix={<EyeOutlined />}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic
-                      title={t('downloads')}
-                      value={metrics.download_count || 0}
-                      prefix={<DownloadOutlined />}
-                    />
-                  </Col>
-                </Row>
-                
-                <Row gutter={16} className="mb-4">
-                  <Col span={12}>
-                    <Statistic
-                      title={t('citations')}
-                      value={metrics.citation_count || 0}
-                      prefix={<TrophyOutlined />}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <Statistic
-                      title={t('quality_score')}
-                      value={metrics.quality_score || 0}
-                      precision={1}
-                      suffix="/ 10"
-                      prefix={<BarChartOutlined />}
-                    />
-                  </Col>
-                </Row>
-
-                <Divider />
-                
-                <div className="mb-4">
-                  <Text strong>{t('engagement_level')}: </Text>
-                  <Text>{engagementData.level}</Text>
-                  <Progress 
-                    percent={engagementData.percent} 
-                    status={engagementData.status}
-                    size="small"
-                    className="mt-1"
-                  />
-                </div>
-
-                {metrics.altmetric_score && (
-                  <div className="mb-2">
-                    <Text strong>{t('altmetric_score')}: </Text>
-                    <Text>{metrics.altmetric_score}</Text>
-                  </div>
-                )}
-
-                {/* Social Media Metrics */}
-                {(metrics.twitter_mentions || metrics.facebook_shares || metrics.linkedin_shares) && (
-                  <div>
-                    <Divider />
-                    <Text strong className="block mb-2">{t('social_media')}</Text>
-                    {metrics.twitter_mentions > 0 && (
-                      <div><Text type="secondary">Twitter: </Text>{metrics.twitter_mentions}</div>
-                    )}
-                    {metrics.facebook_shares > 0 && (
-                      <div><Text type="secondary">Facebook: </Text>{metrics.facebook_shares}</div>
-                    )}
-                    {metrics.linkedin_shares > 0 && (
-                      <div><Text type="secondary">LinkedIn: </Text>{metrics.linkedin_shares}</div>
-                    )}
-                  </div>
-                )}
-
-                {/* Academic Metrics */}
-                {(metrics.mendeley_readers || metrics.researchgate_reads) && (
-                  <div>
-                    <Divider />
-                    <Text strong className="block mb-2">{t('academic_platforms')}</Text>
-                    {metrics.mendeley_readers > 0 && (
-                      <div><Text type="secondary">Mendeley: </Text>{metrics.mendeley_readers}</div>
-                    )}
-                    {metrics.researchgate_reads > 0 && (
-                      <div><Text type="secondary">ResearchGate: </Text>{metrics.researchgate_reads}</div>
-                    )}
-                  </div>
-                )}
-              </div>
-            ) : (
-              <Empty 
-                description={t('no_metrics_available')}
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-              />
-            )}
-          </Card>
-
           {/* Publication Info Card */}
           <Card title={t('publication_info')} className="mb-6">
             <Space direction="vertical" className="w-full">
@@ -1057,9 +930,9 @@ const PublicationDetailPage = () => {
               }
             >
               {availableUsers.map(userOption => (
-                <Option key={userOption.id} value={userOption.id}>
+                <Select.Option key={userOption.id} value={userOption.id}>
                   {userOption.first_name} {userOption.last_name} ({userOption.email})
-                </Option>
+                </Select.Option>
               ))}
             </Select>
           </Form.Item>
@@ -1125,9 +998,9 @@ const PublicationDetailPage = () => {
             rules={[{ required: true, message: t('please_select_status') }]}
           >
             <Select placeholder={t('select_status')}>
-              <Option value="approved">{t('approve')}</Option>
-              <Option value="rejected">{t('reject')}</Option>
-              <Option value="published">{t('publish')}</Option>
+              <Select.Option value="approved">{t('approve')}</Select.Option>
+              <Select.Option value="rejected">{t('reject')}</Select.Option>
+              <Select.Option value="published">{t('publish')}</Select.Option>
             </Select>
           </Form.Item>
 

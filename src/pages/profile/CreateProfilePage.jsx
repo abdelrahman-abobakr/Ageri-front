@@ -36,8 +36,8 @@ const CreateProfilePage = () => {
     const allFields = [...coreFields, ...additionalFields];
 
     const filledFields = allFields.filter(field => data[field] && data[field].trim() !== '');
-    const cvBonus = (data.cv_file || cvFile) ? 1 : 0;
-    return Math.round(((filledFields.length + cvBonus) / (allFields.length + 1)) * 100);
+    // ✅ شيل الـ CV من حساب النسبة
+    return Math.round((filledFields.length / allFields.length) * 100);
   };
 
   // جلب بيانات المستخدم والبروفايل عند تحميل الصفحة
@@ -258,7 +258,7 @@ const CreateProfilePage = () => {
 
   const handleFileChange = (file) => {
     setCvFile(file);
-    // تحديث نسبة الاكتمال مؤقتاً
+    // تحديث نسبة الاكتمال مؤقت
     const values = form.getFieldsValue();
     const tempCompletion = calculateProfileCompletion({ ...values, cv_file: true });
     setProfileCompletion(tempCompletion);
@@ -513,7 +513,7 @@ const CreateProfilePage = () => {
               </Upload>
               {existingCvFile && !cvFile && (
                 <div style={{ textAlign: 'center' }}>
-                  <Text type="success">✓ تم رفع السيرة الذاتية مسبقاً</Text>
+                  <Text type="success">✓ تم رفع السيرة الذاتية مسبق</Text>
                   <br />
                   <a
                     href={existingCvFile}
@@ -744,7 +744,7 @@ const CreateProfilePage = () => {
                     </span>
                   }
                   valuePropName="checked"
-                  tooltip="إذا كان مفعل، سيكون البروفايل مرئياً للجميع"
+                  tooltip="إذا كان مفعل، سيكون البروفايل مرئي للجميع"
                 >
                   <Switch
                     checkedChildren={<><EyeOutlined /> عام</>}

@@ -1,4 +1,5 @@
 import apiClient from './api';
+import axios from 'axios';
 
 const profileService = {
   // بروفايل المستخدم الحالي - تصحيح المسارات حسب urls.py
@@ -123,45 +124,103 @@ const profileService = {
   // رفع السيرة الذاتية منفصل
   uploadCV: async (file) => {
     console.log('📤 ProfileService: Uploading CV file:', file);
+    
+    // Validate file
+    if (!file || !(file instanceof File)) {
+      throw new Error('Invalid file object');
+    }
+
     const formData = new FormData();
     formData.append('cv_file', file);
 
-    // ✅ Do NOT manually set Content-Type for FormData - let Axios handle it automatically
-    console.log('📤 ProfileService: Using PATCH for CV upload with FormData');
-    const response = await apiClient.patch('auth/profiles/me/', formData);
-    console.log('📥 ProfileService: CV upload response:', response.data);
-    return response.data;
+    // Log FormData contents
+    console.log('📤 FormData created with entries:');
+    for (let [key, value] of formData.entries()) {
+      console.log(`  ${key}:`, value);
+    }
+
+    try {
+      // ✅ Use axios directly instead of apiClient
+      const token = localStorage.getItem('access_token');
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      
+      const response = await axios.patch(
+        `${baseURL}/auth/profiles/me/`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            // ✅ DO NOT set Content-Type - let axios handle it
+          },
+          timeout: 30000
+        }
+      );
+
+      console.log('✅ CV upload successful:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ CV upload failed:', error);
+      console.error('❌ Error response:', error.response?.data);
+      
+      if (error.response?.data?.cv_file) {
+        const errorMsg = Array.isArray(error.response.data.cv_file) 
+          ? error.response.data.cv_file[0] 
+          : error.response.data.cv_file;
+        console.error('❌ Backend error:', errorMsg);
+      }
+      
+      throw error;
+    }
   },
 
   // رفع الصورة الشخصية منفصل
   uploadProfilePicture: async (file) => {
     console.log('📤 ProfileService: Uploading profile picture:', file);
-    console.log('📤 ProfileService: File details:', {
-      name: file.name,
-      type: file.type,
-      size: file.size
-    });
+    
+    // Validate file
+    if (!file || !(file instanceof File)) {
+      throw new Error('Invalid file object');
+    }
 
     const formData = new FormData();
     formData.append('profile_picture', file);
 
-    // Log FormData contents for debugging
-    console.log('📤 ProfileService: FormData created');
+    // Log FormData contents
+    console.log('📤 FormData created with entries:');
     for (let [key, value] of formData.entries()) {
-      console.log('📤 ProfileService: FormData entry:', key, value);
+      console.log(`  ${key}:`, value);
     }
 
     try {
-      // ✅ Try POST first (like updateMyProfile method), then fallback to PATCH if needed
-      // ✅ Do NOT manually set Content-Type for FormData - let Axios handle it automatically
-      console.log('📤 ProfileService: Using POST for profile picture upload with FormData (matching updateMyProfile pattern)');
-      const response = await apiClient.patch('auth/profiles/me/', formData);
-      console.log('📥 ProfileService: Profile picture upload response:', response.data);
+      // ✅ Use axios directly instead of apiClient
+      const token = localStorage.getItem('access_token');
+      const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+      
+      const response = await axios.patch(
+        `${baseURL}/auth/profiles/me/`,
+        formData,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            // ✅ DO NOT set Content-Type - let axios handle it
+          },
+          timeout: 30000
+        }
+      );
+
+      console.log('✅ Upload successful:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ ProfileService: Upload failed:', error);
-      console.error('❌ ProfileService: Error response:', error.response);
-      console.error('❌ ProfileService: Error data:', error.response?.data);
+      console.error('❌ Upload failed:', error);
+      console.error('❌ Error response:', error.response?.data);
+      
+      if (error.response?.data?.profile_picture) {
+        const errorMsg = Array.isArray(error.response.data.profile_picture) 
+          ? error.response.data.profile_picture[0] 
+          : error.response.data.profile_picture;
+        console.error('❌ Backend error:', errorMsg);
+      }
+      
       throw error;
     }
   },
