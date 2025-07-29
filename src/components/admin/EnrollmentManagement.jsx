@@ -31,6 +31,7 @@ import {
   BookOutlined
 } from '@ant-design/icons';
 import { EnrollmentService } from '../../services';
+import { trainingService } from '../../services/trainingService';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -39,7 +40,9 @@ const { TextArea } = Input;
 
 const EnrollmentManagement = () => {
   const [enrollments, setEnrollments] = useState([]);
+  const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [coursesLoading, setCoursesLoading] = useState(false);
   const [stats, setStats] = useState({});
   const [filters, setFilters] = useState({
     page: 1,
@@ -51,7 +54,7 @@ const EnrollmentManagement = () => {
   });
   const [total, setTotal] = useState(0);
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  
+
   // Modal states
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
@@ -60,7 +63,22 @@ const EnrollmentManagement = () => {
   useEffect(() => {
     loadEnrollments();
     loadStats();
+    loadCourses();
   }, [filters]);
+
+  const loadCourses = async () => {
+    setCoursesLoading(true);
+    try {
+      const response = await trainingService.getCourses({ status: 'published' });
+      setCourses(response.results || []);
+      console.log('✅ Courses loaded for filter:', response.results?.length || 0);
+    } catch (error) {
+      console.error('Failed to load courses:', error);
+      message.error('فشل في تحميل الدورات');
+    } finally {
+      setCoursesLoading(false);
+    }
+  };
 
   const loadEnrollments = async () => {
     setLoading(true);
@@ -346,14 +364,35 @@ const EnrollmentManagement = () => {
       {/* Filters and Actions */}
       <Card style={{ marginBottom: '16px' }}>
         <Row gutter={[16, 16]} align="middle">
-          <Col xs={24} sm={8}>
+          <Col xs={24} sm={6}>
             <Input.Search
               placeholder="البحث في التسجيلات..."
               onSearch={handleSearch}
               allowClear
             />
           </Col>
-          
+
+          <Col xs={24} sm={4}>
+            <Select
+              placeholder="اختر الدورة"
+              allowClear
+              loading={coursesLoading}
+              onChange={(value) => handleFilterChange('course_id', value)}
+              style={{ width: '100%' }}
+              showSearch
+              optionFilterProp="children"
+              filterOption={(input, option) =>
+                option.children.toLowerCase().indexOf(input.toLowerCase()) >= 0
+              }
+            >
+              {courses.map(course => (
+                <Option key={course.id} value={course.id}>
+                  {course.course_name || course.title}
+                </Option>
+              ))}
+            </Select>
+          </Col>
+
           <Col xs={24} sm={4}>
             <Select
               placeholder="حالة الدفع"
@@ -367,7 +406,7 @@ const EnrollmentManagement = () => {
               <Option value="overdue">متأخر</Option>
             </Select>
           </Col>
-          
+
           <Col xs={24} sm={4}>
             <Select
               placeholder="حالة التسجيل"

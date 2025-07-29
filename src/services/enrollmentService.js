@@ -86,200 +86,19 @@ class EnrollmentService {
     try {
       console.log('🔄 Fetching enrollments with filters:', filters);
 
-      // Try backend first
-      try {
-        const response = await apiClient.get('/training/admin/enrollments/', {
-          params: filters
-        });
+      const response = await apiClient.get('/training/admin/enrollments/', {
+        params: filters
+      });
 
-        console.log('✅ Enrollments loaded from backend:', response.data);
-        return response.data;
-      } catch (backendError) {
-        console.log('⚠️ Backend enrollments endpoint not available, using mock data');
-
-        // Return mock enrollment data for demonstration
-        return this.getMockEnrollments(filters);
-      }
+      console.log('✅ Enrollments loaded from backend:', response.data);
+      return response.data;
     } catch (error) {
       console.error('❌ Failed to load enrollments:', error);
       throw error;
     }
   }
 
-  // Mock enrollment data for demonstration
-  static getMockEnrollments(filters = {}) {
-    const mockEnrollments = [
-      {
-        id: 1,
-        first_name: 'أحمد',
-        last_name: 'محمد علي',
-        email: 'ahmed@example.com',
-        phone: '+20 123 456 7890',
-        organization: 'جامعة القاهرة',
-        job_title: 'مهندس زراعي',
-        education_level: 'bachelor',
-        experience_level: 'intermediate',
-        status: 'approved',
-        payment_status: 'paid',
-        amount_due: 500.00,
-        amount_paid: 500.00,
-        enrollment_date: '2024-01-15T10:30:00Z',
-        completion_date: null,
-        course: {
-          id: 1,
-          course_name: 'أساسيات الزراعة المستدامة',
-          course_code: 'AGR101',
-          instructor: 'د. محمد أحمد'
-        },
-        user: null,
-        is_guest: true,
-        enrollment_token: 'ENR-2024-001-ABC123'
-      },
-      {
-        id: 2,
-        first_name: 'فاطمة',
-        last_name: 'حسن محمود',
-        email: 'fatma@example.com',
-        phone: '+20 111 222 3333',
-        organization: 'وزارة الزراعة',
-        job_title: 'أخصائي تنمية ريفية',
-        education_level: 'master',
-        experience_level: 'advanced',
-        status: 'completed',
-        payment_status: 'paid',
-        amount_due: 750.00,
-        amount_paid: 750.00,
-        enrollment_date: '2024-01-10T09:15:00Z',
-        completion_date: '2024-02-15T16:00:00Z',
-        course: {
-          id: 2,
-          course_name: 'إدارة الموارد المائية',
-          course_code: 'WRM201',
-          instructor: 'د. سارة إبراهيم'
-        },
-        user: null,
-        is_guest: true,
-        enrollment_token: 'ENR-2024-002-DEF456'
-      },
-      {
-        id: 3,
-        first_name: 'محمد',
-        last_name: 'عبد الرحمن',
-        email: 'mohamed@example.com',
-        phone: '+20 100 555 7777',
-        organization: 'شركة الدلتا للتنمية الزراعية',
-        job_title: 'مدير مشروع',
-        education_level: 'bachelor',
-        experience_level: 'intermediate',
-        status: 'approved',
-        payment_status: 'pending',
-        amount_due: 600.00,
-        amount_paid: 300.00,
-        enrollment_date: '2024-01-20T14:45:00Z',
-        completion_date: null,
-        course: {
-          id: 3,
-          course_name: 'تقنيات الري الحديثة',
-          course_code: 'IRR301',
-          instructor: 'د. أحمد فتحي'
-        },
-        user: null,
-        is_guest: true,
-        enrollment_token: 'ENR-2024-003-GHI789'
-      },
-      {
-        id: 4,
-        first_name: 'نورا',
-        last_name: 'سامي أحمد',
-        email: 'nora@example.com',
-        phone: '+20 122 888 9999',
-        organization: 'معهد بحوث الأراضي',
-        job_title: 'باحث أول',
-        education_level: 'phd',
-        experience_level: 'advanced',
-        status: 'pending',
-        payment_status: 'not_required',
-        amount_due: 0.00,
-        amount_paid: 0.00,
-        enrollment_date: '2024-01-25T11:20:00Z',
-        completion_date: null,
-        course: {
-          id: 4,
-          course_name: 'البحث العلمي في الزراعة',
-          course_code: 'RES401',
-          instructor: 'د. علي حسن'
-        },
-        user: null,
-        is_guest: true,
-        enrollment_token: 'ENR-2024-004-JKL012'
-      },
-      {
-        id: 5,
-        first_name: 'خالد',
-        last_name: 'محمود سعد',
-        email: 'khaled@example.com',
-        phone: '+20 101 333 4444',
-        organization: 'جمعية التنمية الزراعية',
-        job_title: 'منسق برامج',
-        education_level: 'bachelor',
-        experience_level: 'beginner',
-        status: 'cancelled',
-        payment_status: 'refunded',
-        amount_due: 400.00,
-        amount_paid: 0.00,
-        enrollment_date: '2024-01-12T13:30:00Z',
-        completion_date: null,
-        course: {
-          id: 1,
-          course_name: 'أساسيات الزراعة المستدامة',
-          course_code: 'AGR101',
-          instructor: 'د. محمد أحمد'
-        },
-        user: null,
-        is_guest: true,
-        enrollment_token: 'ENR-2024-005-MNO345'
-      }
-    ];
 
-    // Apply filters
-    let filteredEnrollments = [...mockEnrollments];
-
-    if (filters.course_id) {
-      filteredEnrollments = filteredEnrollments.filter(e => e.course.id == filters.course_id);
-    }
-
-    if (filters.payment_status) {
-      filteredEnrollments = filteredEnrollments.filter(e => e.payment_status === filters.payment_status);
-    }
-
-    if (filters.status) {
-      filteredEnrollments = filteredEnrollments.filter(e => e.status === filters.status);
-    }
-
-    if (filters.search) {
-      const searchLower = filters.search.toLowerCase();
-      filteredEnrollments = filteredEnrollments.filter(e =>
-        e.first_name.toLowerCase().includes(searchLower) ||
-        e.last_name.toLowerCase().includes(searchLower) ||
-        e.email.toLowerCase().includes(searchLower) ||
-        e.course.course_name.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Simulate pagination
-    const page = filters.page || 1;
-    const pageSize = filters.page_size || 10;
-    const startIndex = (page - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const paginatedResults = filteredEnrollments.slice(startIndex, endIndex);
-
-    return {
-      results: paginatedResults,
-      count: filteredEnrollments.length,
-      next: endIndex < filteredEnrollments.length ? `page=${page + 1}` : null,
-      previous: page > 1 ? `page=${page - 1}` : null
-    };
-  }
 
   // Admin: Update payment information
   static async updatePayment(enrollmentId, paymentData) {
@@ -363,7 +182,7 @@ class EnrollmentService {
         console.log('✅ PDF export completed via backend');
         return true;
       } catch (backendError) {
-        console.log('⚠️ Backend PDF endpoint not available, using client-side generation');
+        console.log('⚠️ Backend PDF endpoint not available, using client-side PDF generation');
 
         // Fallback: Generate PDF on client side
         return await this.generateClientSidePDF(filters);
