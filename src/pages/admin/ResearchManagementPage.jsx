@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
-  CheckCircle, XCircle, Eye, Star, StarOff, Calendar, 
+  CheckCircle, XCircle, Eye, Calendar, 
   User, FileText, AlertCircle, X, Loader2 
 } from 'lucide-react';
 import '../../styles/ResearchManagementPage.css';
@@ -84,18 +84,16 @@ const Toast = ({ message, type, onClose }) => {
     return () => clearTimeout(timer);
   }, [onClose]);
 
-  const bgColor = type === 'success' ? 'bg-green-500' : 
-                 type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-  const icon = type === 'success' ? <CheckCircle className="w-5 h-5" /> : 
-               type === 'error' ? <XCircle className="w-5 h-5" /> : 
-               <AlertCircle className="w-5 h-5" />;
+  const icon = type === 'success' ? <CheckCircle className="toast-icon" /> : 
+               type === 'error' ? <XCircle className="toast-icon" /> : 
+               <AlertCircle className="toast-icon" />;
 
   return (
-    <div className={`fixed top-4 right-4 ${bgColor} text-white px-6 py-4 rounded-lg shadow-lg flex items-center gap-3 z-50 max-w-md`}>
+    <div className={`toast-container toast-${type}`}>
       {icon}
-      <span className="flex-1">{message}</span>
-      <button onClick={onClose} className="text-white hover:text-gray-200">
-        <X className="w-4 h-4" />
+      <span className="toast-message">{message}</span>
+      <button onClick={onClose} className="toast-close-btn">
+        <X className="toast-close-icon" />
       </button>
     </div>
   );
@@ -113,35 +111,33 @@ const ReviewModal = ({ isOpen, onClose, onSubmit, title, action, loading }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-        <div className="p-6 border-b border-gray-200">
-          <h3 className="text-xl font-semibold text-gray-800">
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <div className="modal-header">
+          <h3 className="modal-title">
             {action === 'approve' ? 'Approve Publication' : 'Reject Publication'}
           </h3>
-          <p className="text-sm text-gray-600 mt-1 truncate">{title}</p>
+          <p className="modal-subtitle">{title}</p>
         </div>
-        
-        <div className="p-6">
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Review Notes {action === 'reject' && <span className="text-red-500">*</span>}
+        <div className="modal-body">
+          <div className="modal-form-group">
+            <label className="modal-label">
+              Review Notes {action === 'reject' && <span className="modal-label-required">*</span>}
             </label>
             <textarea
               value={reviewNotes}
               onChange={(e) => setReviewNotes(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+              className="modal-textarea"
               rows="4"
               placeholder={`Enter your ${action} notes here...`}
               required={action === 'reject'}
             />
           </div>
-          
-          <div className="flex gap-3 justify-end">
+          <div className="modal-actions">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="modal-btn modal-btn-cancel"
               disabled={loading}
             >
               Cancel
@@ -150,13 +146,9 @@ const ReviewModal = ({ isOpen, onClose, onSubmit, title, action, loading }) => {
               type="button"
               onClick={handleSubmit}
               disabled={loading || (action === 'reject' && !reviewNotes.trim())}
-              className={`px-6 py-2 text-white rounded-lg transition-colors flex items-center gap-2 ${
-                action === 'approve' 
-                  ? 'bg-green-600 hover:bg-green-700 disabled:bg-green-300' 
-                  : 'bg-red-600 hover:bg-red-700 disabled:bg-red-300'
-              }`}
+              className={`modal-btn modal-btn-${action}`}
             >
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {loading && <Loader2 className="modal-btn-loader" />}
               {action === 'approve' ? 'Approve' : 'Reject'}
             </button>
           </div>
@@ -166,33 +158,29 @@ const ReviewModal = ({ isOpen, onClose, onSubmit, title, action, loading }) => {
   );
 };
 
-// Publications Table Component
-const PendingPublicationsTable = ({ publications, onAction, loading }) => {
+// Publications Table Component with Pagination
+const PAGE_SIZE = 10;
+const PendingPublicationsTable = ({ publications, onAction, loading, page, pageSize, total, onPageChange }) => {
   const getStatusBadge = (status) => {
-    const styles = {
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      approved: 'bg-green-100 text-green-800 border-green-200',
-      rejected: 'bg-red-100 text-red-800 border-red-200',
-      published: 'bg-blue-100 text-blue-800 border-blue-200'
-    };
-    
+    // Only show badge for allowed statuses (no draft, no featured)
+    if (status === 'draft' || status === 'featured') return null;
+    const allowed = ['pending', 'approved', 'rejected', 'published'];
+    if (!allowed.includes(status)) return null;
     return (
-      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${styles[status] || styles.pending}`}>
+      <span className={`status-badge status-${status}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
       </span>
     );
   };
 
-  const getTypeIcon = () => {
-    return <FileText className="w-4 h-4 text-gray-500" />;
-  };
+  const getTypeIcon = () => <FileText className="type-icon" />;
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <div className="flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-          <span className="ml-3 text-gray-600">Loading publications...</span>
+      <div className="table-card loading-card">
+        <div className="table-loading">
+          <Loader2 className="table-loader" />
+          <span className="table-loading-text">Loading publications...</span>
         </div>
       </div>
     );
@@ -200,120 +188,101 @@ const PendingPublicationsTable = ({ publications, onAction, loading }) => {
 
   if (!publications.length) {
     return (
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8">
-        <div className="text-center text-gray-500">
-          <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-lg font-medium">No publications found</p>
-          <p className="text-sm">There are no publications to review at this time.</p>
+      <div className="table-card empty-card">
+        <div className="table-empty">
+          <FileText className="table-empty-icon" />
+          <p className="table-empty-title">No publications found</p>
+          <p className="table-empty-desc">There are no publications to review at this time.</p>
         </div>
       </div>
     );
   }
 
+  // Pagination controls
+  const totalPages = Math.ceil(total / pageSize);
+  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+    <div className="table-card">
+      <div className="table-scroll">
+        <table className="table">
+          <thead className="table-thead">
             <tr>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Publication</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Submitted By</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-              <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-              <th className="px-6 py-4 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              <th className="table-th">Publication</th>
+              <th className="table-th">Type</th>
+              <th className="table-th">Submitted By</th>
+              <th className="table-th">Date</th>
+              <th className="table-th">Status</th>
+              <th className="table-th table-th-actions">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="table-tbody">
             {publications.map((publication) => (
-              <tr key={publication.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-start gap-3">
-                    <div className="flex-shrink-0 mt-1">
-                      <span className="inline-flex items-center justify-center w-8 h-8 bg-blue-100 text-blue-600 rounded-lg text-sm font-medium">
-                        {publication.id}
-                      </span>
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium text-gray-900 line-clamp-2" title={publication.title}>
-                        {publication.title}
-                      </p>
+              <tr key={publication.id} className="table-row">
+                <td className="table-td">
+                  <div className="pub-main">
+                    <div className="pub-id">{publication.id}</div>
+                    <div className="pub-info">
+                      <p className="pub-title" title={publication.title}>{publication.title}</p>
                       {publication.research_area && (
-                        <p className="text-xs text-gray-500 mt-1">{publication.research_area}</p>
+                        <p className="pub-area">{publication.research_area}</p>
                       )}
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
+                <td className="table-td">
+                  <div className="pub-type">
                     {getTypeIcon()}
-                    <span className="text-sm text-gray-900 capitalize">
-                      {publication.publication_type.replace('_', ' ')}
-                    </span>
+                    <span className="pub-type-label">{publication.publication_type.replace('_', ' ')}</span>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                      <User className="w-4 h-4 text-white" />
-                    </div>
+                <td className="table-td">
+                  <div className="pub-user">
+                    <div className="pub-user-avatar"><User className="pub-user-icon" /></div>
                     <div>
-                      <p className="text-sm font-medium text-gray-900">{publication.submitted_by.name}</p>
-                      <p className="text-xs text-gray-500">{publication.submitted_by.email}</p>
+                      <p className="pub-user-name">{publication.submitted_by.name}</p>
+                      <p className="pub-user-email">{publication.submitted_by.email}</p>
                     </div>
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <Calendar className="w-4 h-4" />
+                <td className="table-td">
+                  <div className="pub-date">
+                    <Calendar className="pub-date-icon" />
                     {formatDate(publication.submitted_at)}
                   </div>
                 </td>
-                <td className="px-6 py-4">
-                  {getStatusBadge(publication.status)}
+                <td className="table-td table-td-status">
+                  <div className="status-badge-wrapper">
+                    {getStatusBadge(publication.status)}
+                  </div>
                 </td>
-                <td className="px-6 py-4">
-                  <div className="flex items-center justify-center gap-2">
+                <td className="table-td table-td-actions">
+                  <div className="pub-actions">
                     {publication.status === 'pending' && (
                       <>
                         <button
                           onClick={() => onAction('approve', publication)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition-colors"
+                          className="action-btn action-btn-approve"
                         >
-                          <CheckCircle className="w-3 h-3" />
+                          <CheckCircle className="action-btn-icon" />
                           Approve
                         </button>
                         <button
                           onClick={() => onAction('reject', publication)}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition-colors"
+                          className="action-btn action-btn-reject"
                         >
-                          <XCircle className="w-3 h-3" />
+                          <XCircle className="action-btn-icon" />
                           Reject
                         </button>
                       </>
                     )}
-                    
                     {publication.status === 'approved' && (
                       <button
                         onClick={() => onAction('publish', publication)}
-                        className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
+                        className="action-btn action-btn-publish"
                       >
-                        <Eye className="w-3 h-3" />
+                        <Eye className="action-btn-icon" />
                         Publish
-                      </button>
-                    )}
-                    
-                    {publication.status === 'published' && (
-                      <button
-                        onClick={() => onAction('toggleFeature', publication)}
-                        className={`inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
-                          publication.is_featured
-                            ? 'bg-yellow-600 text-white hover:bg-yellow-700'
-                            : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                        }`}
-                      >
-                        {publication.is_featured ? <Star className="w-3 h-3" /> : <StarOff className="w-3 h-3" />}
-                        {publication.is_featured ? 'Featured' : 'Feature'}
                       </button>
                     )}
                   </div>
@@ -323,6 +292,34 @@ const PendingPublicationsTable = ({ publications, onAction, loading }) => {
           </tbody>
         </table>
       </div>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button
+            className="pagination-btn"
+            onClick={() => onPageChange(page - 1)}
+            disabled={page === 1}
+          >
+            Previous
+          </button>
+          {pages.map((p) => (
+            <button
+              key={p}
+              className={`pagination-btn${p === page ? ' active' : ''}`}
+              onClick={() => onPageChange(p)}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            className="pagination-btn"
+            onClick={() => onPageChange(page + 1)}
+            disabled={page === totalPages}
+          >
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 };
@@ -334,23 +331,24 @@ const AdminDashboard = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [toast, setToast] = useState(null);
   const [modal, setModal] = useState({ isOpen: false, action: '', publication: null });
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
 
   const showToast = (message, type = 'info') => {
     setToast({ message, type });
   };
 
-  const fetchPublications = useCallback(async () => {
+  const fetchPublications = useCallback(async (pageNum = 1) => {
     try {
       setLoading(true);
-      const response = await api.get(`${API_BASE_URL}/api/admin/review/publications/`);
+      const response = await api.get(`${API_BASE_URL}/api/admin/review/publications/?page=${pageNum}&page_size=${PAGE_SIZE}`);
       setPublications(response.results);
+      setTotal(response.count || response.results.length);
+      setPage(pageNum);
     } catch (error) {
       console.error('Error fetching publications:', error);
       showToast('Failed to fetch publications', 'error');
-      
-      // Handle unauthorized (401) errors
       if (error.response && error.response.status === 401) {
-        // You might want to redirect to login or refresh token here
         showToast('Session expired. Please login again.', 'error');
       }
     } finally {
@@ -371,7 +369,6 @@ const AdminDashboard = () => {
       setActionLoading(true);
       let endpoint = '';
       let requestData = {};
-      
       const baseData = {
         title: publication.title,
         abstract: publication.abstract || '',
@@ -396,65 +393,39 @@ const AdminDashboard = () => {
           requestData = {
             ...baseData,
             review_notes: reviewNotes,
-            status: 'approved',
-            is_featured: publication.is_featured || false
+            status: 'approved'
           };
           await api.post(endpoint, requestData);
           break;
-          
         case 'reject':
           endpoint = `${API_BASE_URL}/api/admin/review/publications/${publication.id}/reject/`;
           requestData = {
             ...baseData,
             review_notes: reviewNotes,
-            status: 'rejected',
-            is_featured: false
+            status: 'rejected'
           };
           await api.post(endpoint, requestData);
           break;
-          
         case 'publish':
           endpoint = `${API_BASE_URL}/api/admin/review/publications/${publication.id}/publish/`;
           requestData = {
             ...baseData,
             status: 'published',
-            review_notes: publication.review_notes || '',
-            is_featured: publication.is_featured || false
+            review_notes: publication.review_notes || ''
           };
           await api.post(endpoint, requestData);
           break;
-          
-        case 'toggleFeature':
-          endpoint = `${API_BASE_URL}/api/admin/review/publications/${publication.id}/feature/`;
-          requestData = {
-            is_featured: !publication.is_featured
-          };
-          await api.patch(endpoint, requestData);
+        default:
           break;
       }
 
-      // Update local state
-      setPublications(prev => prev.map(pub => {
-        if (pub.id === publication.id) {
-          return {
-            ...pub,
-            status: action === 'approve' ? 'approved' : 
-                   action === 'reject' ? 'rejected' : 
-                   action === 'publish' ? 'published' : pub.status,
-            is_featured: action === 'toggleFeature' ? !pub.is_featured : pub.is_featured,
-            review_notes: action === 'approve' || action === 'reject' ? reviewNotes : pub.review_notes
-          };
-        }
-        return pub;
-      }));
+      // Refetch publications for current page
+      fetchPublications(page);
 
       const actionMessages = {
         approve: 'Publication approved successfully',
         reject: 'Publication rejected successfully',
-        publish: 'Publication published successfully',
-        toggleFeature: publication.is_featured ? 
-          'Publication removed from featured' : 
-          'Publication featured successfully'
+        publish: 'Publication published successfully'
       };
 
       showToast(actionMessages[action], 'success');
@@ -472,16 +443,21 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    fetchPublications();
+    fetchPublications(1);
   }, [fetchPublications]);
 
+  // Pagination handler
+  const handlePageChange = (newPage) => {
+    if (newPage < 1) return;
+    fetchPublications(newPage);
+  };
+
   const stats = useMemo(() => ({
-    total: publications.length,
+    total: total,
     pending: publications.filter(p => p.status === 'pending').length,
     approved: publications.filter(p => p.status === 'approved').length,
-    published: publications.filter(p => p.status === 'published').length,
-    featured: publications.filter(p => p.is_featured).length
-  }), [publications]);
+    published: publications.filter(p => p.status === 'published').length
+  }), [publications, total]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -492,51 +468,34 @@ const AdminDashboard = () => {
           <p className="text-gray-600 mt-2">Manage and review research publications</p>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Total</p>
-                <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
-              </div>
-              <FileText className="w-8 h-8 text-gray-400" />
+        {/* Statistics Section - Professional Design */}
+        <div className="statistics-section">
+          <div className="stat-card stat-total">
+            <div className="stat-icon"><FileText /></div>
+            <div className="stat-info">
+              <div className="stat-label">Total</div>
+              <div className="stat-value">{stats.total}</div>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Pending</p>
-                <p className="text-3xl font-bold text-yellow-600">{stats.pending}</p>
-              </div>
-              <AlertCircle className="w-8 h-8 text-yellow-400" />
+          <div className="stat-card stat-pending">
+            <div className="stat-icon"><AlertCircle /></div>
+            <div className="stat-info">
+              <div className="stat-label">Pending</div>
+              <div className="stat-value">{stats.pending}</div>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Approved</p>
-                <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-green-400" />
+          <div className="stat-card stat-approved">
+            <div className="stat-icon"><CheckCircle /></div>
+            <div className="stat-info">
+              <div className="stat-label">Approved</div>
+              <div className="stat-value">{stats.approved}</div>
             </div>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Published</p>
-                <p className="text-3xl font-bold text-blue-600">{stats.published}</p>
-              </div>
-              <Eye className="w-8 h-8 text-blue-400" />
-            </div>
-          </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Featured</p>
-                <p className="text-3xl font-bold text-purple-600">{stats.featured}</p>
-              </div>
-              <Star className="w-8 h-8 text-purple-400" />
+          <div className="stat-card stat-published">
+            <div className="stat-icon"><Eye /></div>
+            <div className="stat-info">
+              <div className="stat-label">Published</div>
+              <div className="stat-value">{stats.published}</div>
             </div>
           </div>
         </div>
@@ -546,7 +505,7 @@ const AdminDashboard = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold text-gray-900">All Publications</h2>
             <button
-              onClick={fetchPublications}
+              onClick={() => fetchPublications(page)}
               disabled={loading}
               className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
@@ -560,6 +519,10 @@ const AdminDashboard = () => {
           publications={publications}
           onAction={handleAction}
           loading={loading}
+          page={page}
+          pageSize={PAGE_SIZE}
+          total={total}
+          onPageChange={handlePageChange}
         />
 
         {/* Review Modal */}
