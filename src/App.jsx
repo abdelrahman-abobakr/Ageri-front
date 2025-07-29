@@ -48,6 +48,7 @@ import ServicesManagementPage from './pages/admin/ServicesManagementPage';
 import TrainingManagementPage from './pages/admin/TrainingManagementPage';
 import OrganizationManagementPage from './pages/admin/OrganizationManagementPage';
 import NotificationsManagementPage from './pages/admin/NotificationsManagementPage';
+import AdminDashboard from './pages/admin/publications/AdminDashboard.jsx';
 
 // Import PublicationDetailPage to fix the 'not defined' error
 import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
@@ -235,6 +236,10 @@ const AppContent = () => {
               <Navigate to="/" replace />
           }
         />
+
+        {/* Admin dashboard route */}
+          <Route path="/admin" element={<AdminDashboard />} />
+       
         </Routes>
         </Router>
       </AntdApp>

@@ -3,7 +3,7 @@ import {
   CheckCircle, XCircle, Eye, Star, StarOff, Calendar, 
   User, FileText, AlertCircle, X, Loader2 
 } from 'lucide-react';
-import '../../styles/ResearchManagementPage.css';
+// import '../../styles/ResearchManagementPage.css';
 // Constants
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
