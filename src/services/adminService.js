@@ -327,6 +327,81 @@ export const adminService = {
     }
   },
 
+  // Get training-specific statistics
+  getTrainingStats: async () => {
+    try {
+      console.log('🔄 Fetching training statistics...');
+
+      // Fetch courses and enrollments data in parallel
+      const [coursesResponse, enrollmentsResponse] = await Promise.allSettled([
+        apiClient.get(API_ENDPOINTS.TRAINING.COURSES),
+        apiClient.get(API_ENDPOINTS.TRAINING.ENROLLMENTS + '?page_size=1000') // Get more enrollments for accurate stats
+      ]);
+
+      // Process courses data
+      const courses = coursesResponse.status === 'fulfilled' ? coursesResponse.value.data : { results: [] };
+      const coursesList = Array.isArray(courses.results) ? courses.results : (Array.isArray(courses) ? courses : []);
+
+      // Process enrollments data
+      const enrollments = enrollmentsResponse.status === 'fulfilled' ? enrollmentsResponse.value.data : { results: [] };
+      const enrollmentsList = Array.isArray(enrollments.results) ? enrollments.results : (Array.isArray(enrollments) ? enrollments : []);
+
+      // Calculate course statistics
+      const totalCourses = coursesList.length;
+      const publishedCourses = coursesList.filter(course => course.status === 'published').length;
+      const draftCourses = coursesList.filter(course => course.status === 'draft').length;
+      const completedCourses = coursesList.filter(course => course.status === 'completed').length;
+
+      // Calculate active sessions (courses that are currently running)
+      const now = new Date();
+      const activeSessions = coursesList.filter(course => {
+        if (!course.start_date || !course.end_date) return false;
+        const startDate = new Date(course.start_date);
+        const endDate = new Date(course.end_date);
+        return startDate <= now && now <= endDate && course.status === 'published';
+      }).length;
+
+      // Calculate enrollment statistics
+      const totalEnrollments = enrollmentsList.length;
+      const pendingEnrollments = enrollmentsList.filter(enrollment => enrollment.status === 'pending').length;
+      const approvedEnrollments = enrollmentsList.filter(enrollment => enrollment.status === 'approved').length;
+      const completedEnrollments = enrollmentsList.filter(enrollment => enrollment.status === 'completed').length;
+
+      const trainingStats = {
+        totalCourses,
+        publishedCourses,
+        draftCourses,
+        completedCourses,
+        activeSessions,
+        totalEnrollments,
+        pendingEnrollments,
+        approvedEnrollments,
+        completedEnrollments,
+        averageEnrollmentsPerCourse: totalCourses > 0 ? Math.round(totalEnrollments / totalCourses) : 0
+      };
+
+      console.log('✅ Training stats calculated:', trainingStats);
+      return trainingStats;
+
+    } catch (error) {
+      console.log('🚨 Training stats failed, using fallback data. Error:', error.message);
+
+      // Return fallback training stats
+      return {
+        totalCourses: 0,
+        publishedCourses: 0,
+        draftCourses: 0,
+        completedCourses: 0,
+        activeSessions: 0,
+        totalEnrollments: 0,
+        pendingEnrollments: 0,
+        approvedEnrollments: 0,
+        completedEnrollments: 0,
+        averageEnrollmentsPerCourse: 0
+      };
+    }
+  },
+
   getUserStats: async () => {
     try {
       console.log('🔄 Fetching real user statistics...');

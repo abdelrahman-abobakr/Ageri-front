@@ -79,7 +79,6 @@ const TrainingManagementPage = () => {
   // Animated counters
   const totalCoursesCount = useAnimatedCounter(trainingStats?.totalCourses || 0);
   const activeSessionsCount = useAnimatedCounter(trainingStats?.activeSessions || 0);
-  const totalEnrollmentsCount = useAnimatedCounter(trainingStats?.totalEnrollments || 0);
   const completedCoursesCount = useAnimatedCounter(trainingStats?.completedCourses || 0);
 
   useEffect(() => {
@@ -385,7 +384,7 @@ const TrainingManagementPage = () => {
       pending: { color: 'orange', text: 'في الانتظار' },
       scheduled: { color: 'cyan', text: 'مجدولة' },
     };
-    
+
     const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -396,7 +395,7 @@ const TrainingManagementPage = () => {
       intermediate: { color: 'orange', text: 'متوسط' },
       advanced: { color: 'red', text: 'متقدم' },
     };
-    
+
     const config = levelConfig[level] || { color: 'default', text: level };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -427,7 +426,7 @@ const TrainingManagementPage = () => {
 
       {/* Statistics Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card loading={statsLoading}>
             <Statistic
               title="إجمالي الدورات"
@@ -449,7 +448,7 @@ const TrainingManagementPage = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card loading={statsLoading}>
             <Statistic
               title="الجلسات النشطة"
@@ -462,19 +461,7 @@ const TrainingManagementPage = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title="إجمالي التسجيلات"
-              value={totalEnrollmentsCount.value}
-              prefix={<TeamOutlined />}
-              valueStyle={{
-                color: '#52c41a',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Card>
-        </Col>
+
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic
@@ -532,16 +519,7 @@ const TrainingManagementPage = () => {
                       إضافة دورة جديدة
                     </Button>
 
-                    {/* Simple Test Delete Button */}
-                    {courses.length > 0 && (
-                      <Button
-                        danger
-                        onClick={() => handleDeleteCourse(courses[0])}
-                        style={{ marginLeft: '8px' }}
-                      >
-                        حذف أول دورة (اختبار)
-                      </Button>
-                    )}
+
 
 
                     {selectedRowKeys.length > 0 && (

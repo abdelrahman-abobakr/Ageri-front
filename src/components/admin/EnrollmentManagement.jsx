@@ -12,12 +12,13 @@ import {
   Modal,
   Form,
   InputNumber,
-  message,
   Tooltip,
   Typography,
-  Statistic,
   DatePicker,
-  Divider
+  Divider,
+  Alert,
+  App,
+  Checkbox
 } from 'antd';
 import {
   SearchOutlined,
@@ -27,8 +28,7 @@ import {
   DownloadOutlined,
   EyeOutlined,
   DollarOutlined,
-  UserOutlined,
-  BookOutlined
+  UserOutlined
 } from '@ant-design/icons';
 import { EnrollmentService } from '../../services';
 import { trainingService } from '../../services/trainingService';
@@ -39,16 +39,17 @@ const { RangePicker } = DatePicker;
 const { TextArea } = Input;
 
 const EnrollmentManagement = () => {
+  const { modal, message } = App.useApp();
   const [enrollments, setEnrollments] = useState([]);
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(false);
   const [coursesLoading, setCoursesLoading] = useState(false);
-  const [stats, setStats] = useState({});
+
   const [filters, setFilters] = useState({
     page: 1,
     page_size: 10,
     search: '',
-    course_id: '',
+    course: '',
     payment_status: '',
     status: ''
   });
@@ -57,12 +58,16 @@ const EnrollmentManagement = () => {
 
   // Modal states
   const [paymentModalVisible, setPaymentModalVisible] = useState(false);
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [exportModalVisible, setExportModalVisible] = useState(false);
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
+  const [enrollmentDetails, setEnrollmentDetails] = useState(null);
+  const [detailsLoading, setDetailsLoading] = useState(false);
   const [paymentForm] = Form.useForm();
+  const [exportForm] = Form.useForm();
 
   useEffect(() => {
     loadEnrollments();
-    loadStats();
     loadCourses();
   }, [filters]);
 
@@ -72,6 +77,7 @@ const EnrollmentManagement = () => {
       const response = await trainingService.getCourses({ status: 'published' });
       setCourses(response.results || []);
       console.log('✅ Courses loaded for filter:', response.results?.length || 0);
+      console.log('✅ Course details:', response.results?.map(c => ({ id: c.id, name: c.course_name || c.title })));
     } catch (error) {
       console.error('Failed to load courses:', error);
       message.error('فشل في تحميل الدورات');
@@ -83,32 +89,61 @@ const EnrollmentManagement = () => {
   const loadEnrollments = async () => {
     setLoading(true);
     try {
+      console.log('🔄 ===== LOADING ENROLLMENTS =====');
+      console.log('🔄 Current filters:', filters);
+      console.log('🔄 Course filter specifically:', filters.course);
+
       const response = await EnrollmentService.getEnrollments(filters);
+      console.log('✅ Enrollments response:', response);
+      console.log('✅ Total results:', response.count);
+      console.log('✅ Results length:', response.results?.length);
+
+      // Debug course information in results
+      if (response.results?.length > 0) {
+        console.log('✅ Sample enrollment courses:', response.results.slice(0, 3).map(e => ({
+          id: e.id,
+          course_id: e.course_id || e.course,
+          course_title: e.course_title,
+          course_name: e.course_name
+        })));
+      }
+
       setEnrollments(response.results || []);
       setTotal(response.count || 0);
+      console.log('✅ ===== ENROLLMENTS LOADED =====');
     } catch (error) {
-      console.error('Failed to load enrollments:', error);
-      message.error('فشل في تحميل التسجيلات');
+      console.error('❌ Failed to load enrollments:', error);
+
+      // Show more specific error message
+      if (error.response?.status === 401) {
+        message.error('غير مصرح لك بالوصول إلى هذه البيانات. يرجى تسجيل الدخول كمدير.');
+      } else if (error.response?.status === 403) {
+        message.error('ليس لديك صلاحية للوصول إلى إدارة التسجيلات.');
+      } else {
+        message.error('فشل في تحميل التسجيلات: ' + (error.message || 'خطأ غير معروف'));
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const loadStats = async () => {
-    try {
-      const statsData = await EnrollmentService.getEnrollmentStats();
-      setStats(statsData);
-    } catch (error) {
-      console.error('Failed to load stats:', error);
-    }
-  };
+
 
   const handleSearch = (value) => {
     setFilters(prev => ({ ...prev, search: value, page: 1 }));
   };
 
   const handleFilterChange = (key, value) => {
-    setFilters(prev => ({ ...prev, [key]: value, page: 1 }));
+    console.log('🔄 Filter change:', key, '=', value);
+    const newFilters = { ...filters, [key]: value, page: 1 };
+
+    // Remove empty/null values to clean up the filter object
+    if (value === null || value === undefined || value === '') {
+      delete newFilters[key];
+    }
+
+    console.log('🔄 New filters:', newFilters);
+    setFilters(newFilters);
   };
 
   const handleTableChange = (pagination) => {
@@ -122,22 +157,43 @@ const EnrollmentManagement = () => {
   const handleUpdatePayment = (enrollment) => {
     setSelectedEnrollment(enrollment);
     paymentForm.setFieldsValue({
-      amount_paid: enrollment.amount_paid,
+      payment_status: enrollment.payment_status || 'pending',
       payment_method: enrollment.payment_method || '',
-      payment_reference: enrollment.payment_reference || '',
-      admin_notes: enrollment.admin_notes || ''
+      payment_amount: enrollment.payment_amount || '0.00'
     });
     setPaymentModalVisible(true);
   };
 
   const handlePaymentSubmit = async (values) => {
     try {
-      await EnrollmentService.updatePayment(selectedEnrollment.id, values);
+      console.log('🔄 ===== FORM SUBMISSION =====');
+      console.log('🔄 Form values (raw):', values);
+      console.log('🔄 Form values (stringified):', JSON.stringify(values, null, 2));
+      console.log('🔄 Selected enrollment:', selectedEnrollment);
+      console.log('🔄 Enrollment ID:', selectedEnrollment.id);
+      console.log('🔄 Current enrollment data:', JSON.stringify(selectedEnrollment, null, 2));
+
+      // Validate the form data matches the simplified payment system
+      console.log('🔄 Validating against simplified payment system:');
+      console.log('🔄 - payment_status:', values.payment_status, '(should be: pending, paid, failed, refunded)');
+      console.log('🔄 - payment_method:', values.payment_method, '(should be: cash, bank_transfer, credit_card, mobile_payment, check, other)');
+      console.log('🔄 - payment_amount:', values.payment_amount, '(should be decimal string)');
+
+      console.log('🔄 Sending payment update request...');
+
+      const result = await EnrollmentService.updatePayment(selectedEnrollment.id, values);
+
+      console.log('✅ ===== FORM SUBMISSION SUCCESS =====');
+      console.log('✅ Payment update result:', JSON.stringify(result, null, 2));
+
       message.success('تم تحديث معلومات الدفع بنجاح');
       setPaymentModalVisible(false);
       loadEnrollments();
-      loadStats();
     } catch (error) {
+      console.error('❌ ===== FORM SUBMISSION ERROR =====');
+      console.error('❌ Payment update failed:', error);
+      console.error('❌ Error message:', error.message);
+      console.error('❌ ===== END FORM ERROR =====');
       message.error(error.message || 'فشل في تحديث معلومات الدفع');
     }
   };
@@ -147,14 +203,16 @@ const EnrollmentManagement = () => {
       await EnrollmentService.markCompleted(enrollmentId);
       message.success('تم تحديد التسجيل كمكتمل');
       loadEnrollments();
-      loadStats();
     } catch (error) {
-      message.error('فشل في تحديث حالة التسجيل');
+      console.error('Failed to mark completed:', error);
+      message.error('فشل في تحديث حالة التسجيل: ' + (error.message || 'خطأ غير معروف'));
     }
   };
 
+
+
   const handleDeleteEnrollment = (enrollmentId) => {
-    Modal.confirm({
+    modal.confirm({
       title: 'تأكيد الحذف',
       content: 'هل أنت متأكد من حذف هذا التسجيل؟ لا يمكن التراجع عن هذا الإجراء.',
       okText: 'نعم، احذف',
@@ -162,12 +220,88 @@ const EnrollmentManagement = () => {
       okType: 'danger',
       onOk: async () => {
         try {
+          console.log('🔄 Attempting to delete enrollment:', enrollmentId);
           await EnrollmentService.deleteEnrollment(enrollmentId);
           message.success('تم حذف التسجيل بنجاح');
+          console.log('✅ Enrollment deleted, refreshing data...');
           loadEnrollments();
-          loadStats();
         } catch (error) {
-          message.error('فشل في حذف التسجيل');
+          console.error('❌ Failed to delete enrollment:', error);
+          message.error(error.message || 'فشل في حذف التسجيل');
+        }
+      }
+    });
+  };
+
+  const handleShowDetails = async (enrollment) => {
+    setSelectedEnrollment(enrollment);
+    setDetailsModalVisible(true);
+    setDetailsLoading(true);
+
+    try {
+      const details = await EnrollmentService.getEnrollmentDetails(enrollment.id);
+      setEnrollmentDetails(details);
+    } catch (error) {
+      console.error('Failed to load enrollment details:', error);
+      message.error('فشل في تحميل تفاصيل التسجيل: ' + (error.message || 'خطأ غير معروف'));
+      setEnrollmentDetails(null);
+    } finally {
+      setDetailsLoading(false);
+    }
+  };
+
+  const handleBulkStatusUpdate = async (status) => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('يرجى اختيار تسجيلات للتحديث');
+      return;
+    }
+
+    modal.confirm({
+      title: 'تأكيد التحديث المجمع',
+      content: `هل أنت متأكد من تحديث حالة ${selectedRowKeys.length} تسجيل إلى "${status}"؟`,
+      okText: 'نعم، حدث',
+      cancelText: 'إلغاء',
+      onOk: async () => {
+        try {
+          const result = await EnrollmentService.bulkUpdateStatus(selectedRowKeys, status);
+          message.success(`تم تحديث ${result.successful} تسجيل بنجاح`);
+          if (result.failed > 0) {
+            message.warning(`فشل في تحديث ${result.failed} تسجيل`);
+          }
+          setSelectedRowKeys([]);
+          loadEnrollments();
+        } catch (error) {
+          console.error('Bulk update failed:', error);
+          message.error('فشل في التحديث المجمع: ' + (error.message || 'خطأ غير معروف'));
+        }
+      }
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRowKeys.length === 0) {
+      message.warning('يرجى اختيار تسجيلات للحذف');
+      return;
+    }
+
+    modal.confirm({
+      title: 'تأكيد الحذف المجمع',
+      content: `هل أنت متأكد من حذف ${selectedRowKeys.length} تسجيل؟ لا يمكن التراجع عن هذا الإجراء.`,
+      okText: 'نعم، احذف',
+      cancelText: 'إلغاء',
+      okType: 'danger',
+      onOk: async () => {
+        try {
+          const result = await EnrollmentService.bulkDelete(selectedRowKeys);
+          message.success(`تم حذف ${result.successful} تسجيل بنجاح`);
+          if (result.failed > 0) {
+            message.warning(`فشل في حذف ${result.failed} تسجيل`);
+          }
+          setSelectedRowKeys([]);
+          loadEnrollments();
+        } catch (error) {
+          console.error('Bulk delete failed:', error);
+          message.error('فشل في الحذف المجمع: ' + (error.message || 'خطأ غير معروف'));
         }
       }
     });
@@ -175,10 +309,39 @@ const EnrollmentManagement = () => {
 
   const handleExportPDF = async () => {
     try {
-      await EnrollmentService.exportEnrollmentsPDF(filters);
-      message.success('تم تصدير التقرير بنجاح');
+      // Show course selection modal for export
+      setExportModalVisible(true);
     } catch (error) {
-      message.error('فشل في تصدير التقرير');
+      message.error('فشل في فتح نافذة التصدير');
+    }
+  };
+
+  const handleExportConfirm = async (exportOptions) => {
+    try {
+      console.log('🔄 ===== EXPORT FORM SUBMISSION =====');
+      console.log('🔄 Export options from form:', exportOptions);
+      console.log('🔄 Course ID selected:', exportOptions.course);
+      console.log('🔄 Available courses:', courses.map(c => ({ id: c.id, name: c.course_name })));
+
+      await EnrollmentService.exportEnrollmentsPDF(exportOptions);
+      message.success('تم تصدير التقرير بنجاح');
+      setExportModalVisible(false);
+    } catch (error) {
+      console.error('Export failed:', error);
+      message.error('فشل في تصدير التقرير: ' + (error.message || 'خطأ غير معروف'));
+    }
+  };
+
+  const handleTestConnection = async () => {
+    try {
+      const result = await EnrollmentService.testConnection();
+      if (result.success) {
+        message.success('اتصال ناجح مع الخادم');
+      } else {
+        message.error(`فشل الاتصال: ${result.message}`);
+      }
+    } catch (error) {
+      message.error('فشل في اختبار الاتصال');
     }
   };
 
@@ -190,21 +353,19 @@ const EnrollmentManagement = () => {
       completed: { color: 'blue', text: 'مكتمل' },
       cancelled: { color: 'default', text: 'ملغي' }
     };
-    
+
     const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
 
   const getPaymentStatusTag = (status) => {
     const statusConfig = {
-      not_required: { color: 'green', text: 'غير مطلوب' },
       pending: { color: 'orange', text: 'في الانتظار' },
       paid: { color: 'green', text: 'مدفوع' },
-      partial: { color: 'blue', text: 'مدفوع جزئياً' },
-      refunded: { color: 'purple', text: 'مسترد' },
-      overdue: { color: 'red', text: 'متأخر' }
+      failed: { color: 'red', text: 'فشل' },
+      refunded: { color: 'blue', text: 'مسترد' }
     };
-    
+
     const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -216,13 +377,13 @@ const EnrollmentManagement = () => {
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 'bold' }}>
-            {record.user ? 
-              `${record.user.first_name} ${record.user.last_name}` : 
-              `${record.first_name} ${record.last_name}`
+            {record.enrollee_name ||
+              (record.student_name) ||
+              (record.user ? `${record.user.first_name} ${record.user.last_name}` : `${record.first_name} ${record.last_name}`)
             }
           </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.user?.email || record.email}
+            {record.enrollee_email || record.user?.email || record.email}
           </div>
           {record.phone && (
             <div style={{ fontSize: '12px', color: '#666' }}>
@@ -237,9 +398,11 @@ const EnrollmentManagement = () => {
       key: 'course',
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 'bold' }}>{record.course?.course_name}</div>
+          <div style={{ fontWeight: 'bold' }}>
+            {record.course_title || record.course?.course_name}
+          </div>
           <div style={{ fontSize: '12px', color: '#666' }}>
-            {record.course?.course_code}
+            {record.course_code || record.course?.course_code}
           </div>
         </div>
       ),
@@ -268,15 +431,16 @@ const EnrollmentManagement = () => {
       key: 'payment',
       render: (_, record) => (
         <div>
-          <div>{record.amount_paid} / {record.amount_due} جنيه</div>
-          {record.amount_due > 0 && (
+          <div>{record.payment_amount || 0} جنيه</div>
+          {record.payment_method && (
             <div style={{ fontSize: '12px', color: '#666' }}>
-              متبقي: {record.amount_due - record.amount_paid} جنيه
+              {record.payment_method.replace('_', ' ')}
             </div>
           )}
         </div>
       ),
     },
+
     {
       title: 'الإجراءات',
       key: 'actions',
@@ -289,7 +453,7 @@ const EnrollmentManagement = () => {
               onClick={() => handleUpdatePayment(record)}
             />
           </Tooltip>
-          
+
           {record.status !== 'completed' && (
             <Tooltip title="تحديد كمكتمل">
               <Button
@@ -299,7 +463,15 @@ const EnrollmentManagement = () => {
               />
             </Tooltip>
           )}
-          
+
+          <Tooltip title="عرض التفاصيل">
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => handleShowDetails(record)}
+            />
+          </Tooltip>
+
           <Tooltip title="حذف">
             <Button
               size="small"
@@ -320,46 +492,7 @@ const EnrollmentManagement = () => {
 
   return (
     <div className="enrollment-management">
-      {/* Statistics Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic
-              title="إجمالي التسجيلات"
-              value={stats.total_enrollments || 0}
-              prefix={<UserOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic
-              title="التسجيلات المكتملة"
-              value={stats.completed_enrollments || 0}
-              prefix={<CheckOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic
-              title="المدفوعات المعلقة"
-              value={stats.pending_payments || 0}
-              prefix={<DollarOutlined />}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={6}>
-          <Card>
-            <Statistic
-              title="إجمالي الإيرادات"
-              value={stats.total_revenue || 0}
-              suffix="جنيه"
-              prefix={<DollarOutlined />}
-            />
-          </Card>
-        </Col>
-      </Row>
+
 
       {/* Filters and Actions */}
       <Card style={{ marginBottom: '16px' }}>
@@ -372,12 +505,12 @@ const EnrollmentManagement = () => {
             />
           </Col>
 
-          <Col xs={24} sm={4}>
+          <Col xs={24} sm={3}>
             <Select
               placeholder="اختر الدورة"
               allowClear
               loading={coursesLoading}
-              onChange={(value) => handleFilterChange('course_id', value)}
+              onChange={(value) => handleFilterChange('course', value)}
               style={{ width: '100%' }}
               showSearch
               optionFilterProp="children"
@@ -393,7 +526,7 @@ const EnrollmentManagement = () => {
             </Select>
           </Col>
 
-          <Col xs={24} sm={4}>
+          <Col xs={24} sm={3}>
             <Select
               placeholder="حالة الدفع"
               allowClear
@@ -402,12 +535,12 @@ const EnrollmentManagement = () => {
             >
               <Option value="pending">في الانتظار</Option>
               <Option value="paid">مدفوع</Option>
-              <Option value="partial">مدفوع جزئياً</Option>
-              <Option value="overdue">متأخر</Option>
+              <Option value="failed">فشل</Option>
+              <Option value="refunded">مسترد</Option>
             </Select>
           </Col>
 
-          <Col xs={24} sm={4}>
+          <Col xs={24} sm={3}>
             <Select
               placeholder="حالة التسجيل"
               allowClear
@@ -416,12 +549,15 @@ const EnrollmentManagement = () => {
             >
               <Option value="pending">في الانتظار</Option>
               <Option value="approved">مقبول</Option>
+              <Option value="rejected">مرفوض</Option>
               <Option value="completed">مكتمل</Option>
-              <Option value="cancelled">ملغي</Option>
+              <Option value="dropped">منسحب</Option>
             </Select>
           </Col>
-          
-          <Col xs={24} sm={8}>
+
+
+
+          <Col xs={24} sm={9}>
             <Space>
               <Button
                 type="primary"
@@ -430,23 +566,29 @@ const EnrollmentManagement = () => {
               >
                 تصدير PDF
               </Button>
-              
+
               {selectedRowKeys.length > 0 && (
-                <Button
-                  danger
-                  onClick={() => {
-                    Modal.confirm({
-                      title: 'حذف التسجيلات المحددة',
-                      content: `هل أنت متأكد من حذف ${selectedRowKeys.length} تسجيل؟`,
-                      onOk: async () => {
-                        // Implement bulk delete
-                        message.info('جاري تطوير هذه الميزة');
-                      }
-                    });
-                  }}
-                >
-                  حذف المحدد ({selectedRowKeys.length})
-                </Button>
+                <Space>
+                  <Button
+                    type="primary"
+                    onClick={() => handleBulkStatusUpdate('approved')}
+                  >
+                    موافقة المحدد ({selectedRowKeys.length})
+                  </Button>
+
+                  <Button
+                    onClick={() => handleBulkStatusUpdate('rejected')}
+                  >
+                    رفض المحدد ({selectedRowKeys.length})
+                  </Button>
+
+                  <Button
+                    danger
+                    onClick={handleBulkDelete}
+                  >
+                    حذف المحدد ({selectedRowKeys.length})
+                  </Button>
+                </Space>
               )}
             </Space>
           </Col>
@@ -467,7 +609,7 @@ const EnrollmentManagement = () => {
             total: total,
             showSizeChanger: true,
             showQuickJumper: true,
-            showTotal: (total, range) => 
+            showTotal: (total, range) =>
               `${range[0]}-${range[1]} من ${total} تسجيل`,
           }}
           onChange={handleTableChange}
@@ -477,7 +619,7 @@ const EnrollmentManagement = () => {
 
       {/* Payment Update Modal */}
       <Modal
-        title={`تحديث معلومات الدفع - ${selectedEnrollment?.first_name} ${selectedEnrollment?.last_name}`}
+        title={`تحديث معلومات الدفع - ${selectedEnrollment?.enrollee_name || selectedEnrollment?.student_name || `${selectedEnrollment?.first_name} ${selectedEnrollment?.last_name}`}`}
         open={paymentModalVisible}
         onCancel={() => setPaymentModalVisible(false)}
         footer={null}
@@ -491,27 +633,23 @@ const EnrollmentManagement = () => {
           >
             <div style={{ marginBottom: '16px', padding: '12px', background: '#f5f5f5', borderRadius: '6px' }}>
               <Row gutter={16}>
-                <Col span={12}>
-                  <Text strong>الدورة:</Text> {selectedEnrollment.course?.course_name}
-                </Col>
-                <Col span={12}>
-                  <Text strong>المبلغ المطلوب:</Text> {selectedEnrollment.amount_due} جنيه
+                <Col span={24}>
+                  <Text strong>الدورة:</Text> {selectedEnrollment.course_title || selectedEnrollment.course?.course_name}
                 </Col>
               </Row>
             </div>
 
             <Form.Item
-              label="المبلغ المدفوع"
-              name="amount_paid"
-              rules={[{ required: true, message: 'يرجى إدخال المبلغ المدفوع' }]}
+              label="حالة الدفع"
+              name="payment_status"
+              rules={[{ required: true, message: 'يرجى اختيار حالة الدفع' }]}
             >
-              <InputNumber
-                style={{ width: '100%' }}
-                min={0}
-                max={selectedEnrollment?.amount_due}
-                precision={2}
-                addonAfter="جنيه"
-              />
+              <Select placeholder="اختر حالة الدفع">
+                <Option value="pending">في الانتظار</Option>
+                <Option value="paid">مدفوع</Option>
+                <Option value="failed">فشل</Option>
+                <Option value="refunded">مسترد</Option>
+              </Select>
             </Form.Item>
 
             <Form.Item
@@ -522,24 +660,22 @@ const EnrollmentManagement = () => {
                 <Option value="cash">نقدي</Option>
                 <Option value="bank_transfer">تحويل بنكي</Option>
                 <Option value="credit_card">بطاقة ائتمان</Option>
+                <Option value="mobile_payment">دفع محمول</Option>
+                <Option value="check">شيك</Option>
                 <Option value="other">أخرى</Option>
               </Select>
             </Form.Item>
 
             <Form.Item
-              label="مرجع الدفع"
-              name="payment_reference"
+              label="مبلغ الدفع"
+              name="payment_amount"
+              rules={[{ required: true, message: 'يرجى إدخال مبلغ الدفع' }]}
             >
-              <Input placeholder="رقم المرجع أو رقم المعاملة" />
-            </Form.Item>
-
-            <Form.Item
-              label="ملاحظات إدارية"
-              name="admin_notes"
-            >
-              <TextArea
-                rows={3}
-                placeholder="ملاحظات داخلية للاستخدام الإداري..."
+              <InputNumber
+                style={{ width: '100%' }}
+                min={0}
+                precision={2}
+                addonAfter="جنيه"
               />
             </Form.Item>
 
@@ -563,6 +699,274 @@ const EnrollmentManagement = () => {
             </Form.Item>
           </Form>
         )}
+      </Modal>
+
+      {/* Enrollment Details Modal */}
+      <Modal
+        title={`تفاصيل التسجيل - ${selectedEnrollment?.enrollee_name || selectedEnrollment?.student_name || `${selectedEnrollment?.first_name} ${selectedEnrollment?.last_name}`}`}
+        open={detailsModalVisible}
+        onCancel={() => {
+          setDetailsModalVisible(false);
+          setEnrollmentDetails(null);
+        }}
+        footer={[
+          <Button key="close" onClick={() => {
+            setDetailsModalVisible(false);
+            setEnrollmentDetails(null);
+          }}>
+            إغلاق
+          </Button>
+        ]}
+        width={800}
+      >
+        {detailsLoading ? (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <Text>جاري تحميل التفاصيل...</Text>
+          </div>
+        ) : enrollmentDetails ? (
+          <div>
+            <Row gutter={[16, 16]}>
+              <Col span={12}>
+                <Card size="small" title="معلومات المشارك">
+                  <p><strong>الاسم:</strong> {enrollmentDetails.enrollee_name || enrollmentDetails.student_name || `${enrollmentDetails.first_name} ${enrollmentDetails.last_name}`}</p>
+                  <p><strong>البريد الإلكتروني:</strong> {enrollmentDetails.enrollee_email || enrollmentDetails.email}</p>
+                  <p><strong>الهاتف:</strong> {enrollmentDetails.phone || 'غير محدد'}</p>
+                  <p><strong>المسمى الوظيفي:</strong> {enrollmentDetails.job_title || 'غير محدد'}</p>
+                  <p><strong>المؤسسة:</strong> {enrollmentDetails.organization || 'غير محدد'}</p>
+                  <p><strong>نوع التسجيل:</strong> {enrollmentDetails.is_guest_enrollment ? 'تسجيل ضيف' : 'مستخدم مسجل'}</p>
+                  {enrollmentDetails.enrollment_token && (
+                    <p><strong>رمز التسجيل:</strong> {enrollmentDetails.enrollment_token}</p>
+                  )}
+                  {enrollmentDetails.education_level && (
+                    <p><strong>المؤهل العلمي:</strong> {enrollmentDetails.education_level}</p>
+                  )}
+                  {enrollmentDetails.experience_level && (
+                    <p><strong>مستوى الخبرة:</strong> {enrollmentDetails.experience_level}</p>
+                  )}
+                </Card>
+              </Col>
+              <Col span={12}>
+                <Card size="small" title="معلومات الدورة">
+                  <p><strong>اسم الدورة:</strong> {enrollmentDetails.course_title || enrollmentDetails.course?.course_name || enrollmentDetails.course?.title || 'غير محدد'}</p>
+                  <p><strong>كود الدورة:</strong> {enrollmentDetails.course_code || enrollmentDetails.course?.course_code || enrollmentDetails.course?.code || 'غير محدد'}</p>
+                  <p><strong>معرف الدورة:</strong> {enrollmentDetails.course || 'غير محدد'}</p>
+
+                  {/* Extended course information if available */}
+                  {enrollmentDetails.course && typeof enrollmentDetails.course === 'object' && (
+                    <>
+                      {enrollmentDetails.course.instructor && (
+                        <p><strong>المدرب:</strong> {enrollmentDetails.course.instructor}</p>
+                      )}
+                      {enrollmentDetails.course.start_date && (
+                        <p><strong>تاريخ البداية:</strong> {new Date(enrollmentDetails.course.start_date).toLocaleDateString('ar-EG')}</p>
+                      )}
+                      {enrollmentDetails.course.end_date && (
+                        <p><strong>تاريخ النهاية:</strong> {new Date(enrollmentDetails.course.end_date).toLocaleDateString('ar-EG')}</p>
+                      )}
+                      {enrollmentDetails.course.description && (
+                        <p><strong>وصف الدورة:</strong> {enrollmentDetails.course.description}</p>
+                      )}
+                      {enrollmentDetails.course.duration && (
+                        <p><strong>مدة الدورة:</strong> {enrollmentDetails.course.duration}</p>
+                      )}
+                      {enrollmentDetails.course.location && (
+                        <p><strong>مكان الدورة:</strong> {enrollmentDetails.course.location}</p>
+                      )}
+                    </>
+                  )}
+
+                  {/* Fallback message if no extended course data */}
+                  {(!enrollmentDetails.course || typeof enrollmentDetails.course !== 'object') && (
+                    <p style={{ color: '#999', fontStyle: 'italic' }}>
+                      تفاصيل الدورة الإضافية غير متاحة (معرف الدورة: {enrollmentDetails.course})
+                    </p>
+                  )}
+                </Card>
+              </Col>
+            </Row>
+
+            <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
+              <Col span={12}>
+                <Card size="small" title="معلومات التسجيل">
+                  <p><strong>تاريخ التسجيل:</strong> {new Date(enrollmentDetails.enrollment_date).toLocaleDateString('ar-EG')}</p>
+                  <p><strong>حالة التسجيل:</strong>
+                    <Tag color={
+                      enrollmentDetails.status === 'completed' ? 'green' :
+                        enrollmentDetails.status === 'approved' ? 'blue' :
+                          enrollmentDetails.status === 'pending' ? 'orange' : 'red'
+                    }>
+                      {enrollmentDetails.status === 'completed' ? 'مكتمل' :
+                        enrollmentDetails.status === 'approved' ? 'مقبول' :
+                          enrollmentDetails.status === 'pending' ? 'في الانتظار' : 'مرفوض'}
+                    </Tag>
+                  </p>
+                  <p><strong>رقم التسجيل:</strong> {enrollmentDetails.enrollment_token || 'غير محدد'}</p>
+                  {enrollmentDetails.completion_date && (
+                    <p><strong>تاريخ الإنجاز:</strong> {new Date(enrollmentDetails.completion_date).toLocaleDateString('ar-EG')}</p>
+                  )}
+                  <p><strong>حالة النشاط:</strong>
+                    <Tag color={enrollmentDetails.is_active ? 'green' : 'red'}>
+                      {enrollmentDetails.is_active ? 'نشط' : 'غير نشط'}
+                    </Tag>
+                  </p>
+                </Card>
+              </Col>
+              <Col span={12}>
+                <Card size="small" title="معلومات الدفع">
+                  <p><strong>مبلغ الدفع:</strong> {enrollmentDetails.payment_amount || '0.00'} جنيه</p>
+                  <p><strong>حالة الدفع:</strong>
+                    <Tag color={
+                      enrollmentDetails.payment_status === 'paid' ? 'green' :
+                        enrollmentDetails.payment_status === 'failed' ? 'red' :
+                          enrollmentDetails.payment_status === 'refunded' ? 'blue' : 'orange'
+                    }>
+                      {enrollmentDetails.payment_status === 'paid' ? 'مدفوع' :
+                        enrollmentDetails.payment_status === 'failed' ? 'فشل' :
+                          enrollmentDetails.payment_status === 'refunded' ? 'مسترد' : 'في الانتظار'}
+                    </Tag>
+                  </p>
+                  {enrollmentDetails.payment_method && (
+                    <p><strong>طريقة الدفع:</strong>
+                      {enrollmentDetails.payment_method === 'cash' ? 'نقدي' :
+                        enrollmentDetails.payment_method === 'bank_transfer' ? 'تحويل بنكي' :
+                          enrollmentDetails.payment_method === 'credit_card' ? 'بطاقة ائتمان' :
+                            enrollmentDetails.payment_method === 'mobile_payment' ? 'دفع محمول' :
+                              enrollmentDetails.payment_method === 'check' ? 'شيك' :
+                                enrollmentDetails.payment_method === 'other' ? 'أخرى' : enrollmentDetails.payment_method}
+                    </p>
+                  )}
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Training Progress Information */}
+            <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
+              <Col span={24}>
+                <Card size="small" title="بيانات التدريب">
+                  {enrollmentDetails.grade && (
+                    <p><strong>الدرجة:</strong> {enrollmentDetails.grade}</p>
+                  )}
+                  {enrollmentDetails.attendance_percentage !== null && (
+                    <p><strong>نسبة الحضور:</strong> {enrollmentDetails.attendance_percentage}%</p>
+                  )}
+                  {enrollmentDetails.completion_date && (
+                    <p><strong>تاريخ الإنجاز:</strong> {new Date(enrollmentDetails.completion_date).toLocaleDateString('ar-EG')}</p>
+                  )}
+                  {!enrollmentDetails.grade && !enrollmentDetails.attendance_percentage && !enrollmentDetails.completion_date && (
+                    <p style={{ color: '#999', fontStyle: 'italic' }}>لا توجد بيانات تدريب متاحة</p>
+                  )}
+                </Card>
+              </Col>
+
+            </Row>
+
+            {/* Notes Section */}
+            {(enrollmentDetails.notes || enrollmentDetails.admin_notes) && (
+              <Card size="small" title="الملاحظات" style={{ marginTop: '16px' }}>
+                {enrollmentDetails.notes && (
+                  <div>
+                    <strong>ملاحظات المشارك:</strong>
+                    <p>{enrollmentDetails.notes}</p>
+                  </div>
+                )}
+                {enrollmentDetails.admin_notes && (
+                  <div>
+                    <strong>ملاحظات إدارية:</strong>
+                    <p>{enrollmentDetails.admin_notes}</p>
+                  </div>
+                )}
+              </Card>
+            )}
+          </div>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '40px' }}>
+            <Text type="danger">فشل في تحميل تفاصيل التسجيل</Text>
+          </div>
+        )}
+      </Modal>
+
+      {/* Export PDF Modal */}
+      <Modal
+        title="تصدير بيانات التسجيلات"
+        open={exportModalVisible}
+        onCancel={() => {
+          setExportModalVisible(false);
+          exportForm.resetFields();
+        }}
+        footer={null}
+        width={600}
+      >
+        <Form
+          form={exportForm}
+          layout="vertical"
+          onFinish={handleExportConfirm}
+          initialValues={{
+            course: '',
+            include_payment: true,
+            include_status: true,
+            include_dates: true
+          }}
+        >
+          <Form.Item
+            label="اختيار الدورة"
+            name="course"
+          >
+            <Select
+              placeholder="اختر دورة محددة أو جميع الدورات"
+              loading={coursesLoading}
+              allowClear
+            >
+              <Option value="">جميع الدورات</Option>
+              {courses.map(course => (
+                <Option key={course.id} value={course.id}>
+                  {course.course_name} ({course.course_code})
+                </Option>
+              ))}
+            </Select>
+          </Form.Item>
+
+          <Divider>خيارات التصدير</Divider>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="include_payment" valuePropName="checked">
+                <Checkbox>تضمين معلومات الدفع</Checkbox>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="include_status" valuePropName="checked">
+                <Checkbox>تضمين حالة التسجيل</Checkbox>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="include_dates" valuePropName="checked">
+                <Checkbox>تضمين التواريخ</Checkbox>
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="include_contact" valuePropName="checked">
+                <Checkbox>تضمين معلومات الاتصال</Checkbox>
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Form.Item style={{ marginTop: '24px', textAlign: 'center' }}>
+            <Space>
+              <Button onClick={() => {
+                setExportModalVisible(false);
+                exportForm.resetFields();
+              }}>
+                إلغاء
+              </Button>
+              <Button type="primary" htmlType="submit" icon={<DownloadOutlined />}>
+                تصدير PDF
+              </Button>
+            </Space>
+          </Form.Item>
+        </Form>
       </Modal>
     </div>
   );

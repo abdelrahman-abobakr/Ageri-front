@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider, useDispatch, useSelector } from 'react-redux';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntdApp } from 'antd';
 import { useTranslation } from 'react-i18next';
 import arEG from 'antd/locale/ar_EG';
 import enUS from 'antd/locale/en_US';
@@ -48,7 +48,7 @@ import ResearchManagementPage from './pages/admin/ResearchManagementPage';
 import ServicesManagementPage from './pages/admin/ServicesManagementPage';
 import TrainingManagementPage from './pages/admin/TrainingManagementPage';
 import OrganizationManagementPage from './pages/admin/OrganizationManagementPage';
-import  CreateCoursePage from './pages/admin/AddCourseForm.jsx'
+import CreateCoursePage from './pages/admin/AddCourseForm.jsx'
 // Import PublicationDetailPage to fix the 'not defined' error
 import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
 import PublicationsPage from './pages/research/PublicationsPage.jsx';
@@ -94,140 +94,142 @@ const AppContent = () => {
 
   return (
     <ConfigProvider theme={theme} locale={getAntdLocale()}>
-      <Router>
-        <Routes>
-        {/* Auth routes (no layout) */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/pending-approval" element={<PendingApprovalPage />} />
-        <Route path="/unauthorized" element={<UnauthorizedPage />} />
+      <AntdApp>
+        <Router>
+          <Routes>
+            {/* Auth routes (no layout) */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route path="/pending-approval" element={<PendingApprovalPage />} />
+            <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
-        {/* Public routes with guest layout */}
-        <Route element={
-          <ProtectedRoute allowGuest>
-            <GuestLayout />
-          </ProtectedRoute>
-        }>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/courses" element={<CoursesPage />} />
-          <Route path="/services" element={<ServicesPage />} />
-          <Route path="/announcements" element={<AnnouncementsPage />} />
-          <Route path="/researchers/:id" element={<ResearcherProfilePage />} />
-          <Route path="/labs/:id" element={<LabDetailPage />} />
-          <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
-          <Route path="/enrollment/lookup" element={<EnrollmentLookupPage />} />
-          <Route path="/test" element={<TestPage />} />
-          <Route path="/test/courses" element={<CourseTestPage />} />
-          <Route path="/posts/:id" element={<PostDetailPage />} />
-        </Route>
+            {/* Public routes with guest layout */}
+            <Route element={
+              <ProtectedRoute allowGuest>
+                <GuestLayout />
+              </ProtectedRoute>
+            }>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/courses" element={<CoursesPage />} />
+              <Route path="/services" element={<ServicesPage />} />
+              <Route path="/announcements" element={<AnnouncementsPage />} />
+              <Route path="/researchers/:id" element={<ResearcherProfilePage />} />
+              <Route path="/labs/:id" element={<LabDetailPage />} />
+              <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
+              <Route path="/enrollment/lookup" element={<EnrollmentLookupPage />} />
+              <Route path="/test" element={<TestPage />} />
+              <Route path="/test/courses" element={<CourseTestPage />} />
+              <Route path="/posts/:id" element={<PostDetailPage />} />
+            </Route>
 
-        {/* Authenticated routes with main layout */}
-        <Route
-          path="/app"
-          element={
-            <ProtectedRoute>
-              <MainLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="research/publications" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationsPage /></ProtectedRoute>} />
-          <Route path="research/publications/new" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm /></ProtectedRoute>} />
-          <Route path="research/publications/:id" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationDetailPage /></ProtectedRoute>} />
-          <Route path="research/publications/:id/edit" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm isEdit={true} /></ProtectedRoute>} />
-          {/* Home page for authenticated users */}
-          <Route path="home" element={<HomePage />} />
+            {/* Authenticated routes with main layout */}
+            <Route
+              path="/app"
+              element={
+                <ProtectedRoute>
+                  <MainLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<DashboardPage />} />
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="research/publications" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationsPage /></ProtectedRoute>} />
+              <Route path="research/publications/new" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm /></ProtectedRoute>} />
+              <Route path="research/publications/:id" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationDetailPage /></ProtectedRoute>} />
+              <Route path="research/publications/:id/edit" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm isEdit={true} /></ProtectedRoute>} />
+              {/* Home page for authenticated users */}
+              <Route path="home" element={<HomePage />} />
 
-          {/* Admin only routes */}
-          <Route
-            path="users"
-            element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <UserManagementPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="analytics"
-            element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <AnalyticsPage />
-              </ProtectedRoute>
-            }
-          />
+              {/* Admin only routes */}
+              <Route
+                path="users"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <UserManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="analytics"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <AnalyticsPage />
+                  </ProtectedRoute>
+                }
+              />
 
-          {/* Module routes - now fully implemented */}
-          <Route
-            path="research"
-            element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <ResearchManagementPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="organization"
-            element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <OrganizationManagementPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="training"
-            element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <TrainingManagementPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="services"
-            element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <ServicesManagementPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="content"
-            element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <ContentManagementPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="AddCourse"
-            element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <CreateCoursePage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="settings"
-            element={
-              <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                <SystemSettingsPage />
-              </ProtectedRoute>
-            }
-          />
-        </Route>
+              {/* Module routes - now fully implemented */}
+              <Route
+                path="research"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <ResearchManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="organization"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <OrganizationManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="training"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <TrainingManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="services"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <ServicesManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="content"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <ContentManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="AddCourse"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <CreateCoursePage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <SystemSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-        {/* Catch all route - redirect unknown paths */}
-        <Route
-          path="*"
-          element={
-            isAuthenticated ?
-              <Navigate to="/app/dashboard" replace /> :
-              <Navigate to="/" replace />
-          }
-        />
-        </Routes>
-      </Router>
+            {/* Catch all route - redirect unknown paths */}
+            <Route
+              path="*"
+              element={
+                isAuthenticated ?
+                  <Navigate to="/app/dashboard" replace /> :
+                  <Navigate to="/" replace />
+              }
+            />
+          </Routes>
+        </Router>
+      </AntdApp>
     </ConfigProvider>
   );
 };

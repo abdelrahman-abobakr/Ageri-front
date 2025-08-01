@@ -226,6 +226,12 @@ export const API_ENDPOINTS = {
     UNENROLL: (id) => `/training/courses/${id}/unenroll/`,
     COURSE_ENROLLMENTS: (id) => `/training/courses/${id}/enrollments/`,
     MY_ENROLLMENTS: '/training/my-enrollments/',
+    ENROLLMENTS: '/training/enrollments/',
+    ENROLLMENT_DETAIL: (id) => `/training/enrollments/${id}/`,
+    MARK_COMPLETED: (id) => `/training/enrollments/${id}/mark_completed/`,
+    ISSUE_CERTIFICATE: (id) => `/training/enrollments/${id}/issue_certificate/`,
+    ENROLLMENT_STATS: '/training/enrollments/stats/', // May not exist, fallback available
+    EXPORT_ENROLLMENTS: '/training/enrollments/export_pdf/', // May not exist, fallback available
     SUMMER_PROGRAMS: '/training/summer-programs/',
     SUMMER_PROGRAM_DETAIL: (id) => `/training/summer-programs/${id}/`,
     PUBLIC_SERVICES: '/training/public-services/',
