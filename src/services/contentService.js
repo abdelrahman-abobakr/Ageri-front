@@ -34,40 +34,7 @@ export const contentService = {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch announcements:', error);
-      // Return mock data as fallback
-      return {
-        results: [
-          {
-            id: 1,
-            title: 'إعلان عن ورشة الزراعة المستدامة',
-            content: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة والممارسات البيئية الصديقة.',
-            excerpt: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة...',
-            status: 'published',
-            author: 'أحمد محمد',
-            created_at: '2024-01-15T10:30:00Z',
-            updated_at: '2024-01-15T10:30:00Z',
-            published_at: '2024-01-15T10:30:00Z',
-            views_count: 1245,
-            type: 'announcement'
-          },
-          {
-            id: 2,
-            title: 'مؤتمر التكنولوجيا الزراعية 2024',
-            content: 'مؤتمر سنوي يجمع خبراء التكنولوجيا الزراعية من جميع أنحاء المنطقة.',
-            excerpt: 'مؤتمر سنوي يجمع خبراء التكنولوجيا الزراعية...',
-            status: 'scheduled',
-            author: 'محمد حسن',
-            created_at: '2024-01-13T09:15:00Z',
-            updated_at: '2024-01-13T09:15:00Z',
-            published_at: '2024-02-01T09:00:00Z',
-            views_count: 0,
-            type: 'event'
-          }
-        ],
-        count: 89,
-        next: null,
-        previous: null
-      };
+      throw error;
     }
   },
 
@@ -293,58 +260,7 @@ export const contentService = {
       };
     } catch (error) {
       console.error('Failed to fetch all content:', error);
-      // Return mock data
-      return {
-        results: [
-          {
-            id: 1,
-            title: 'إعلان عن ورشة الزراعة المستدامة',
-            type: 'announcement',
-            status: 'published',
-            author: 'أحمد محمد',
-            publishDate: '2024-01-15',
-            lastModified: '2024-01-15',
-            views: 1245,
-            excerpt: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة...'
-          },
-          {
-            id: 2,
-            title: 'أحدث البحوث في مجال الذكاء الاصطناعي الزراعي',
-            type: 'post',
-            status: 'published',
-            author: 'فاطمة علي',
-            publishDate: '2024-01-14',
-            lastModified: '2024-01-14',
-            views: 987,
-            excerpt: 'مقال شامل حول تطبيقات الذكاء الاصطناعي في الزراعة...'
-          },
-          {
-            id: 3,
-            title: 'مؤتمر التكنولوجيا الزراعية 2024',
-            type: 'event',
-            status: 'scheduled',
-            author: 'محمد حسن',
-            publishDate: '2024-02-01',
-            lastModified: '2024-01-13',
-            views: 0,
-            excerpt: 'مؤتمر سنوي يجمع خبراء التكنولوجيا الزراعية...'
-          },
-          {
-            id: 4,
-            title: 'دليل تحليل التربة المتقدم',
-            type: 'post',
-            status: 'draft',
-            author: 'سارة أحمد',
-            publishDate: null,
-            lastModified: '2024-01-12',
-            views: 0,
-            excerpt: 'دليل شامل لتحليل التربة باستخدام التقنيات الحديثة...'
-          }
-        ],
-        count: 89,
-        next: null,
-        previous: null
-      };
+      throw error;
     }
   },
 
@@ -355,16 +271,7 @@ export const contentService = {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch content stats:', error);
-      // Return mock stats
-      return {
-        totalContent: Math.floor(Math.random() * 500) + 300,
-        publishedContent: Math.floor(Math.random() * 400) + 250,
-        draftContent: Math.floor(Math.random() * 50) + 20,
-        scheduledContent: Math.floor(Math.random() * 20) + 5,
-        contentGrowth: (Math.random() * 15 - 2).toFixed(1),
-        viewsThisMonth: Math.floor(Math.random() * 10000) + 5000,
-        engagementRate: (Math.random() * 30 + 60).toFixed(1)
-      };
+      throw error;
     }
   }
 };

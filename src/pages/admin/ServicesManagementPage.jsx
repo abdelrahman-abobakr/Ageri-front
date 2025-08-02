@@ -102,32 +102,8 @@ const ServicesManagementPage = () => {
     } catch (error) {
       console.error('Failed to load services:', error);
       message.error('فشل في تحميل الخدمات');
-      // Fallback to mock data
-      setServices([
-        {
-          id: 1,
-          name: 'تحليل التربة المتقدم',
-          description: 'تحليل شامل لخصائص التربة الفيزيائية والكيميائية',
-          category: 'soil_analysis',
-          price: 150.00,
-          estimated_duration: 3,
-          available: true,
-          equipment_required: ['مطياف', 'مجهر إلكتروني'],
-          created_at: '2024-01-10T10:00:00Z'
-        },
-        {
-          id: 2,
-          name: 'فحص جودة المياه',
-          description: 'تحليل عينات المياه للتأكد من صلاحيتها للري',
-          category: 'water_testing',
-          price: 100.00,
-          estimated_duration: 2,
-          available: true,
-          equipment_required: ['جهاز قياس pH', 'مطياف الامتصاص الذري'],
-          created_at: '2024-01-08T14:30:00Z'
-        }
-      ]);
-      setTotal(2);
+      setServices([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -156,34 +132,8 @@ const ServicesManagementPage = () => {
     } catch (error) {
       console.error('Failed to load requests:', error);
       message.error('فشل في تحميل الطلبات');
-      // Fallback to mock data
-      setRequests([
-        {
-          id: 1,
-          service_name: 'تحليل التربة المتقدم',
-          client_name: 'أحمد محمد',
-          client_email: 'ahmed@example.com',
-          status: 'pending',
-          priority: 'high',
-          created_at: '2024-01-15T09:00:00Z',
-          estimated_completion: '2024-01-18T17:00:00Z',
-          assigned_technician: null,
-          notes: 'عينة من مزرعة القمح - منطقة الدلتا'
-        },
-        {
-          id: 2,
-          service_name: 'فحص جودة المياه',
-          client_name: 'فاطمة علي',
-          client_email: 'fatima@example.com',
-          status: 'in_progress',
-          priority: 'medium',
-          created_at: '2024-01-14T11:30:00Z',
-          estimated_completion: '2024-01-16T15:00:00Z',
-          assigned_technician: 'د. محمد حسن',
-          notes: 'عينة مياه جوفية للري'
-        }
-      ]);
-      setTotal(2);
+      setRequests([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -272,7 +222,7 @@ const ServicesManagementPage = () => {
       completed: { color: 'green', text: 'مكتمل' },
       cancelled: { color: 'red', text: 'ملغي' },
     };
-    
+
     const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -283,7 +233,7 @@ const ServicesManagementPage = () => {
       medium: { color: 'orange', text: 'متوسطة' },
       low: { color: 'green', text: 'منخفضة' },
     };
-    
+
     const config = priorityConfig[priority] || { color: 'default', text: priority };
     return <Tag color={config.color}>{config.text}</Tag>;
   };

@@ -81,7 +81,7 @@ const OrganizationManagementPage = () => {
   // Real-time organization statistics - temporarily disabled for debugging
   // const { stats: orgStats, loading: statsLoading, refresh: refreshStats } = useRealTimeStats('organization', 30000);
   const statsLoading = false;
-  const refreshStats = () => {};
+  const refreshStats = () => { };
 
   // Animated counters - temporarily disabled for debugging
   // const totalDepartmentsCount = useAnimatedCounter(orgStats?.totalDepartments || 0);
@@ -126,28 +126,8 @@ const OrganizationManagementPage = () => {
     } catch (error) {
       console.error('Failed to load departments:', error);
       message.error('فشل في تحميل الأقسام');
-      // Fallback to mock data
-      setDepartments([
-        {
-          id: 1,
-          name: 'Cell Biology',
-          description: 'we are a department specialized in cell biology field.',
-          labs: []
-        },
-        {
-          id: 2,
-          name: 'قسم وقاية النبات',
-          description: 'قسم متخصص في مكافحة الآفات وأمراض النباتات',
-          head: 'د. فاطمة علي',
-          staff_count: 12,
-          labs_count: 2,
-          budget: 400000,
-          status: 'active',
-          established_date: '2012-03-20',
-          location: 'مبنى البحوث - الطابق الأول'
-        }
-      ]);
-      setTotal(2);
+      setDepartments([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -172,34 +152,8 @@ const OrganizationManagementPage = () => {
     } catch (error) {
       console.error('Failed to load labs:', error);
       message.error('فشل في تحميل المختبرات');
-      // Fallback to mock data
-      setLabs([
-        {
-          id: 1,
-          name: 'مختبر تحليل التربة المتقدم',
-          department: 'قسم علوم التربة',
-          supervisor: 'د. محمد حسن',
-          equipment_count: 25,
-          capacity: 50,
-          status: 'operational',
-          specialization: 'تحليل فيزيائي وكيميائي للتربة',
-          location: 'المبنى الرئيسي - الطابق الأرضي',
-          established_date: '2015-06-10'
-        },
-        {
-          id: 2,
-          name: 'مختبر الميكروبيولوجي',
-          department: 'قسم وقاية النبات',
-          supervisor: 'د. سارة أحمد',
-          equipment_count: 18,
-          capacity: 30,
-          status: 'operational',
-          specialization: 'دراسة الكائنات الدقيقة المفيدة والضارة',
-          location: 'مبنى البحوث - الطابق الثاني',
-          established_date: '2018-09-15'
-        }
-      ]);
-      setTotal(2);
+      setLabs([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -228,34 +182,8 @@ const OrganizationManagementPage = () => {
     } catch (error) {
       console.error('Failed to load staff:', error);
       message.error('فشل في تحميل الموظفين');
-      // Fallback to mock data
-      setStaff([
-        {
-          id: 1,
-          name: 'د. أحمد محمد',
-          position: 'رئيس قسم علوم التربة',
-          department: 'قسم علوم التربة',
-          email: 'ahmed.mohamed@ageri.example.com',
-          phone: '+20123456789',
-          specialization: 'كيمياء التربة',
-          hire_date: '2010-01-15',
-          status: 'active',
-          education: 'دكتوراه في علوم التربة'
-        },
-        {
-          id: 2,
-          name: 'د. فاطمة علي',
-          position: 'رئيس قسم وقاية النبات',
-          department: 'قسم وقاية النبات',
-          email: 'fatima.ali@ageri.example.com',
-          phone: '+20123456788',
-          specialization: 'أمراض النباتات',
-          hire_date: '2012-03-20',
-          status: 'active',
-          education: 'دكتوراه في أمراض النباتات'
-        }
-      ]);
-      setTotal(2);
+      setStaff([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -470,7 +398,7 @@ const OrganizationManagementPage = () => {
       maintenance: { color: 'orange', text: 'صيانة' },
       closed: { color: 'red', text: 'مغلق' },
     };
-    
+
     const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };

@@ -104,32 +104,8 @@ const ResearchManagementPage = () => {
     } catch (error) {
       console.error('Failed to load publications:', error);
       message.error('فشل في تحميل المنشورات');
-      // Fallback to mock data
-      setPublications([
-        {
-          id: 1,
-          title: 'تطبيقات الذكاء الاصطناعي في الزراعة المستدامة',
-          authors: ['د. أحمد محمد', 'د. فاطمة علي'],
-          type: 'journal_article',
-          status: 'published',
-          publication_date: '2024-01-15',
-          journal: 'مجلة البحوث الزراعية',
-          citations: 25,
-          downloads: 1250
-        },
-        {
-          id: 2,
-          title: 'تحليل التربة باستخدام تقنيات الاستشعار عن بعد',
-          authors: ['د. محمد حسن'],
-          type: 'conference_paper',
-          status: 'under_review',
-          publication_date: null,
-          journal: 'مؤتمر التكنولوجيا الزراعية 2024',
-          citations: 0,
-          downloads: 0
-        }
-      ]);
-      setTotal(2);
+      setPublications([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -196,7 +172,7 @@ const ResearchManagementPage = () => {
       draft: { color: 'blue', text: 'مسودة' },
       rejected: { color: 'red', text: 'مرفوض' },
     };
-    
+
     const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -209,7 +185,7 @@ const ResearchManagementPage = () => {
       thesis: { color: 'orange', text: 'رسالة' },
       report: { color: 'cyan', text: 'تقرير' },
     };
-    
+
     const config = typeConfig[type] || { color: 'default', text: type };
     return <Tag color={config.color}>{config.text}</Tag>;
   };

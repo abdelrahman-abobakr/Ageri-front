@@ -116,46 +116,8 @@ const TrainingManagementPage = () => {
     } catch (error) {
       console.error('❌ Failed to load courses:', error);
       message.error('فشل في تحميل الدورات');
-      // Fallback to mock data with guide field structure
-      setCourses([
-        {
-          id: 1,
-          course_name: 'أساسيات الزراعة المستدامة',
-          course_code: 'AGR101',
-          description: 'دورة شاملة حول مبادئ وتقنيات الزراعة المستدامة',
-          type: 'course',
-          training_hours: 40,
-          cost: 500.00,
-          instructor: 'د. أحمد محمد',
-          status: 'published',
-          current_enrollment: 25,
-          max_participants: 30,
-          start_date: '2024-02-01',
-          end_date: '2024-02-28',
-          registration_deadline: '2024-01-25',
-          is_featured: true,
-          is_public: true
-        },
-        {
-          id: 2,
-          course_name: 'تقنيات الري الحديثة',
-          course_code: 'IRR201',
-          description: 'تعلم أحدث تقنيات الري وإدارة المياه في الزراعة',
-          type: 'workshop',
-          training_hours: 30,
-          cost: 400.00,
-          instructor: 'د. فاطمة علي',
-          status: 'draft',
-          current_enrollment: 15,
-          max_participants: 25,
-          start_date: '2024-03-01',
-          end_date: '2024-03-20',
-          registration_deadline: '2024-02-25',
-          is_featured: false,
-          is_public: true
-        }
-      ]);
-      setTotal(2);
+      setCourses([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -180,34 +142,8 @@ const TrainingManagementPage = () => {
     } catch (error) {
       console.error('Failed to load sessions:', error);
       message.error('فشل في تحميل الجلسات');
-      // Fallback to mock data
-      setSessions([
-        {
-          id: 1,
-          course_title: 'أساسيات الزراعة المستدامة',
-          title: 'مقدمة في الزراعة المستدامة',
-          session_date: '2024-02-05T10:00:00Z',
-          duration: 2,
-          instructor: 'د. أحمد محمد',
-          location: 'قاعة المحاضرات الرئيسية',
-          attendees_count: 22,
-          max_attendees: 30,
-          status: 'scheduled'
-        },
-        {
-          id: 2,
-          course_title: 'تقنيات الري الحديثة',
-          title: 'أنظمة الري بالتنقيط',
-          session_date: '2024-03-05T14:00:00Z',
-          duration: 3,
-          instructor: 'د. فاطمة علي',
-          location: 'المختبر التطبيقي',
-          attendees_count: 0,
-          max_attendees: 25,
-          status: 'upcoming'
-        }
-      ]);
-      setTotal(2);
+      setSessions([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -236,30 +172,8 @@ const TrainingManagementPage = () => {
     } catch (error) {
       console.error('Failed to load enrollments:', error);
       message.error('فشل في تحميل التسجيلات');
-      // Fallback to mock data
-      setEnrollments([
-        {
-          id: 1,
-          course_title: 'أساسيات الزراعة المستدامة',
-          student_name: 'محمد أحمد',
-          student_email: 'mohamed@example.com',
-          enrollment_date: '2024-01-20T09:00:00Z',
-          status: 'active',
-          progress: 65,
-          completion_date: null
-        },
-        {
-          id: 2,
-          course_title: 'تقنيات الري الحديثة',
-          student_name: 'سارة محمود',
-          student_email: 'sara@example.com',
-          enrollment_date: '2024-01-25T11:30:00Z',
-          status: 'pending',
-          progress: 0,
-          completion_date: null
-        }
-      ]);
-      setTotal(2);
+      setEnrollments([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }

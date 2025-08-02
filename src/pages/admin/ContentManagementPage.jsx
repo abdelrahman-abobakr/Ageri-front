@@ -63,7 +63,7 @@ const ContentManagementPage = () => {
   // Real-time content statistics - temporarily disabled for debugging
   // const { stats: contentStats, loading: statsLoading, refresh: refreshStats } = useRealTimeStats('content', 30000);
   const statsLoading = false;
-  const refreshStats = () => {};
+  const refreshStats = () => { };
 
   // Animated counters - temporarily disabled for debugging
   // const totalContentCount = useAnimatedCounter(contentStats?.totalContent || 0);
@@ -75,53 +75,7 @@ const ContentManagementPage = () => {
   const draftContentCount = { value: 0 };
   const scheduledContentCount = { value: 0 };
 
-  // Mock data for demonstration
-  const mockContent = [
-    {
-      id: 1,
-      title: 'إعلان عن ورشة الزراعة المستدامة',
-      type: 'announcement',
-      status: 'published',
-      author: 'أحمد محمد',
-      publishDate: '2024-01-15',
-      lastModified: '2024-01-15',
-      views: 1245,
-      excerpt: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة...'
-    },
-    {
-      id: 2,
-      title: 'أحدث البحوث في مجال الذكاء الاصطناعي الزراعي',
-      type: 'post',
-      status: 'published',
-      author: 'فاطمة علي',
-      publishDate: '2024-01-14',
-      lastModified: '2024-01-14',
-      views: 987,
-      excerpt: 'مقال شامل حول تطبيقات الذكاء الاصطناعي في الزراعة...'
-    },
-    {
-      id: 3,
-      title: 'مؤتمر التكنولوجيا الزراعية 2024',
-      type: 'event',
-      status: 'scheduled',
-      author: 'محمد حسن',
-      publishDate: '2024-02-01',
-      lastModified: '2024-01-13',
-      views: 0,
-      excerpt: 'مؤتمر سنوي يجمع خبراء التكنولوجيا الزراعية...'
-    },
-    {
-      id: 4,
-      title: 'دليل تحليل التربة المتقدم',
-      type: 'post',
-      status: 'draft',
-      author: 'سارة أحمد',
-      publishDate: null,
-      lastModified: '2024-01-12',
-      views: 0,
-      excerpt: 'دليل شامل لتحليل التربة باستخدام التقنيات الحديثة...'
-    }
-  ];
+
 
   useEffect(() => {
     loadContent();
@@ -175,9 +129,8 @@ const ContentManagementPage = () => {
     } catch (error) {
       console.error('Failed to load content:', error);
       message.error('فشل في تحميل المحتوى');
-      // Fallback to mock data
-      setContent(mockContent);
-      setTotal(mockContent.length);
+      setContent([]);
+      setTotal(0);
     } finally {
       setLoading(false);
     }
@@ -285,7 +238,7 @@ const ContentManagementPage = () => {
       archived: { color: 'red', text: t('admin.contentManagement.archived') },
       scheduled: { color: 'blue', text: t('admin.contentManagement.scheduled') },
     };
-    
+
     const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -297,7 +250,7 @@ const ContentManagementPage = () => {
       news: { color: 'green', text: t('admin.contentManagement.news') },
       event: { color: 'orange', text: t('admin.contentManagement.event') },
     };
-    
+
     const config = typeConfig[type] || { color: 'default', text: type };
     return <Tag color={config.color}>{config.text}</Tag>;
   };

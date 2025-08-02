@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react';
-import { 
-  Card, 
-  Row, 
-  Col, 
-  Typography, 
-  Button, 
-  Divider, 
-  Tag, 
-  Avatar, 
-  Space, 
+import {
+  Card,
+  Row,
+  Col,
+  Typography,
+  Button,
+  Divider,
+  Tag,
+  Avatar,
+  Space,
   Carousel,
   Spin,
   Image
@@ -97,22 +97,12 @@ const HomePage = () => {
           setOrganizationData(orgData);
         } catch (error) {
           console.error('Failed to load organization settings:', error);
-          // Set default organization data
+          // Set minimal default data
           setOrganizationData({
-            name: "منظمة البحث العلمي الزراعي",
-            vision: "أن نكون المنظمة الرائدة في البحث العلمي الزراعي والابتكار التكنولوجي في المنطقة",
-            vision_image: null, // Will use default image
-            mission: "نسعى لتطوير الحلول المبتكرة في مجال الزراعة والبحث العلمي لخدمة المجتمع والبيئة",
-            mission_image: null, // Will use default image
-            about: "منظمة رائدة في مجال البحث العلمي الزراعي، نعمل على تطوير التقنيات الحديثة والحلول المستدامة لتحسين الإنتاج الزراعي وحماية البيئة.",
-            email: "info@agri-research.org",
-            phone: "+966 11 123 4567",
-            address: "الرياض، المملكة العربية السعودية",
-            website: "https://agri-research.org",
-            facebook: "https://facebook.com/agri-research",
-            twitter: "https://twitter.com/agri_research",
-            linkedin: "https://linkedin.com/company/agri-research",
-            instagram: "https://instagram.com/agri_research"
+            name: "منظمة البحث العلمي",
+            vision: "",
+            mission: "",
+            about: ""
           });
         } finally {
           setSettingsLoading(false);
@@ -165,76 +155,9 @@ const HomePage = () => {
           }
         } catch (error) {
           console.error('Failed to load content:', error);
-          // Set fallback content with mock data
-          setAnnouncements([
-            {
-              id: 1,
-              title: 'إعلان عن ورشة الزراعة المستدامة',
-              content: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة والممارسات البيئية الصديقة.',
-              date: new Date().toISOString(),
-              category: 'إعلان',
-              views: 245,
-              type: 'announcement',
-              excerpt: 'ورشة تدريبية حول أحدث تقنيات الزراعة المستدامة والممارسات البيئية الصديقة للبيئة.'
-            },
-            {
-              id: 2,
-              title: 'فتح باب التسجيل للدورات الجديدة',
-              content: 'نعلن عن فتح باب التسجيل للدورات التدريبية الجديدة في مجال البحث العلمي.',
-              date: new Date(Date.now() - 86400000).toISOString(),
-              category: 'إعلان',
-              views: 189,
-              type: 'announcement',
-              excerpt: 'نعلن عن فتح باب التسجيل للدورات التدريبية الجديدة في مجال البحث العلمي والتطوير.'
-            }
-          ]);
-
-          setPosts([
-            {
-              id: 1,
-              title: 'أحدث التطورات في تقنيات الزراعة الذكية',
-              content: 'مقال شامل حول أحدث التطورات في مجال الزراعة الذكية واستخدام التكنولوجيا.',
-              date: new Date().toISOString(),
-              category: 'أخبار',
-              views: 567,
-              type: 'post',
-              excerpt: 'مقال شامل حول أحدث التطورات في مجال الزراعة الذكية واستخدام التكنولوجيا الحديثة.',
-              author: 'د. أحمد محمد'
-            },
-            {
-              id: 2,
-              title: 'نتائج البحث الجديد في مقاومة الآفات',
-              content: 'دراسة جديدة تكشف عن طرق مبتكرة لمقاومة الآفات الزراعية بطرق طبيعية.',
-              date: new Date(Date.now() - 172800000).toISOString(),
-              category: 'بحث',
-              views: 423,
-              type: 'post',
-              excerpt: 'دراسة جديدة تكشف عن طرق مبتكرة لمقاومة الآفات الزراعية بطرق طبيعية وصديقة للبيئة.',
-              author: 'د. فاطمة علي'
-            },
-            {
-              id: 3,
-              title: 'تأثير التغير المناخي على الإنتاج الزراعي',
-              content: 'تحليل شامل لتأثير التغير المناخي على الإنتاج الزراعي والحلول المقترحة.',
-              date: new Date(Date.now() - 259200000).toISOString(),
-              category: 'أخبار',
-              views: 334,
-              type: 'post',
-              excerpt: 'تحليل شامل لتأثير التغير المناخي على الإنتاج الزراعي والحلول المقترحة للتكيف.',
-              author: 'د. محمد حسن'
-            },
-            {
-              id: 4,
-              title: 'ابتكارات جديدة في مجال الري الذكي',
-              content: 'استعراض لأحدث الابتكارات في مجال أنظمة الري الذكي وتوفير المياه.',
-              date: new Date(Date.now() - 345600000).toISOString(),
-              category: 'تقنية',
-              views: 278,
-              type: 'post',
-              excerpt: 'استعراض لأحدث الابتكارات في مجال أنظمة الري الذكي وتوفير المياه في الزراعة.',
-              author: 'د. سارة أحمد'
-            }
-          ]);
+          // Set empty arrays on error
+          setAnnouncements([]);
+          setPosts([]);
         }
       } catch (error) {
         console.error('Failed to load homepage data:', error);
@@ -295,7 +218,7 @@ const HomePage = () => {
         icon: <ExperimentOutlined />
       });
     }
-    
+
     // Default slide if no data
     if (slides.length === 0) {
       slides.push({
@@ -306,7 +229,7 @@ const HomePage = () => {
         icon: <BookOutlined />
       });
     }
-    
+
     return slides;
   };
 

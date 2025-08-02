@@ -21,17 +21,9 @@ const PostDetailPage = () => {
         setPost(data);
         document.title = data.title || 'تفاصيل الخبر';
       } catch (e) {
-        // fallback mock
-        setPost({
-          id,
-          title: 'عنوان الخبر التجريبي',
-          content: 'هذا نص تجريبي لمحتوى الخبر أو المقال. سيتم استبداله بالبيانات الحقيقية من الخادم.',
-          date: new Date().toISOString(),
-          category: 'أخبار',
-          views: 0,
-          author: 'فريق التحرير',
-        });
-        document.title = 'تفاصيل الخبر';
+        console.error('Failed to load post:', e);
+        setPost(null);
+        document.title = 'خطأ في تحميل الخبر';
       } finally {
         setLoading(false);
       }

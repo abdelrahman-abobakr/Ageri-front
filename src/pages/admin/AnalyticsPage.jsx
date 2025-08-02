@@ -69,29 +69,9 @@ const AnalyticsPage = () => {
     networkTraffic: 89
   };
 
-  const [userActivityData, setUserActivityData] = useState([
-    { date: '2024-01-01', registrations: 12, logins: 145 },
-    { date: '2024-01-02', registrations: 8, logins: 167 },
-    { date: '2024-01-03', registrations: 15, logins: 189 },
-    { date: '2024-01-04', registrations: 6, logins: 134 },
-    { date: '2024-01-05', registrations: 11, logins: 156 },
-    { date: '2024-01-06', registrations: 9, logins: 178 },
-    { date: '2024-01-07', registrations: 13, logins: 198 }
-  ]);
-
-  const [contentMetrics, setContentMetrics] = useState([
-    { type: 'Publications', count: 342, growth: 12.5 },
-    { type: 'Courses', count: 28, growth: -2.1 },
-    { type: 'Services', count: 15, growth: 8.7 },
-    { type: 'Announcements', count: 67, growth: 15.3 }
-  ]);
-
-  const [topContent, setTopContent] = useState([
-    { title: 'مقدمة في الذكاء الاصطناعي الزراعي', type: 'Course', views: 1245, engagement: 89 },
-    { title: 'تحليل التربة المتقدم', type: 'Service', views: 987, engagement: 76 },
-    { title: 'أحدث التقنيات في الري', type: 'Publication', views: 756, engagement: 82 },
-    { title: 'ورشة الزراعة المستدامة', type: 'Announcement', views: 654, engagement: 71 }
-  ]);
+  const [userActivityData, setUserActivityData] = useState([]);
+  const [contentMetrics, setContentMetrics] = useState([]);
+  const [topContent, setTopContent] = useState([]);
 
   useEffect(() => {
     // Refresh data when date range changes
@@ -385,7 +365,7 @@ const AnalyticsPage = () => {
                       suffix="%"
                       valueStyle={{
                         color: systemHealth.cpuUsage > 80 ? '#ff4d4f' :
-                               systemHealth.cpuUsage > 60 ? '#faad14' : '#52c41a'
+                          systemHealth.cpuUsage > 60 ? '#faad14' : '#52c41a'
                       }}
                     />
                     <Progress
@@ -403,7 +383,7 @@ const AnalyticsPage = () => {
                       suffix="%"
                       valueStyle={{
                         color: systemHealth.memoryUsage > 80 ? '#ff4d4f' :
-                               systemHealth.memoryUsage > 60 ? '#faad14' : '#52c41a'
+                          systemHealth.memoryUsage > 60 ? '#faad14' : '#52c41a'
                       }}
                     />
                     <Progress
@@ -421,7 +401,7 @@ const AnalyticsPage = () => {
                       suffix="%"
                       valueStyle={{
                         color: systemHealth.diskUsage > 80 ? '#ff4d4f' :
-                               systemHealth.diskUsage > 60 ? '#faad14' : '#52c41a'
+                          systemHealth.diskUsage > 60 ? '#faad14' : '#52c41a'
                       }}
                     />
                     <Progress

@@ -10,62 +10,7 @@ export const adminService = {
       return response.data;
     } catch (error) {
       console.error('Failed to fetch users:', error);
-      // Return mock data as fallback
-      return {
-        results: [
-          {
-            id: 1,
-            username: 'ahmed.mohamed',
-            email: 'ahmed@ageri.example.com',
-            first_name: 'أحمد',
-            last_name: 'محمد',
-            role: 'researcher',
-            status: 'approved',
-            date_joined: '2024-01-15T10:30:00Z',
-            last_login: '2024-01-20T14:20:00Z',
-            is_active: true
-          },
-          {
-            id: 2,
-            username: 'fatima.ali',
-            email: 'fatima@ageri.example.com',
-            first_name: 'فاطمة',
-            last_name: 'علي',
-            role: 'researcher',
-            status: 'pending',
-            date_joined: '2024-01-18T09:15:00Z',
-            last_login: null,
-            is_active: false
-          },
-          {
-            id: 3,
-            username: 'mohamed.hassan',
-            email: 'mohamed@ageri.example.com',
-            first_name: 'محمد',
-            last_name: 'حسن',
-            role: 'moderator',
-            status: 'approved',
-            date_joined: '2024-01-10T11:45:00Z',
-            last_login: '2024-01-19T16:30:00Z',
-            is_active: true
-          },
-          {
-            id: 4,
-            username: 'sara.ahmed',
-            email: 'sara@ageri.example.com',
-            first_name: 'سارة',
-            last_name: 'أحمد',
-            role: 'researcher',
-            status: 'pending',
-            date_joined: '2024-01-19T08:45:00Z',
-            last_login: null,
-            is_active: false
-          }
-        ],
-        count: 156,
-        next: null,
-        previous: null
-      };
+      throw error;
     }
   },
 
@@ -276,54 +221,8 @@ export const adminService = {
 
       return realStats;
     } catch (error) {
-      console.log('🚨 Real dashboard stats failed, using fallback data. Error:', error.message);
-      console.log('Error details:', error.response?.status, error.response?.data);
-      // Fallback to static mock data if API is not available (FALLBACK MODE)
-      console.log('🚨 Using FALLBACK data - Real API endpoints not available');
-      return {
-        users: {
-          total: 1250,
-          activeToday: 85,
-          newThisMonth: 42,
-          pendingApprovals: 12,
-          activeUsers: 1100,
-          newRegistrations: 28
-        },
-        content: {
-          totalAnnouncements: 89,
-          totalCourses: 56,
-          totalPublications: 379,
-          totalServices: 24,
-          pendingRequests: 14,
-          publishedContent: 340,
-          draftContent: 25,
-          scheduledContent: 14,
-          pendingPublications: 8
-        },
-        organization: {
-          totalDepartments: 1,
-          totalLabs: 0,
-          activeDepartments: 1,
-          activeLabs: 0,
-          departmentsWithLabs: 0,
-          totalStaff: 0
-        },
-        analytics: {
-          pageViews: 45230,
-          uniqueVisitors: 8750,
-          bounceRate: '32.4',
-          avgSessionDuration: '4:23'
-        },
-        system: {
-          cpuUsage: 45,
-          memoryUsage: 62,
-          diskUsage: 38,
-          networkTraffic: 75,
-          serverStatus: 'healthy',
-          databaseStatus: 'healthy',
-          cacheStatus: 'healthy'
-        }
-      };
+      console.log('🚨 Dashboard stats failed. Error:', error.message);
+      throw error;
     }
   },
 
@@ -451,33 +350,8 @@ export const adminService = {
       console.log('✅ Real user stats calculated:', stats);
       return stats;
     } catch (error) {
-      console.log('🚨 User stats failed, using fallback. Error:', error.message);
-      // Fallback to mock data
-      const now = new Date();
-      const stats = {
-        totalUsers: 1250,
-        activeUsers: 1100,
-        pendingApprovals: 12,
-        newRegistrations: 28,
-        newThisWeek: 15,
-        activeToday: 85,
-        byRole: { admin: 5, moderator: 8, researcher: 1237 },
-        userGrowth: '+12.5',
-        registrationTrend: []
-      };
-
-      // Generate fallback trend data
-      for (let i = 6; i >= 0; i--) {
-        const date = new Date(now);
-        date.setDate(date.getDate() - i);
-        stats.registrationTrend.push({
-          date: date.toISOString().split('T')[0],
-          registrations: Math.floor(Math.random() * 15) + 5,
-          logins: Math.floor(Math.random() * 100) + 50
-        });
-      }
-
-      return stats;
+      console.log('🚨 User stats failed. Error:', error.message);
+      throw error;
     }
   },
 
@@ -486,15 +360,8 @@ export const adminService = {
       const response = await apiClient.get(API_ENDPOINTS.ANALYTICS.PUBLICATIONS);
       return response.data;
     } catch (error) {
-      return {
-        totalContent: Math.floor(Math.random() * 500) + 300,
-        publishedContent: Math.floor(Math.random() * 400) + 250,
-        draftContent: Math.floor(Math.random() * 50) + 20,
-        scheduledContent: Math.floor(Math.random() * 20) + 5,
-        contentGrowth: (Math.random() * 15 - 2).toFixed(1),
-        viewsThisMonth: Math.floor(Math.random() * 10000) + 5000,
-        engagementRate: (Math.random() * 30 + 60).toFixed(1)
-      };
+      console.error('Failed to fetch content stats:', error);
+      throw error;
     }
   },
 
@@ -503,20 +370,8 @@ export const adminService = {
       const response = await apiClient.get(API_ENDPOINTS.ADMIN.HEALTH_CHECK);
       return response.data;
     } catch (error) {
-      return {
-        serverVersion: '1.0.0',
-        databaseVersion: 'PostgreSQL 14.2',
-        pythonVersion: 'Python 3.9.7',
-        uptime: `${Math.floor(Math.random() * 30) + 1} days, ${Math.floor(Math.random() * 24)} hours`,
-        lastBackup: new Date(Date.now() - Math.random() * 86400000 * 7).toISOString(),
-        cpuUsage: Math.floor(Math.random() * 60) + 20,
-        memoryUsage: Math.floor(Math.random() * 70) + 30,
-        diskUsage: Math.floor(Math.random() * 50) + 20,
-        networkTraffic: Math.floor(Math.random() * 100) + 50,
-        serverStatus: Math.random() > 0.1 ? 'healthy' : 'warning',
-        databaseStatus: Math.random() > 0.05 ? 'healthy' : 'warning',
-        cacheStatus: Math.random() > 0.2 ? 'healthy' : 'warning'
-      };
+      console.error('Failed to fetch system health:', error);
+      throw error;
     }
   },
 };
