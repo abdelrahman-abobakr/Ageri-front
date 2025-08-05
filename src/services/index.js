@@ -10,6 +10,7 @@ export { analyticsService } from './analyticsService';
 export { notificationService } from './notificationService';
 export { adminService } from './adminService';
 export { default as EnrollmentService } from './enrollmentService';
+export { statisticsService } from './statisticsService';
 
 // Export API client for direct use if needed
 export { default as apiClient } from './api';

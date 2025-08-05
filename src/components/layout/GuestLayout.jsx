@@ -131,10 +131,10 @@ const GuestLayout = () => {
   // Get translated menu label
   const getMenuLabel = (key) => {
     const labelMap = {
-      'home': t('common.home'),
-      'announcements': t('common.announcements'),
-      'courses': t('common.courses'),
-      'services': t('common.services'),
+      'home': t('navigation.home'),
+      'posts': t('navigation.posts'),
+      'courses': t('navigation.courses'),
+      'services': t('navigation.services'),
     };
     return labelMap[key] || key;
   };
@@ -270,11 +270,11 @@ const GuestLayout = () => {
                   alignItems: 'center',
                   gap: '4px',
                   marginLeft: '16px',
-                  flexShrink: 0 // Prevent departments button from shrinking
+                  flexShrink: 0
                 }}
               >
                 <BankOutlined />
-                {!isMobile && 'Departments'}
+                {!isMobile && t('navigation.departments')}
                 <DownOutlined />
               </Button>
             </Dropdown>

@@ -33,6 +33,8 @@ import AnnouncementDetailPage from './pages/public/AnnouncementDetailPage';
 import AnnouncementsPage from './pages/public/AnnouncementsPage';
 import PostDetailPage from './pages/public/PostDetailPage';
 import EnrollmentLookupPage from './pages/public/EnrollmentLookupPage';
+import PublicResearchPage from './pages/public/PublicResearchPage';
+import PublicResearchersPage from './pages/public/PublicResearchersPage';
 
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -47,6 +49,7 @@ import ResearchManagementPage from './pages/admin/ResearchManagementPage';
 import ServicesManagementPage from './pages/admin/ServicesManagementPage';
 import TrainingManagementPage from './pages/admin/TrainingManagementPage';
 import OrganizationManagementPage from './pages/admin/OrganizationManagementPage';
+import NotificationsManagementPage from './pages/admin/NotificationsManagementPage';
 import CreateCoursePage from './pages/admin/AddCourseForm.jsx'
 // Import PublicationDetailPage to fix the 'not defined' error
 import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
@@ -111,13 +114,14 @@ const AppContent = () => {
               <Route path="/" element={<HomePage />} />
               <Route path="/courses" element={<CoursesPage />} />
               <Route path="/services" element={<ServicesPage />} />
-              <Route path="/announcements" element={<AnnouncementsPage />} />
+              <Route path="/posts" element={<AnnouncementsPage />} />
+              <Route path="/research" element={<PublicResearchPage />} />
+              <Route path="/researchers" element={<PublicResearchersPage />} />
               <Route path="/researchers/:id" element={<ResearcherProfilePage />} />
               <Route path="/labs/:id" element={<LabDetailPage />} />
-              <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
-              <Route path="/enrollment/lookup" element={<EnrollmentLookupPage />} />
-
               <Route path="/posts/:id" element={<PostDetailPage />} />
+              <Route path="/enrollment-lookup" element={<EnrollmentLookupPage />} />
+              <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
             </Route>
 
             {/* Authenticated routes with main layout */}
@@ -156,7 +160,6 @@ const AppContent = () => {
                   </ProtectedRoute>
                 }
               />
-
               {/* Module routes - now fully implemented */}
               <Route
                 path="research"
@@ -193,8 +196,16 @@ const AppContent = () => {
               <Route
                 path="content"
                 element={
-                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                  <ProtectedRoute requiredPermission="CONTENT_MODERATION">
                     <ContentManagementPage />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="notifications"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <NotificationsManagementPage />
                   </ProtectedRoute>
                 }
               />

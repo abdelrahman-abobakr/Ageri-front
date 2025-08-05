@@ -251,9 +251,10 @@ export const API_ENDPOINTS = {
 
   // Content Management
   CONTENT: {
-    ANNOUNCEMENTS: '/content/announcements/',
-    ANNOUNCEMENT_DETAIL: (id) => `/content/announcements/${id}/`,
+    ANNOUNCEMENTS: '/content/posts/',
+    ANNOUNCEMENT_DETAIL: (id) => `/content/posts/${id}/`,
     POSTS: '/content/posts/',
+    MY_POSTS: '/content/posts/my_posts/',
     POST_DETAIL: (id) => `/content/posts/${id}/`,
     POST_COMMENTS: (id) => `/content/posts/${id}/comments/`,
     COMMENT_DETAIL: (id) => `/content/comments/${id}/`,
@@ -351,7 +352,7 @@ export const MENU_ITEMS = {
   ],
   [USER_ROLES.GUEST]: [
     { key: 'home', label: 'Home', icon: 'DashboardOutlined', path: '/' },
-    { key: 'announcements', label: 'Announcements', icon: 'FileTextOutlined', path: '/announcements' },
+    { key: 'posts', label: 'Posts', icon: 'FileTextOutlined', path: '/posts' },
     { key: 'courses', label: 'Courses', icon: 'ReadOutlined', path: '/courses' },
     { key: 'services', label: 'Services', icon: 'ToolOutlined', path: '/services' },
   ],

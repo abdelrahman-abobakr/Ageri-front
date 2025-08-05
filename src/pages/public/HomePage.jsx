@@ -11,7 +11,9 @@ import {
   Space,
   Carousel,
   Spin,
-  Image
+  Image,
+  Statistic,
+  Badge
 } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
@@ -39,9 +41,18 @@ import {
   EnvironmentOutlined,
   LinkOutlined,
   LeftOutlined,
-  RightOutlined as CarouselRightOutlined
+  RightOutlined as CarouselRightOutlined,
+  TrophyOutlined,
+  SafetyOutlined,
+  RocketOutlined,
+  BulbOutlined,
+  StarOutlined,
+  FireOutlined,
+  ThunderboltOutlined,
+  CrownOutlined,
+  FileTextOutlined
 } from '@ant-design/icons';
-import { contentService, organizationService } from '../../services';
+import { contentService, organizationService, statisticsService } from '../../services';
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -54,13 +65,20 @@ const HomePage = () => {
   const [posts, setPosts] = useState([]);
   const [organizationData, setOrganizationData] = useState({});
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [stats, setStats] = useState({
+    researchers: 0,
+    projects: 0,
+    publications: 0,
+    courses: 0
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
-  // Add CSS animations for carousel
+  // Enhanced CSS animations
   const carouselAnimations = `
     @keyframes fadeInUp {
       from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(50px);
       }
       to {
         opacity: 1;
@@ -79,36 +97,176 @@ const HomePage = () => {
       }
     }
 
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(100px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% {
+        box-shadow: 0 0 20px rgba(24, 144, 255, 0.3);
+      }
+      50% {
+        box-shadow: 0 0 40px rgba(24, 144, 255, 0.6);
+      }
+    }
+
+    @keyframes floatingAnimation {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
     .carousel-slide-content {
       animation: fadeInUp 1s ease-out;
     }
-  `;
 
+    .floating-element {
+      animation: floatingAnimation 3s ease-in-out infinite;
+    }
+
+    .professional-card {
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.95);
+    }
+
+    .professional-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-overlay {
+      background: linear-gradient(135deg, 
+        rgba(102, 126, 234, 0.8) 0%, 
+        rgba(118, 75, 162, 0.8) 30%,
+        rgba(79, 172, 254, 0.8) 70%,
+        rgba(0, 242, 254, 0.8) 100%);
+      backdrop-filter: blur(10px);
+    }
+
+    .stats-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 20px;
+      color: white;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .stats-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+      transform: translateX(-100%);
+      transition: transform 0.6s;
+    }
+
+    .stats-card:hover::before {
+      transform: translateX(100%);
+    }
+
+    .news-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 16px;
+      transition: all 0.3s ease;
+    }
+
+    .news-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .news-card:hover::before {
+      left: 100%;
+    }
+  `;
+  const heroImages = [
+    '/2304.w019.n002.1028B.p15.1028.jpg',  
+    '/2304.w019.n002.1028B.p15.1028.jpg',  
+    '/2304.w019.n002.1028B.p15.1028.jpg'   
+  ];
   useEffect(() => {
-    // Load data for the news-style homepage
     const loadHomePageData = async () => {
       try {
         setLoading(true);
+        setStatsLoading(true);
+
+        // Load statistics
+        try {
+          const statisticsData = await statisticsService.getPublicStatistics();
+          console.log('🏠 Homepage received stats:', statisticsData);
+          setStats(statisticsData);
+        } catch (error) {
+          console.error('Failed to load statistics:', error);
+          // Keep default zeros if API fails
+        } finally {
+          setStatsLoading(false);
+        }
 
         // Load organization settings
         try {
           setSettingsLoading(true);
           const orgData = await organizationService.getPublicSettings();
-          setOrganizationData(orgData);
+          // Override the name to Arabic regardless of API response
+          setOrganizationData({
+            ...orgData,
+            name: "منظمة البحث العلمي"
+          });
         } catch (error) {
           console.error('Failed to load organization settings:', error);
-          // Set minimal default data
+          // Default institute data
           setOrganizationData({
             name: "منظمة البحث العلمي",
-            vision: "",
-            mission: "",
-            about: ""
+            vision: "أن نصبح المعهد الرائد في منطقة الشرق الأوسط في مجال البحث العلمي والابتكار التقني، ونساهم في بناء مجتمع المعرفة وتحقيق التنمية المستدامة",
+            vision_image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+            mission: "نلتزم بإجراء البحوث العلمية المتقدمة وتطوير الحلول التقنية المبتكرة، وتأهيل الكوادر العلمية المتخصصة، وتقديم الاستشارات العلمية والتقنية لخدمة المجتمع والاقتصاد الوطني",
+            mission_image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
+            about: "معهد البحوث العلمية والتطوير التقني مؤسسة رائدة في مجال البحث العلمي والابتكار التقني، تأسس عام 1985 ويضم نخبة من العلماء والباحثين المتخصصين في مختلف المجالات العلمية والتقنية. يساهم المعهد في تطوير الحلول العلمية والتقنية المتقدمة لمواجهة التحديات المعاصرة وتحقيق التنمية المستدامة.",
+            email: "info@research-institute.org",
+            phone: "+966 11 456 7890",
+            address: "شارع الملك فهد، الرياض 11564، المملكة العربية السعودية",
+            website: "https://research-institute.org",
+            facebook: "https://facebook.com/research-institute",
+            twitter: "https://twitter.com/research_institute",
+            linkedin: "https://linkedin.com/company/research-institute",
+            instagram: "https://instagram.com/research_institute"
           });
         } finally {
           setSettingsLoading(false);
         }
 
-        // Load announcements and posts separately
+        // Load content with institute-specific data
         try {
           const [announcementsResponse, postsResponse] = await Promise.allSettled([
             contentService.getPublicAnnouncements({
@@ -121,43 +279,54 @@ const HomePage = () => {
             })
           ]);
 
-          // Process announcements
-          if (announcementsResponse.status === 'fulfilled') {
-            const transformedAnnouncements = announcementsResponse.value.results.map(item => ({
-              id: item.id,
-              title: item.title,
-              content: item.content || item.description || '',
-              date: item.created_at || item.date,
-              category: 'إعلان',
-              priority: item.priority || 'medium',
-              views: item.view_count || 0,
-              type: 'announcement',
-              excerpt: item.excerpt || item.content?.substring(0, 150) + '...'
-            }));
-            setAnnouncements(transformedAnnouncements);
+          console.log('🔍 Posts Response:', postsResponse);
+
+          if (postsResponse.status === 'fulfilled') {
+            console.log('🔍 All Posts:', postsResponse.value.results);
+            
+            // Show all published posts instead of just featured ones
+            const publishedPosts = postsResponse.value.results.filter(item => 
+              item.status === 'published' && item.is_public
+            );
+            
+            const transformedPosts = publishedPosts.map(item => {
+      
+              
+              return {
+                id: item.id,
+                title: item.title,
+                content: item.content || item.description || '',
+                date: item.created_at || item.date,
+                category: item.category || 'أبحاث',
+                priority: item.priority || 'medium',
+                views: item.view_count || 0,
+                type: 'post',
+                featured_image: item.featured_image || item.attachment || null,
+                attachment: item.attachment || null,
+                excerpt: item.excerpt || item.content?.substring(0, 150) + '...',
+                author: typeof item.author === 'string'
+                  ? item.author
+                  : item.author?.full_name || item.author?.email || 'فريق البحث العلمي',
+                is_featured: item.is_featured || false
+              };
+            });
+
+            // Sort posts to show featured ones first
+            const sortedPosts = transformedPosts.sort((a, b) => {
+              if (a.is_featured && !b.is_featured) return -1;
+              if (!a.is_featured && b.is_featured) return 1;
+              return new Date(b.date) - new Date(a.date);
+            });
+
+            console.log('🔍 Final Sorted Posts:', sortedPosts);
+            setPosts(sortedPosts);
           }
 
-          // Process posts
-          if (postsResponse.status === 'fulfilled') {
-            const transformedPosts = postsResponse.value.results.map(item => ({
-              id: item.id,
-              title: item.title,
-              content: item.content || item.description || '',
-              date: item.created_at || item.date,
-              category: item.category || 'أخبار',
-              priority: item.priority || 'medium',
-              views: item.view_count || 0,
-              type: 'post',
-              excerpt: item.excerpt || item.content?.substring(0, 150) + '...',
-              author: item.author || 'فريق التحرير'
-            }));
-            setPosts(transformedPosts);
+          if (announcementsResponse.status === 'fulfilled') {
+            setAnnouncements(announcementsResponse.value.results || []);
           }
         } catch (error) {
           console.error('Failed to load content:', error);
-          // Set empty arrays on error
-          setAnnouncements([]);
-          setPosts([]);
         }
       } catch (error) {
         console.error('Failed to load homepage data:', error);
@@ -167,31 +336,20 @@ const HomePage = () => {
     };
 
     loadHomePageData();
-  }, []);
-
-  // Default images for agricultural research theme
-  const getDefaultImage = (type) => {
-    const defaultImages = {
-      vision: 'https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Agricultural field with modern farming
-      mission: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80', // Scientists in laboratory
-      about: 'https://images.unsplash.com/photo-1508385082359-f48b1c1b5c81?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80' // DNA and scientific research
-    };
-    return defaultImages[type];
-  };
-
-  // Carousel slides data
+  }, []); 
   const getCarouselSlides = () => {
     const slides = [];
-
+    const defaultImage = '/2304.w019.n002.1028B.p15.1028.jpg';
+    
     // Vision slide
     if (organizationData.vision) {
       slides.push({
         id: 'vision',
-        title: 'رؤيتنا',
+        title: "منظمة البحث العلمي", // Force Arabic title
         content: organizationData.vision,
-        background: 'linear-gradient(135deg, rgba(102, 126, 234, 0.8) 0%, rgba(118, 75, 162, 0.8) 100%)',
-        backgroundImage: organizationData.vision_image || getDefaultImage('vision'),
-        icon: <GlobalOutlined />
+        backgroundImage: defaultImage,
+        icon: <RocketOutlined />,
+        subtitle: t('homepage.ourVision')
       });
     }
 
@@ -199,11 +357,11 @@ const HomePage = () => {
     if (organizationData.mission) {
       slides.push({
         id: 'mission',
-        title: 'رسالتنا',
+        title: t('homepage.ourMission'),
         content: organizationData.mission,
-        background: 'linear-gradient(135deg, rgba(240, 147, 251, 0.8) 0%, rgba(245, 87, 108, 0.8) 100%)',
-        backgroundImage: organizationData.mission_image || getDefaultImage('mission'),
-        icon: <TeamOutlined />
+        backgroundImage: defaultImage,
+        icon: <BulbOutlined />,
+        subtitle: t('homepage.missionSubtitle')
       });
     }
 
@@ -211,26 +369,22 @@ const HomePage = () => {
     if (organizationData.about) {
       slides.push({
         id: 'about',
-        title: 'من نحن',
+        title: t('homepage.aboutUs'),
         content: organizationData.about,
-        background: 'linear-gradient(135deg, rgba(79, 172, 254, 0.8) 0%, rgba(0, 242, 254, 0.8) 100%)',
-        backgroundImage: getDefaultImage('about'),
-        icon: <ExperimentOutlined />
+        backgroundImage: defaultImage,
+        icon: <ExperimentOutlined />,
+        subtitle: t('homepage.aboutSubtitle')
       });
     }
-
-    // Default slide if no data
-    if (slides.length === 0) {
-      slides.push({
-        id: 'default',
-        title: organizationData.name || 'منظمة البحث العلمي',
-        content: 'مرحباً بكم في منصة البحث العلمي الزراعي',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        icon: <BookOutlined />
-      });
-    }
-
-    return slides;
+    
+    return slides.length > 0 ? slides : [{
+      id: 'default',
+      title: "منظمة البحث العلمي",
+      content: t('homepage.heroSubtitle'),
+      backgroundImage: defaultImage,
+      icon: <StarOutlined />,
+      subtitle: t('homepage.journeyToExcellence')
+    }];
   };
 
   const formatDate = (dateString) => {
@@ -244,9 +398,25 @@ const HomePage = () => {
   const getCategoryColor = (category) => {
     const colors = {
       'إعلان': 'purple',
-      'أخبار': 'blue',
-      'حدث': 'green',
-      'بحث': 'orange'
+      'announcement': 'purple',
+      'منح': 'gold',
+      'grants': 'gold',
+      'مؤتمرات': 'cyan',
+      'conferences': 'cyan',
+      'اكتشافات': 'red',
+      'discoveries': 'red',
+      'براءات اختراع': 'green',
+      'patents': 'green',
+      'شراكات': 'blue',
+      'partnerships': 'blue',
+      'مختبرات': 'orange',
+      'laboratories': 'orange',
+      'أبحاث': 'geekblue',
+      'research': 'geekblue',
+      'ندوة': 'purple',
+      'seminar': 'purple',
+      'ورشة عمل': 'cyan',
+      'workshop': 'cyan'
     };
     return colors[category] || 'default';
   };
@@ -265,61 +435,128 @@ const HomePage = () => {
     return gradients[index % gradients.length];
   };
 
+  const getCategoryIcon = (category) => {
+    const icons = {
+      'اكتشافات': <FireOutlined />,
+      'discoveries': <FireOutlined />,
+      'براءات اختراع': <TrophyOutlined />,
+      'patents': <TrophyOutlined />,
+      'شراكات': <TeamOutlined />,
+      'partnerships': <TeamOutlined />,
+      'مختبرات': <ExperimentOutlined />,
+      'laboratories': <ExperimentOutlined />,
+      'أبحاث': <BookOutlined />,
+      'research': <BookOutlined />,
+      'ندوة': <ReadOutlined />,
+      'seminar': <ReadOutlined />,
+      'ورشة عمل': <ToolOutlined />,
+      'workshop': <ToolOutlined />
+    };
+    return icons[category] || <BookOutlined />;
+  };
+
+  const handleStatCardClick = (type) => {
+    if (isAuthenticated) {
+      // Navigate to authenticated routes
+      switch (type) {
+        case 'researchers':
+          navigate('/app/users');
+          break;
+        case 'publications':
+          navigate('/app/research/publications');
+          break;
+        case 'courses':
+          navigate('/app/training');
+          break;
+        case 'services':
+          navigate('/app/services');
+          break;
+        default:
+          break;
+      }
+    } else {
+      // Navigate to public routes
+      switch (type) {
+        case 'researchers':
+          navigate('/researchers');
+          break;
+        case 'publications':
+          navigate('/research');
+          break;
+        case 'courses':
+          navigate('/courses');
+          break;
+        case 'services':
+          navigate('/services');
+          break;
+        default:
+          break;
+      }
+    }
+  };
+
   return (
     <div>
-      {/* Inject CSS animations */}
       <style>{carouselAnimations}</style>
 
-      {/* Hero Carousel Section */}
-      <div style={{ position: 'relative' }}>
+      {/* Enhanced Hero Carousel Section */}
+      <div style={{ position: 'relative', minHeight: '80vh' }}>
         <Spin spinning={settingsLoading}>
           <Carousel
             autoplay
-            autoplaySpeed={6000}
+            autoplaySpeed={8000}
             dots={true}
             arrows={false}
-            style={{ minHeight: '70vh' }}
+            style={{ minHeight: '80vh' }}
             effect="fade"
             fade
           >
             {getCarouselSlides().map((slide) => (
               <div key={slide.id}>
-                <div style={{
-                  minHeight: '70vh',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative',
-                  overflow: 'hidden',
-                  backgroundImage: `url(${slide.backgroundImage})`,
-                  backgroundSize: 'cover',
-                  backgroundPosition: 'center',
-                  backgroundRepeat: 'no-repeat'
-                }}>
-                  {/* Background Overlay */}
-                  <div style={{
+                    <div style={{ 
+                      minHeight: '80vh',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      backgroundImage: `url(${slide.backgroundImage})`,
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundRepeat: 'no-repeat'
+                    }}>
+                  {/* Enhanced Background Overlay */}
+                  <div className={slide.background} style={{
                     position: 'absolute',
                     top: 0,
                     left: 0,
                     right: 0,
                     bottom: 0,
-                    background: slide.background,
                     zIndex: 1
                   }} />
 
-                  {/* Background Pattern */}
+                  {/* Floating Elements */}
                   <div style={{
                     position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    background: `
-                      radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                      radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%)
-                    `,
+                    top: '10%',
+                    right: '10%',
+                    width: '100px',
+                    height: '100px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.1)',
                     zIndex: 2
-                  }} />
+                  }} className="floating-element" />
+                  
+                  <div style={{
+                    position: 'absolute',
+                    bottom: '20%',
+                    left: '15%',
+                    width: '60px',
+                    height: '60px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    zIndex: 2
+                  }} className="floating-element" />
 
                   <div style={{
                     maxWidth: '1200px',
@@ -327,40 +564,75 @@ const HomePage = () => {
                     padding: '0 24px',
                     position: 'relative',
                     zIndex: 3,
-                    textAlign: 'center',
-                    animation: 'fadeInUp 1s ease-out'
-                  }}>
+                    textAlign: 'center'
+                  }} className="carousel-slide-content">
+                    
                     <div style={{
                       color: 'white',
-                      fontSize: '4rem',
-                      marginBottom: '2rem',
+                      fontSize: '5rem',
+                      marginBottom: '1rem',
                       textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                      animation: 'fadeInScale 1.2s ease-out'
+                      animation: 'fadeInScale 1.5s ease-out'
                     }}>
                       {slide.icon}
                     </div>
+
+                    <Text style={{
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      fontSize: '18px',
+                      fontWeight: '500',
+                      textTransform: 'uppercase',
+                      letterSpacing: '2px',
+                      marginBottom: '1rem',
+                      display: 'block',
+                      animation: 'fadeInUp 1s ease-out 0.2s both'
+                    }}>
+                      {slide.subtitle}
+                    </Text>
+
                     <Title level={1} style={{
                       color: 'white',
                       marginBottom: '2rem',
-                      fontSize: 'clamp(2.5rem, 5vw, 4rem)',
-                      fontWeight: 'bold',
-                      lineHeight: '1.2',
-                      textShadow: '2px 2px 4px rgba(0,0,0,0.5)',
-                      animation: 'fadeInUp 1s ease-out 0.3s both'
+                      fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
+                      fontWeight: '700',
+                      lineHeight: '1.1',
+                      textShadow: '3px 3px 6px rgba(0,0,0,0.6)',
+                      animation: 'fadeInUp 1s ease-out 0.4s both'
                     }}>
                       {slide.title}
                     </Title>
+
                     <Paragraph style={{
-                      fontSize: 'clamp(18px, 2.5vw, 24px)',
+                      fontSize: 'clamp(16px, 2.2vw, 22px)',
                       color: 'rgba(255, 255, 255, 0.95)',
-                      lineHeight: '1.7',
-                      textShadow: '1px 1px 2px rgba(0,0,0,0.5)',
-                      maxWidth: '800px',
-                      margin: '0 auto',
+                      lineHeight: '1.8',
+                      textShadow: '1px 1px 3px rgba(0,0,0,0.5)',
+                      maxWidth: '900px',
+                      margin: '0 auto 3rem auto',
                       animation: 'fadeInUp 1s ease-out 0.6s both'
                     }}>
                       {slide.content}
                     </Paragraph>
+
+                    <div style={{ animation: 'fadeInUp 1s ease-out 0.8s both' }}>
+                      <Button
+                        type="primary"
+                        size="large"
+                        style={{
+                          height: '60px',
+                          padding: '0 40px',
+                          fontSize: '18px',
+                          borderRadius: '30px',
+                          background: 'rgba(255, 255, 255, 0.2)',
+                          backdropFilter: 'blur(10px)',
+                          border: '2px solid rgba(255, 255, 255, 0.3)',
+                          fontWeight: '600'
+                        }}
+                        onClick={() => navigate('/about')}
+                      >
+                        اكتشف المزيد
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -370,7 +642,49 @@ const HomePage = () => {
       </div>
 
       {/* Main Content Container */}
-      <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+      <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px' }}>
+
+        {/* Statistics Section */}
+        <div style={{ marginTop: '-60px', marginBottom: '80px', position: 'relative', zIndex: 10 }}>
+          <Row gutter={[24, 24]} justify="center">
+            {[
+              { title: 'الباحثون', value: stats.researchers, icon: <TeamOutlined />, suffix: stats.researchers > 0 ? '+' : '' },
+              { title: 'المشاريع البحثية', value: stats.projects, icon: <ExperimentOutlined />, suffix: stats.projects > 0 ? '+' : '' },
+              { title: 'المنشورات العلمية', value: stats.publications, icon: <BookOutlined />, suffix: stats.publications > 0 ? '+' : '' },
+              { title: 'الدورات التدريبية', value: stats.courses, icon: <FileTextOutlined />, suffix: stats.courses > 0 ? '+' : '' }
+            ].map((stat, index) => (
+              <Col xs={12} sm={6} key={index}>
+                <Card className="stats-card professional-card" style={{
+                  textAlign: 'center',
+                  background: getGradientBackground(index),
+                  minHeight: '140px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <div style={{ color: 'white' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
+                      {stat.icon}
+                    </div>
+                    <Statistic
+                      value={stat.value}
+                      suffix={stat.suffix}
+                      valueStyle={{ 
+                        color: 'white', 
+                        fontSize: '2rem', 
+                        fontWeight: 'bold',
+                        marginBottom: '0.5rem'
+                      }}
+                    />
+                    <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>
+                      {stat.title}
+                    </Text>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
 
         {/* Quick Actions Section */}
         <div style={{ marginTop: '60px', marginBottom: '60px' }}>
@@ -444,184 +758,229 @@ const HomePage = () => {
           </Row>
         </div>
 
-        {/* Latest Announcements Section */}
-        {announcements.length > 0 && (
-          <div style={{ marginBottom: '60px' }}>
-            <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-              <Title level={2} style={{ margin: 0, color: '#1890ff' }}>
-                أحدث الإعلانات
+        {/* Latest News/Posts Section */}
+        {posts.length > 0 && (
+          <div style={{ marginBottom: '100px' }}>
+            <div style={{ marginBottom: '48px', textAlign: 'center' }}>
+              <Title level={1} style={{ 
+                margin: 0, 
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontSize: '3.5rem',
+                fontWeight: '800',
+                marginBottom: '16px'
+              }}>
+                آخر الأخبار والمقالات
               </Title>
-              <Paragraph type="secondary" style={{ marginTop: '8px', fontSize: '16px' }}>
-                تابع آخر الإعلانات والأخبار المهمة
+              <Paragraph style={{ 
+                marginTop: '16px', 
+                fontSize: '18px',
+                color: '#6b7280',
+                fontWeight: '500',
+                maxWidth: '600px',
+                margin: '0 auto'
+              }}>
+                اطلع على أحدث المقالات والأخبار في مجال البحث العلمي والتطوير التكنولوجي
               </Paragraph>
+              {/* Debug info */}
+              <div style={{ marginTop: '16px', fontSize: '14px', color: '#999' }}>
+                عدد المقالات المميزة: {posts.length}
+              </div>
             </div>
 
-            <Row gutter={[24, 24]}>
-              {announcements.slice(0, 3).map((announcement, index) => (
-                <Col xs={24} md={8} key={announcement.id}>
+            <Row gutter={[32, 32]}>
+              {posts.slice(0, 4).map((post, index) => (
+                <Col xs={24} sm={12} lg={6} key={post.id}>
                   <Card
                     hoverable
-                    style={{ height: '100%' }}
+                    style={{ 
+                      height: '100%',
+                      borderRadius: '20px',
+                      border: 'none',
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                      overflow: 'hidden',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)'
+                    }}
+                    bodyStyle={{ padding: '24px' }}
                     cover={
-                      <div style={{
-                        height: '200px',
-                        background: getGradientBackground(index),
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative'
-                      }}>
+                      <div
+                        style={{
+                          height: '220px',
+                          background: (post.featured_image || post.attachment)
+                            ? `url(${post.featured_image || post.attachment}) center/cover no-repeat`
+                            : getGradientBackground(index + 3),
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          position: 'relative',
+                          overflow: 'hidden',
+                          borderBottom: '1px solid #f0f0f0',
+                        }}
+                      >
+                        {/* Debug overlay */}
+                        {!(post.featured_image || post.attachment) && (
+                          <div style={{
+                            position: 'absolute',
+                            top: '8px',
+                            left: '8px',
+                            background: 'rgba(0,0,0,0.7)',
+                            color: 'white',
+                            padding: '4px 8px',
+                            borderRadius: '4px',
+                            fontSize: '10px',
+                            zIndex: 3
+                          }}>
+                            لا توجد صورة
+                          </div>
+                        )}
+                        
+                        {/* Decorative elements */}
+                        <div style={{
+                          position: 'absolute',
+                          top: '-50px',
+                          right: '-50px',
+                          width: '100px',
+                          height: '100px',
+                          borderRadius: '50%',
+                          background: 'rgba(255,255,255,0.1)',
+                        }} />
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '-30px',
+                          left: '-30px',
+                          width: '60px',
+                          height: '60px',
+                          borderRadius: '50%',
+                          background: 'rgba(255,255,255,0.1)',
+                        }} />
+                        
                         <div style={{
                           position: 'absolute',
                           top: '16px',
-                          right: '16px'
+                          right: '16px',
+                          zIndex: 2
                         }}>
-                          <Tag color={getCategoryColor(announcement.category)}>
-                            {announcement.category}
-                          </Tag>
-                        </div>
-                        <div style={{
-                          color: 'white',
-                          fontSize: '48px'
-                        }}>
-                          <GlobalOutlined />
-                        </div>
-                      </div>
-                    }
-                    actions={[
-                      <Button type="link" icon={<EyeOutlined />}>
-                        {announcement.views || 0} مشاهدة
-                      </Button>,
-                      <Button type="link" icon={<ArrowRightOutlined />}>
-                        اقرأ المزيد
-                      </Button>
-                    ]}
-                  >
-                    <Card.Meta
-                      title={
-                        <Text strong style={{ fontSize: '16px' }}>
-                          {announcement.title}
-                        </Text>
-                      }
-                      description={
-                        <div>
-                          <Paragraph
-                            ellipsis={{ rows: 3 }}
-                            style={{ marginBottom: '12px', color: '#666' }}
-                          >
-                            {announcement.excerpt || announcement.content}
-                          </Paragraph>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text type="secondary" style={{ fontSize: '12px' }}>
-                              <CalendarOutlined style={{ marginLeft: '4px' }} />
-                              {formatDate(announcement.date)}
-                            </Text>
-                          </div>
-                        </div>
-                      }
-                    />
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-
-            {announcements.length > 3 && (
-              <div style={{ textAlign: 'center', marginTop: '32px' }}>
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={() => navigate('/announcements')}
-                >
-                  عرض جميع الإعلانات
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Latest News/Posts Section */}
-        {posts.length > 0 && (
-          <div style={{ marginBottom: '60px' }}>
-            <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-              <Title level={2} style={{ margin: 0, color: '#1890ff' }}>
-                آخر الأخبار والمقالات
-              </Title>
-              <Paragraph type="secondary" style={{ marginTop: '8px', fontSize: '16px' }}>
-                اطلع على أحدث المقالات والأخبار في مجال البحث العلمي
-              </Paragraph>
-            </div>
-
-            <Row gutter={[24, 24]}>
-              {posts.slice(0, 4).map((post, index) => (
-                <Col xs={24} sm={12} md={6} key={post.id}>
-                  <Card
-                    hoverable
-                    style={{ height: '100%' }}
-                    cover={
-                      <div style={{
-                        height: '180px',
-                        background: getGradientBackground(index + 3),
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        position: 'relative'
-                      }}>
-                        <div style={{
-                          position: 'absolute',
-                          top: '12px',
-                          right: '12px'
-                        }}>
-                          <Tag color={getCategoryColor(post.category)}>
+                          <Tag style={{
+                            background: 'rgba(255,255,255,0.2)',
+                            border: 'none',
+                            color: 'white',
+                            borderRadius: '20px',
+                            padding: '4px 12px',
+                            fontSize: '12px',
+                            fontWeight: '600',
+                            backdropFilter: 'blur(10px)'
+                          }}>
                             {post.category}
                           </Tag>
                         </div>
-                        <div style={{
-                          color: 'white',
-                          fontSize: '36px'
-                        }}>
-                          <BookOutlined />
-                        </div>
+
+                        {!(post.featured_image || post.attachment) && (
+                          <div style={{
+                            color: 'white',
+                            fontSize: '48px',
+                            textShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                            zIndex: 1
+                          }}>
+                            <BookOutlined />
+                          </div>
+                        )}
                       </div>
                     }
+
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                      e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.1)';
+                    }}
                   >
-                    <Card.Meta
-                      title={
-                        <Text strong style={{ fontSize: '14px' }}>
-                          {post.title}
-                        </Text>
-                      }
-                      description={
-                        <div>
-                          <Paragraph
-                            ellipsis={{ rows: 2 }}
-                            style={{ marginBottom: '8px', color: '#666', fontSize: '12px' }}
-                          >
-                            {post.excerpt || post.content}
-                          </Paragraph>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Text type="secondary" style={{ fontSize: '11px' }}>
-                              {post.author}
-                            </Text>
-                            <Text type="secondary" style={{ fontSize: '11px' }}>
-                              {formatDate(post.date)}
-                            </Text>
-                          </div>
+                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                      <Title level={4} style={{ 
+                        fontSize: '16px', 
+                        color: '#1e293b',
+                        fontWeight: '700',
+                        lineHeight: '1.4',
+                        marginBottom: '12px',
+                        minHeight: '44px'
+                      }}>
+                        {post.title}
+                      </Title>
+                      
+                      <Paragraph
+                        ellipsis={{ rows: 3 }}
+                        style={{ 
+                          marginBottom: '20px', 
+                          color: '#64748b', 
+                          fontSize: '14px',
+                          lineHeight: '1.6',
+                          flex: 1
+                        }}
+                      >
+                        {post.excerpt || post.content}
+                      </Paragraph>
+                      
+                      <div style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center',
+                        paddingTop: '16px',
+                        borderTop: '1px solid #e2e8f0'
+                      }}>
+                        <div style={{
+                          padding: '6px 12px',
+                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                          borderRadius: '20px',
+                          color: 'white',
+                          fontSize: '11px',
+                          fontWeight: '600'
+                        }}>
+                          جديد
                         </div>
-                      }
-                    />
+                        <Text style={{ 
+                          fontSize: '12px',
+                          color: '#94a3b8',
+                          fontWeight: '500'
+                        }}>
+                          {formatDate(post.date)}
+                        </Text>
+                      </div>
+                    </div>
                   </Card>
                 </Col>
               ))}
             </Row>
 
             {posts.length > 4 && (
-              <div style={{ textAlign: 'center', marginTop: '32px' }}>
+              <div style={{ textAlign: 'center', marginTop: '48px' }}>
                 <Button
                   type="primary"
                   size="large"
-                  onClick={() => navigate('/news')}
+                  onClick={() => navigate('/posts')}
+                  style={{
+                    height: '56px',
+                    padding: '0 40px',
+                    fontSize: '16px',
+                    fontWeight: '600',
+                    borderRadius: '28px',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    border: 'none',
+                    boxShadow: '0 8px 32px rgba(102, 126, 234, 0.3)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'translateY(-2px)';
+                    e.target.style.boxShadow = '0 12px 40px rgba(102, 126, 234, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 8px 32px rgba(102, 126, 234, 0.3)';
+                  }}
                 >
-                  عرض جميع الأخبار
+                  عرض جميع المنشورات
                 </Button>
               </div>
             )}
@@ -630,36 +989,87 @@ const HomePage = () => {
 
         {/* About Section */}
         {organizationData.about && (
-          <div style={{ marginBottom: '60px' }}>
+          <div style={{ marginBottom: '100px' }}>
             <Card
               style={{
                 textAlign: 'center',
-                background: 'linear-gradient(135deg, #e0f7fa 0%, #f8f9fa 100%)',
-                boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.10)',
-                borderRadius: '24px',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                boxShadow: '0 20px 60px rgba(102, 126, 234, 0.2)',
+                borderRadius: '32px',
                 border: 'none',
                 padding: 0,
                 overflow: 'hidden',
                 position: 'relative',
-                minHeight: '320px',
+                minHeight: '400px',
               }}
               bodyStyle={{ padding: 0 }}
             >
-              <Row gutter={[0, 0]} align="middle" justify="center" style={{ flexWrap: 'wrap-reverse' }}>
-                <Col xs={24} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 320 }}>
-                  <Image
-                    src="https://images.unsplash.com/photo-1508385082359-f48b1c1b5c81?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                    alt="أبحاث الجينات والعلوم الحيوية"
-                    preview={false}
-                    style={{
-                      width: '100%',
-                      maxWidth: 400,
-                      height: '100%',
-                      objectFit: 'cover',
-                      borderRadius: '24px',
-                      boxShadow: '0 4px 24px 0 rgba(31, 38, 135, 0.10)'
-                    }}
-                  />
+              {/* Decorative elements */}
+              <div style={{
+                position: 'absolute',
+                top: '-100px',
+                right: '-100px',
+                width: '200px',
+                height: '200px',
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.1)',
+              }} />
+              <div style={{
+                position: 'absolute',
+                bottom: '-80px',
+                left: '-80px',
+                width: '160px',
+                height: '160px',
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.1)',
+              }} />
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: '300px',
+                height: '300px',
+                borderRadius: '50%',
+                background: 'rgba(255,255,255,0.05)',
+              }} />
+
+              <Row gutter={[0, 0]} align="middle" justify="center" style={{ flexWrap: 'wrap-reverse', minHeight: '400px' }}>
+                <Col xs={24} style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  padding: '40px',
+                  position: 'relative',
+                  zIndex: 2
+                }}>
+                  <div style={{ textAlign: 'center', color: 'white' }}>
+                    <div style={{
+                      fontSize: '80px',
+                      marginBottom: '24px',
+                      filter: 'drop-shadow(0 4px 20px rgba(0,0,0,0.3))'
+                    }}>
+                      🧬
+                    </div>
+                    <Title level={2} style={{ 
+                      color: 'white', 
+                      marginBottom: '16px',
+                      fontSize: '2.5rem',
+                      fontWeight: '700',
+                      textShadow: '0 4px 20px rgba(0,0,0,0.3)'
+                    }}>
+                      أبحاث الجينات والعلوم الحيوية
+                    </Title>
+                    <Paragraph style={{ 
+                      color: 'rgba(255,255,255,0.9)', 
+                      fontSize: '18px',
+                      lineHeight: '1.7',
+                      maxWidth: '500px',
+                      margin: '0 auto'
+                    }}>
+                      نقود الابتكار في مجال الأبحاث العلمية والتكنولوجيا الحيوية لبناء مستقبل أفضل للإنسانية
+                    </Paragraph>
+                  </div>
                 </Col>
               </Row>
             </Card>

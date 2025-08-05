@@ -609,7 +609,7 @@ const OrganizationManagementPage = () => {
             </Spin>
           </TabPane>
 
-          <TabPane tab="المختبرات" key="labs">
+          <TabPane tab={<span style={{ paddingRight: '20px' }}>المختبرات</span>} key="labs">
             {/* Labs Filters and Actions */}
             <div style={{ marginBottom: '16px' }}>
               <Row gutter={[16, 16]} align="middle">
@@ -1012,7 +1012,7 @@ const OrganizationManagementPage = () => {
         onCancel={() => setModalVisible(false)}
         footer={null}
         width={800}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form
           form={form}

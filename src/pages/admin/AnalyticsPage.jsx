@@ -56,7 +56,6 @@ const AnalyticsPage = () => {
   const publicationsCount = useAnimatedCounter(dashboardStats?.content?.totalPublications || 0);
   const coursesCount = useAnimatedCounter(dashboardStats?.content?.totalCourses || 0);
   const servicesCount = useAnimatedCounter(dashboardStats?.content?.totalServices || 0);
-  const announcementsCount = useAnimatedCounter(dashboardStats?.content?.totalAnnouncements || 0);
 
   // Use system stats from real-time hook
   const systemHealth = systemStats || {

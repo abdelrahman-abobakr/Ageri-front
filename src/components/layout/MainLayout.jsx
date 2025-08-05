@@ -110,36 +110,32 @@ const MainLayout = () => {
   //   }
   // };
 
-  const handleMenuClick = ({ key }) => {
-    // Ensure we navigate within the app context
-    const appPath = key.startsWith('/app') ? key : `/app${key}`;
-    navigate(appPath);
-  };
-
   // Get translated menu label
   const getMenuLabel = (key) => {
     const labelMap = {
-      'dashboard': t('common.dashboard'),
+      'dashboard': t('navigation.dashboard'),
       'users': t('navigation.userManagement'),
       'research': t('navigation.myResearch'),
       'organization': t('navigation.organization'),
       'training': t('navigation.training'),
-      'services': t('common.services'),
+      'services': t('navigation.services'),
       'content': t('navigation.content'),
       'analytics': t('navigation.analytics'),
       'notifications': t('navigation.notifications'),
-      'settings': t('common.settings'),
-      'profile': t('common.profile'),
-      'home': t('common.home'),
-      'announcements': t('common.announcements'),
-      'courses': t('common.courses'),
+      'settings': t('navigation.settings'),
+      'profile': t('navigation.profile'),
+      'home': t('navigation.home'),
+      'posts': t('navigation.posts'),
+      'courses': t('navigation.courses'),
     };
     return labelMap[key] || key;
   };
 
   // Get menu items based on user role
   const getMenuItems = () => {
-    const userRole = user?.role || USER_ROLES.RESEARCHER;
+    // Read role from localStorage if available
+    const localRole = localStorage.getItem('role');
+    const userRole = localRole || user?.role || USER_ROLES.RESEARCHER;
     const items = MENU_ITEMS[userRole] || MENU_ITEMS[USER_ROLES.RESEARCHER];
 
     return items.map((item) => {
@@ -150,6 +146,19 @@ const MainLayout = () => {
         label: getMenuLabel(item.key),
       };
     });
+  };
+
+  // Sidebar menu click handler
+  const handleMenuClick = ({ key }) => {
+    // If moderator, always use localStorage role for navigation
+    const localRole = localStorage.getItem('role');
+    if (localRole === USER_ROLES.MODERATOR) {
+      navigate(key);
+      return;
+    }
+    // Default navigation logic
+    const appPath = key.startsWith('/app') ? key : `/app${key}`;
+    navigate(appPath);
   };
 
   // User dropdown menu
@@ -361,6 +370,8 @@ const MainLayout = () => {
             {/* Notification Bell */}
             {/* <Dropdown
               dropdownRender={() => notificationDropdown}
+            <Dropdown
+              popupRender={() => notificationDropdown}
               placement="bottomRight"
               arrow
               trigger={['click']}
