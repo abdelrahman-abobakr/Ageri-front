@@ -212,9 +212,9 @@ const HomePage = () => {
     }
   `;
   const heroImages = [
-    '/2304.w019.n002.1028B.p15.1028.jpg',  
-    '/2304.w019.n002.1028B.p15.1028.jpg',  
-    '/2304.w019.n002.1028B.p15.1028.jpg'   
+    '/2304.w019.n002.1028B.p15.1028.jpg',
+    '/2304.w019.n002.1028B.p15.1028.jpg',
+    '/2304.w019.n002.1028B.p15.1028.jpg'
   ];
   useEffect(() => {
     const loadHomePageData = async () => {
@@ -268,6 +268,9 @@ const HomePage = () => {
 
         // Load content with institute-specific data
         try {
+          console.log('🔍 Starting to fetch content...');
+          console.log('🔍 API Base URL:', import.meta.env.VITE_API_BASE_URL);
+
           const [announcementsResponse, postsResponse] = await Promise.allSettled([
             contentService.getPublicAnnouncements({
               page_size: 6,
@@ -280,18 +283,28 @@ const HomePage = () => {
           ]);
 
           console.log('🔍 Posts Response:', postsResponse);
+          console.log('🔍 Posts Response Status:', postsResponse.status);
+          if (postsResponse.status === 'rejected') {
+            console.error('🔍 Posts Error:', postsResponse.reason);
+          }
 
           if (postsResponse.status === 'fulfilled') {
             console.log('🔍 All Posts:', postsResponse.value.results);
-            
+            console.log('🔍 Posts Response Data:', postsResponse.value);
+
+            // Check if we have results
+            if (!postsResponse.value.results || postsResponse.value.results.length === 0) {
+              console.warn('🔍 No posts found in response');
+            }
+
             // Show all published posts instead of just featured ones
-            const publishedPosts = postsResponse.value.results.filter(item => 
+            const publishedPosts = postsResponse.value.results?.filter(item =>
               item.status === 'published' && item.is_public
-            );
-            
+            ) || [];
+
             const transformedPosts = publishedPosts.map(item => {
-      
-              
+
+
               return {
                 id: item.id,
                 title: item.title,
@@ -336,11 +349,11 @@ const HomePage = () => {
     };
 
     loadHomePageData();
-  }, []); 
+  }, []);
   const getCarouselSlides = () => {
     const slides = [];
     const defaultImage = '/2304.w019.n002.1028B.p15.1028.jpg';
-    
+
     // Vision slide
     if (organizationData.vision) {
       slides.push({
@@ -376,7 +389,7 @@ const HomePage = () => {
         subtitle: t('homepage.aboutSubtitle')
       });
     }
-    
+
     return slides.length > 0 ? slides : [{
       id: 'default',
       title: "منظمة البحث العلمي",
@@ -513,18 +526,18 @@ const HomePage = () => {
           >
             {getCarouselSlides().map((slide) => (
               <div key={slide.id}>
-                    <div style={{ 
-                      minHeight: '80vh',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      backgroundImage: `url(${slide.backgroundImage})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundRepeat: 'no-repeat'
-                    }}>
+                <div style={{
+                  minHeight: '80vh',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  backgroundImage: `url(${slide.backgroundImage})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  backgroundRepeat: 'no-repeat'
+                }}>
                   {/* Enhanced Background Overlay */}
                   <div className={slide.background} style={{
                     position: 'absolute',
@@ -546,7 +559,7 @@ const HomePage = () => {
                     background: 'rgba(255, 255, 255, 0.1)',
                     zIndex: 2
                   }} className="floating-element" />
-                  
+
                   <div style={{
                     position: 'absolute',
                     bottom: '20%',
@@ -566,7 +579,7 @@ const HomePage = () => {
                     zIndex: 3,
                     textAlign: 'center'
                   }} className="carousel-slide-content">
-                    
+
                     <div style={{
                       color: 'white',
                       fontSize: '5rem',
@@ -669,9 +682,9 @@ const HomePage = () => {
                     <Statistic
                       value={stat.value}
                       suffix={stat.suffix}
-                      valueStyle={{ 
-                        color: 'white', 
-                        fontSize: '2rem', 
+                      valueStyle={{
+                        color: 'white',
+                        fontSize: '2rem',
                         fontWeight: 'bold',
                         marginBottom: '0.5rem'
                       }}
@@ -762,8 +775,8 @@ const HomePage = () => {
         {posts.length > 0 && (
           <div style={{ marginBottom: '100px' }}>
             <div style={{ marginBottom: '48px', textAlign: 'center' }}>
-              <Title level={1} style={{ 
-                margin: 0, 
+              <Title level={1} style={{
+                margin: 0,
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
@@ -773,8 +786,8 @@ const HomePage = () => {
               }}>
                 آخر الأخبار والمقالات
               </Title>
-              <Paragraph style={{ 
-                marginTop: '16px', 
+              <Paragraph style={{
+                marginTop: '16px',
                 fontSize: '18px',
                 color: '#6b7280',
                 fontWeight: '500',
@@ -794,7 +807,7 @@ const HomePage = () => {
                 <Col xs={24} sm={12} lg={6} key={post.id}>
                   <Card
                     hoverable
-                    style={{ 
+                    style={{
                       height: '100%',
                       borderRadius: '20px',
                       border: 'none',
@@ -835,7 +848,7 @@ const HomePage = () => {
                             لا توجد صورة
                           </div>
                         )}
-                        
+
                         {/* Decorative elements */}
                         <div style={{
                           position: 'absolute',
@@ -855,7 +868,7 @@ const HomePage = () => {
                           borderRadius: '50%',
                           background: 'rgba(255,255,255,0.1)',
                         }} />
-                        
+
                         <div style={{
                           position: 'absolute',
                           top: '16px',
@@ -899,8 +912,8 @@ const HomePage = () => {
                     }}
                   >
                     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                      <Title level={4} style={{ 
-                        fontSize: '16px', 
+                      <Title level={4} style={{
+                        fontSize: '16px',
                         color: '#1e293b',
                         fontWeight: '700',
                         lineHeight: '1.4',
@@ -909,12 +922,12 @@ const HomePage = () => {
                       }}>
                         {post.title}
                       </Title>
-                      
+
                       <Paragraph
                         ellipsis={{ rows: 3 }}
-                        style={{ 
-                          marginBottom: '20px', 
-                          color: '#64748b', 
+                        style={{
+                          marginBottom: '20px',
+                          color: '#64748b',
                           fontSize: '14px',
                           lineHeight: '1.6',
                           flex: 1
@@ -922,10 +935,10 @@ const HomePage = () => {
                       >
                         {post.excerpt || post.content}
                       </Paragraph>
-                      
-                      <div style={{ 
-                        display: 'flex', 
-                        justifyContent: 'space-between', 
+
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
                         alignItems: 'center',
                         paddingTop: '16px',
                         borderTop: '1px solid #e2e8f0'
@@ -940,7 +953,7 @@ const HomePage = () => {
                         }}>
                           جديد
                         </div>
-                        <Text style={{ 
+                        <Text style={{
                           fontSize: '12px',
                           color: '#94a3b8',
                           fontWeight: '500'
@@ -1035,10 +1048,10 @@ const HomePage = () => {
               }} />
 
               <Row gutter={[0, 0]} align="middle" justify="center" style={{ flexWrap: 'wrap-reverse', minHeight: '400px' }}>
-                <Col xs={24} style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
+                <Col xs={24} style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   padding: '40px',
                   position: 'relative',
                   zIndex: 2
@@ -1051,8 +1064,8 @@ const HomePage = () => {
                     }}>
                       🧬
                     </div>
-                    <Title level={2} style={{ 
-                      color: 'white', 
+                    <Title level={2} style={{
+                      color: 'white',
                       marginBottom: '16px',
                       fontSize: '2.5rem',
                       fontWeight: '700',
@@ -1060,8 +1073,8 @@ const HomePage = () => {
                     }}>
                       أبحاث الجينات والعلوم الحيوية
                     </Title>
-                    <Paragraph style={{ 
-                      color: 'rgba(255,255,255,0.9)', 
+                    <Paragraph style={{
+                      color: 'rgba(255,255,255,0.9)',
                       fontSize: '18px',
                       lineHeight: '1.7',
                       maxWidth: '500px',

@@ -182,103 +182,108 @@ export const API_CONFIG = {
 export const API_ENDPOINTS = {
   // Authentication & User Management
   AUTH: {
-    LOGIN: '/auth/login/',
-    REGISTER: '/auth/register/',
-    LOGOUT: '/auth/logout/',
-    REFRESH: '/auth/token/refresh/',
-    PROFILE: '/auth/users/me/',
-    UPDATE_PROFILE: '/auth/users/me/',
-    AVATAR_UPLOAD: '/auth/users/me/avatar/',
-    USERS: '/auth/users/',
-    USER_DETAIL: (id) => `/auth/users/${id}/`,
-    APPROVE_USER: (id) => `/auth/users/${id}/approve/`,
+    LOGIN: '/api/auth/login/',
+    REGISTER: '/api/auth/register/',
+    LOGOUT: '/api/auth/logout/',
+    REFRESH: '/api/auth/token/refresh/',
+    PROFILE: '/api/auth/users/me/',
+    UPDATE_PROFILE: '/api/auth/users/me/',
+    AVATAR_UPLOAD: '/api/auth/users/me/avatar/',
+    PROFILE_PICTURE: '/api/auth/profiles/me/',
+    CHANGE_PASSWORD: '/api/auth/change-password/',
+    PASSWORD_RESET: '/api/auth/password-reset/',
+    PASSWORD_RESET_CONFIRM: '/api/auth/password-reset-confirm/',
+    USERS: '/api/auth/users/',
+    PENDING_USERS: '/api/auth/users/pending/',
+    USER_DETAIL: (id) => `/api/auth/users/${id}/`,
+    APPROVE_USER: (id) => `/api/auth/users/${id}/approve/`,
   },
 
   // Research Management
   RESEARCH: {
-    PUBLICATIONS: '/research/publications/',
-    PUBLICATION_DETAIL: (id) => `/research/publications/${id}/`,
-    PUBLICATION_AUTHORS: (id) => `/research/publications/${id}/authors/`,
-    REMOVE_AUTHOR: (pubId, authorId) => `/research/publications/${pubId}/authors/${authorId}/`,
-    PUBLICATION_FILES: (id) => `/research/publications/${id}/files/`,
-    DELETE_FILE: (pubId, fileId) => `/research/publications/${pubId}/files/${fileId}/`,
+    PUBLICATIONS: '/api/research/publications/',
+    PUBLICATION_DETAIL: (id) => `/api/research/publications/${id}/`,
+    PUBLICATION_AUTHORS: (id) => `/api/research/publications/${id}/authors/`,
+    REMOVE_AUTHOR: (pubId, authorId) => `/api/research/publications/${pubId}/authors/${authorId}/`,
+    PUBLICATION_FILES: (id) => `/api/research/publications/${id}/files/`,
+    DELETE_FILE: (pubId, fileId) => `/api/research/publications/${pubId}/files/${fileId}/`,
   },
 
   // Organization Management
   ORGANIZATION: {
-    DEPARTMENTS: '/organization/departments/',
-    DEPARTMENT_DETAIL: (id) => `/organization/departments/${id}/`,
-    LABS: '/organization/labs/',
-    LAB_DETAIL: (id) => `/organization/labs/${id}/`,
-    ASSIGNMENTS: '/organization/assignments/',
-    MY_ASSIGNMENTS: '/organization/assignments/my/',
-    LAB_RESEARCHERS: (id) => `/organization/labs/${id}/researchers/`,
-    SETTINGS: '/organization/settings/',
+    DEPARTMENTS: '/api/organization/departments/',
+    DEPARTMENT_DETAIL: (id) => `/api/organization/departments/${id}/`,
+    LABS: '/api/organization/labs/',
+    LAB_DETAIL: (id) => `/api/organization/labs/${id}/`,
+    ASSIGNMENTS: '/api/organization/assignments/',
+    MY_ASSIGNMENTS: '/api/organization/assignments/my/',
+    LAB_RESEARCHERS: (id) => `/api/organization/labs/${id}/researchers/`,
+    SETTINGS: '/api/organization/settings/',
   },
 
   // Training System
   TRAINING: {
-    COURSES: '/training/courses/',
-    COURSE_DETAIL: (id) => `/training/courses/${id}/`,
-    FEATURED_COURSES: '/training/courses/featured/',
-    UPCOMING_COURSES: '/training/courses/upcoming/',
-    ENROLL: (id) => `/training/courses/${id}/enroll/`,
-    UNENROLL: (id) => `/training/courses/${id}/unenroll/`,
-    COURSE_ENROLLMENTS: (id) => `/training/courses/${id}/enrollments/`,
-    MY_ENROLLMENTS: '/training/my-enrollments/',
-    ENROLLMENTS: '/training/enrollments/',
-    ENROLLMENT_DETAIL: (id) => `/training/enrollments/${id}/`,
-    MARK_COMPLETED: (id) => `/training/enrollments/${id}/mark_completed/`,
-    ISSUE_CERTIFICATE: (id) => `/training/enrollments/${id}/issue_certificate/`,
-    ENROLLMENT_STATS: '/training/enrollments/stats/', // May not exist, fallback available
-    EXPORT_ENROLLMENTS: '/training/enrollments/export_pdf/', // May not exist, fallback available
-    SUMMER_PROGRAMS: '/training/summer-programs/',
-    SUMMER_PROGRAM_DETAIL: (id) => `/training/summer-programs/${id}/`,
-    PUBLIC_SERVICES: '/training/public-services/',
-    PUBLIC_SERVICE_DETAIL: (id) => `/training/public-services/${id}/`,
+    COURSES: '/api/training/courses/',
+    COURSE_DETAIL: (id) => `/api/training/courses/${id}/`,
+    FEATURED_COURSES: '/api/training/courses/featured/',
+    UPCOMING_COURSES: '/api/training/courses/upcoming/',
+    ENROLL: (id) => `/api/training/courses/${id}/enroll/`,
+    UNENROLL: (id) => `/api/training/courses/${id}/unenroll/`,
+    COURSE_ENROLLMENTS: (id) => `/api/training/courses/${id}/enrollments/`,
+    MY_ENROLLMENTS: '/api/training/my-enrollments/',
+    ENROLLMENTS: '/api/training/enrollments/',
+    ENROLLMENT_DETAIL: (id) => `/api/training/enrollments/${id}/`,
+    MARK_COMPLETED: (id) => `/api/training/enrollments/${id}/mark_completed/`,
+    ISSUE_CERTIFICATE: (id) => `/api/training/enrollments/${id}/issue_certificate/`,
+    ENROLLMENT_STATS: '/api/training/enrollments/stats/', // May not exist, fallback available
+    EXPORT_ENROLLMENTS: '/api/training/enrollments/export_pdf/', // May not exist, fallback available
+    SUMMER_PROGRAMS: '/api/training/summer-programs/',
+    SUMMER_PROGRAM_DETAIL: (id) => `/api/training/summer-programs/${id}/`,
+    PUBLIC_SERVICES: '/api/training/public-services/',
+    PUBLIC_SERVICE_DETAIL: (id) => `/api/training/public-services/${id}/`,
   },
 
   // Services Management
   SERVICES: {
-    TEST_SERVICES: '/services/test-services/',
-    TEST_SERVICE_DETAIL: (id) => `/services/test-services/${id}/`,
-    REQUESTS: '/services/requests/',
-    REQUEST_DETAIL: (id) => `/services/requests/${id}/`,
-    ASSIGN_TECHNICIAN: (id) => `/services/requests/${id}/assign-technician/`,
-    UPDATE_STATUS: (id) => `/services/requests/${id}/update-status/`,
-    MY_REQUESTS: '/services/my-requests/',
+    TEST_SERVICES: '/api/services/test-services/',
+    TEST_SERVICE_DETAIL: (id) => `/api/services/test-services/${id}/`,
+    REQUESTS: '/api/services/requests/',
+    REQUEST_DETAIL: (id) => `/api/services/requests/${id}/`,
+    ASSIGN_TECHNICIAN: (id) => `/api/services/requests/${id}/assign-technician/`,
+    UPDATE_STATUS: (id) => `/api/services/requests/${id}/update-status/`,
+    MY_REQUESTS: '/api/services/my-requests/',
   },
 
   // Content Management
   CONTENT: {
-    ANNOUNCEMENTS: '/content/posts/',
-    ANNOUNCEMENT_DETAIL: (id) => `/content/posts/${id}/`,
-    POSTS: '/content/posts/',
-    MY_POSTS: '/content/posts/my_posts/',
-    POST_DETAIL: (id) => `/content/posts/${id}/`,
-    POST_COMMENTS: (id) => `/content/posts/${id}/comments/`,
-    COMMENT_DETAIL: (id) => `/content/comments/${id}/`,
+    ANNOUNCEMENTS: '/api/content/posts/',
+    ANNOUNCEMENT_DETAIL: (id) => `/api/content/posts/${id}/`,
+    POSTS: '/api/content/posts/',
+    MY_POSTS: '/api/content/posts/my_posts/',
+    POST_DETAIL: (id) => `/api/content/posts/${id}/`,
+    POST_COMMENTS: (id) => `/api/content/posts/${id}/comments/`,
+    COMMENT_DETAIL: (id) => `/api/content/comments/${id}/`,
   },
 
   // Search & Analytics
   SEARCH: {
-    GLOBAL: '/search/',
-    PUBLICATIONS: '/search/publications/',
-    USERS: '/search/users/',
+    GLOBAL: '/api/search/',
+    PUBLICATIONS: '/api/search/publications/',
+    USERS: '/api/search/users/',
   },
 
   ANALYTICS: {
     DASHBOARD: '/dashboard/analytics/', // Special endpoint outside /api prefix
-    PUBLICATIONS: '/analytics/publications/',
-    USERS: '/analytics/users/',
-    SERVICES: '/analytics/services/',
+    PUBLICATIONS: '/api/analytics/publications/',
+    USERS: '/api/analytics/users/',
+    SERVICES: '/api/analytics/services/',
   },
 
-  // Notifications
+  // Notifications - Temporarily disabled until backend implementation
   NOTIFICATIONS: {
-    LIST: '/notifications/',
-    MARK_READ: (id) => `/notifications/${id}/mark-read/`,
-    MARK_ALL_READ: '/notifications/mark-all-read/',
+    LIST: '/api/content/notifications/', // Will be implemented later
+    MARK_READ: (id) => `/api/content/notifications/${id}/mark-read/`,
+    MARK_ALL_READ: '/content/notifications/mark-all-read/',
   },
 
   // Admin System Management

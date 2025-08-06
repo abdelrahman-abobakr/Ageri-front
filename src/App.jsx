@@ -39,6 +39,7 @@ import PublicResearchersPage from './pages/public/PublicResearchersPage';
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
 import ProfilePage from './pages/profile/ProfilePage';
+import CreateProfilePage from './pages/profile/CreateProfilePage';
 
 // Admin Pages
 import UserManagementPage from './pages/admin/UserManagementPage';
@@ -50,11 +51,16 @@ import ServicesManagementPage from './pages/admin/ServicesManagementPage';
 import TrainingManagementPage from './pages/admin/TrainingManagementPage';
 import OrganizationManagementPage from './pages/admin/OrganizationManagementPage';
 import NotificationsManagementPage from './pages/admin/NotificationsManagementPage';
-import CreateCoursePage from './pages/admin/AddCourseForm.jsx'
+import CreateCoursePage from './pages/admin/AddCourseForm.jsx';
+import AdminDashboard from './pages/admin/publications/AdminDashboard.jsx';
 // Import PublicationDetailPage to fix the 'not defined' error
 import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
 import PublicationsPage from './pages/research/PublicationsPage.jsx';
 import PublicationForm from './pages/research/PublicationForm.jsx';
+
+// Service Request Components
+import ServiceRequestForm from './pages/services/ServiceRequestForm.jsx';
+import MyRequestsPage from './pages/services/MyRequestsPage.jsx';
 
 // Ant Design theme configuration
 const theme = {
@@ -136,10 +142,16 @@ const AppContent = () => {
               <Route index element={<Navigate to="dashboard" replace />} />
               <Route path="dashboard" element={<DashboardPage />} />
               <Route path="profile" element={<ProfilePage />} />
+              <Route path="create-profile" element={<CreateProfilePage />} />
               <Route path="research/publications" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationsPage /></ProtectedRoute>} />
               <Route path="research/publications/new" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm /></ProtectedRoute>} />
               <Route path="research/publications/:id" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationDetailPage /></ProtectedRoute>} />
               <Route path="research/publications/:id/edit" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm isEdit={true} /></ProtectedRoute>} />
+
+              {/* Service Request routes */}
+              <Route path="services/request/:serviceId" element={<ServiceRequestForm />} />
+              <Route path="services/my-requests" element={<MyRequestsPage />} />
+
               {/* Home page for authenticated users */}
               <Route path="home" element={<HomePage />} />
 
@@ -222,6 +234,15 @@ const AppContent = () => {
                 element={
                   <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
                     <SystemSettingsPage />
+                  </ProtectedRoute>
+                }
+              />
+              {/* Admin dashboard route */}
+              <Route
+                path="admin"
+                element={
+                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                    <AdminDashboard />
                   </ProtectedRoute>
                 }
               />

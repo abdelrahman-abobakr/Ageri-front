@@ -77,9 +77,31 @@ export const getCurrentUser = createAsyncThunk(
   }
 );
 
+// Helper function to safely parse user from localStorage
+const getUserFromStorage = () => {
+  try {
+    const userStr = localStorage.getItem('user');
+    if (!userStr) return null;
+
+    // If it's already an object, return it
+    if (typeof userStr === 'object') {
+      console.warn('User in localStorage is already an object, this should not happen');
+      return userStr;
+    }
+
+    // Try to parse as JSON
+    return JSON.parse(userStr);
+  } catch (error) {
+    console.error('Failed to parse user from localStorage:', error);
+    // Clear invalid data
+    localStorage.removeItem('user');
+    return null;
+  }
+};
+
 // Initial state
 const initialState = {
-  user: JSON.parse(localStorage.getItem('user')) || null,
+  user: getUserFromStorage(),
   token: localStorage.getItem('access_token') || null,
   refreshToken: localStorage.getItem('refresh_token') || null,
   isAuthenticated: !!localStorage.getItem('access_token'),

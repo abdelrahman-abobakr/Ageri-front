@@ -3,7 +3,7 @@ import { API_CONFIG } from '../constants';
 
 // Create axios instance
 const apiClient = axios.create({
-  baseURL: API_CONFIG.BASE_URL,
+  baseURL: API_CONFIG.BASE_URL.endsWith('/') ? API_CONFIG.BASE_URL : API_CONFIG.BASE_URL + '/',
   timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
@@ -17,18 +17,30 @@ apiClient.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    // تسجيل الطلبات للمساعدة في التشخيص
+    console.log(`API Request: ${config.method?.toUpperCase()} ${config.url}`);
+
     return config;
   },
   (error) => {
+    console.error('Request interceptor error:', error);
     return Promise.reject(error);
   }
 );
 
 // Response interceptor for token refresh
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // تسجيل الاستجابات الناجحة
+    console.log(`API Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
+
+    // تسجيل الأخطاء للمساعدة في التشخيص
+    console.error(`API Error: ${error.response?.status} ${error.config?.url}`, error.response?.data);
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true;
@@ -36,6 +48,8 @@ apiClient.interceptors.response.use(
       try {
         const refreshToken = localStorage.getItem('refresh_token');
         if (refreshToken) {
+          console.log('Attempting token refresh...');
+
           const response = await axios.post(`${API_CONFIG.BASE_URL}/auth/token/refresh/`, {
             refresh: refreshToken,
           });
@@ -43,16 +57,25 @@ apiClient.interceptors.response.use(
           const { access } = response.data;
           localStorage.setItem('access_token', access);
 
+          console.log('Token refreshed successfully');
+
           // Retry the original request with new token
           originalRequest.headers.Authorization = `Bearer ${access}`;
           return apiClient(originalRequest);
         }
       } catch (refreshError) {
+        console.error('Token refresh failed:', refreshError);
+
         // Refresh failed, redirect to login
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
         localStorage.removeItem('user');
-        window.location.href = '/login';
+
+        // استخدم react-router أو window.location حسب الإعداد
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login';
+        }
+
         return Promise.reject(refreshError);
       }
     }
@@ -69,5 +92,28 @@ export const publicApiClient = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// إضافة interceptor للعميل العام أيضاً
+publicApiClient.interceptors.request.use(
+  (config) => {
+    console.log(`Public API Request: ${config.method?.toUpperCase()} ${config.url}`);
+    return config;
+  },
+  (error) => {
+    console.error('Public API request error:', error);
+    return Promise.reject(error);
+  }
+);
+
+publicApiClient.interceptors.response.use(
+  (response) => {
+    console.log(`Public API Response: ${response.status} ${response.config.url}`);
+    return response;
+  },
+  (error) => {
+    console.error(`Public API Error: ${error.response?.status} ${error.config?.url}`, error.response?.data);
+    return Promise.reject(error);
+  }
+);
 
 export default apiClient;

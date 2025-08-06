@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Button, theme, Breadcrumb, Badge, List, Typography } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Button, theme, Breadcrumb } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -26,7 +26,6 @@ import LanguageSwitcher from '../common/LanguageSwitcher';
 // import { notificationService } from '../../services';
 
 const { Header, Sider, Content } = Layout;
-const { Text } = Typography;
 
 // Icon mapping
 const iconMap = {
@@ -75,7 +74,7 @@ const MainLayout = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [dispatch, sidebarCollapsed]);
 
-  // Load notifications on component mount
+  // Load notifications on component mount (commented out for now)
   // useEffect(() => {
   //   const loadNotifications = async () => {
   //     try {
@@ -84,6 +83,8 @@ const MainLayout = () => {
   //       setNotifications(response.results || []);
   //     } catch (error) {
   //       console.error('Failed to load notifications:', error);
+  //       // Set empty notifications array on error to prevent UI issues
+  //       setNotifications([]);
   //     } finally {
   //       setNotificationLoading(false);
   //     }
@@ -99,16 +100,24 @@ const MainLayout = () => {
     navigate('/login');
   };
 
+  // Notification click handler (commented out for now)
   // const handleNotificationClick = async (notification) => {
   //   try {
   //     await notificationService.markAsRead(notification.id);
+  //     // Update local state to mark as read
   //     setNotifications(prev =>
   //       prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
   //     );
   //   } catch (error) {
   //     console.error('Failed to mark notification as read:', error);
+  //     // Still update local state even if API call fails (for better UX)
+  //     setNotifications(prev =>
+  //       prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
+  //     );
   //   }
   // };
+
+
 
   // Get translated menu label
   const getMenuLabel = (key) => {
@@ -199,7 +208,7 @@ const MainLayout = () => {
     pathSegments.forEach((segment, index) => {
       const path = '/app/' + pathSegments.slice(1, index + 1).join('/');
       const title = segment.charAt(0).toUpperCase() + segment.slice(1);
-      
+
       breadcrumbItems.push({
         title,
         href: path,
@@ -304,10 +313,10 @@ const MainLayout = () => {
           zIndex: isMobile ? 1000 : 'auto',
         }}
       >
-        <div style={{ 
-          height: 64, 
-          display: 'flex', 
-          alignItems: 'center', 
+        <div style={{
+          height: 64,
+          display: 'flex',
+          alignItems: 'center',
           justifyContent: 'center',
           borderBottom: '1px solid #f0f0f0',
           fontSize: sidebarCollapsed ? '16px' : '18px',
@@ -367,10 +376,8 @@ const MainLayout = () => {
             {/* Language Switcher */}
             <LanguageSwitcher size="small" />
 
-            {/* Notification Bell */}
+            {/* Notification Bell (commented out for now) */}
             {/* <Dropdown
-              dropdownRender={() => notificationDropdown}
-            <Dropdown
               popupRender={() => notificationDropdown}
               placement="bottomRight"
               arrow
@@ -409,8 +416,8 @@ const MainLayout = () => {
             borderRadius: borderRadiusLG,
           }}
         >
-          <Breadcrumb 
-            items={generateBreadcrumbs()} 
+          <Breadcrumb
+            items={generateBreadcrumbs()}
             style={{ marginBottom: 16 }}
           />
           <Outlet />
