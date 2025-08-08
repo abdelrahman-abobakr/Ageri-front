@@ -269,30 +269,27 @@ export const API_ENDPOINTS = {
   SEARCH: {
     GLOBAL: '/api/search/',
     PUBLICATIONS: '/api/search/publications/',
-    USERS: '/api/search/users/',
+    USERS: '/api/search/users/'
   },
 
   ANALYTICS: {
-    DASHBOARD: '/dashboard/analytics/', // Special endpoint outside /api prefix
-    PUBLICATIONS: '/api/analytics/publications/',
-    USERS: '/api/analytics/users/',
-    SERVICES: '/api/analytics/services/',
+    DASHBOARD: '/dashboard/analytics/'
   },
 
-  // Notifications - Temporarily disabled until backend implementation
+  // Notifications
   NOTIFICATIONS: {
-    LIST: '/api/content/notifications/', // Will be implemented later
-    MARK_READ: (id) => `/api/content/notifications/${id}/mark-read/`,
-    MARK_ALL_READ: '/content/notifications/mark-all-read/',
+    LIST: '/api/notifications/',
+    UNREAD: '/api/notifications/unread/',
+    MARK_READ: (id) => `/api/notifications/${id}/mark-read/`
   },
 
   // Admin System Management
   ADMIN: {
     SYSTEM_INFO: '/admin/system-info/',
     CLEAR_CACHE: '/admin/clear-cache/',
-    HEALTH_CHECK: '/admin/health-check/',
-  },
-};
+    HEALTH_CHECK: '/admin/health-check/'
+  }
+}; 
 
 // Theme colors (Governmental style)
 export const THEME_COLORS = {

@@ -1,688 +1,396 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-  Card,
   Table,
   Button,
-  Input,
-  Select,
-  Space,
-  Tag,
-  Typography,
-  Row,
-  Col,
-  Statistic,
   Modal,
   Form,
+  Input,
+  Select,
   message,
-  Dropdown,
-  Tooltip,
-  Spin,
-  Tabs,
-  Progress,
-  Avatar
+  Card,
+  Statistic,
+  Upload,
+  Tag,
+  Checkbox
 } from 'antd';
 import {
-  ToolOutlined,
-  SearchOutlined,
   PlusOutlined,
   EditOutlined,
   DeleteOutlined,
-  EyeOutlined,
-  CheckOutlined,
-  CloseOutlined,
-  MoreOutlined,
-  ExclamationCircleOutlined,
-  UserOutlined,
-  ReloadOutlined,
-  ClockCircleOutlined,
-  TeamOutlined,
-  SettingOutlined
+  UploadOutlined
 } from '@ant-design/icons';
-import { useTranslation } from 'react-i18next';
-import { servicesService } from '../../services';
-import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
-import RealTimeIndicator from '../../components/admin/RealTimeIndicator';
-import moment from 'moment';
+import {
+  getServices,
+  createService,
+  updateService,
+  deleteService,
+  getCategories,
+  getStatuses
+} from '../../services/servicesApi';
 
-const { Title, Text } = Typography;
-const { Search } = Input;
-const { Option } = Select;
 const { TextArea } = Input;
-const { confirm } = Modal;
-const { TabPane } = Tabs;
+const { Option } = Select;
 
 const ServicesManagementPage = () => {
-  const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('services');
   const [services, setServices] = useState([]);
-  const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingItem, setEditingItem] = useState(null);
+  const [visible, setVisible] = useState(false);
   const [form] = Form.useForm();
-  const pageSize = 10;
+  const [editingId, setEditingId] = useState(null);
+  const [categories, setCategories] = useState([]);
+  const [statuses, setStatuses] = useState([]);
 
-  // Real-time services statistics
-  const { stats: servicesStats, loading: statsLoading, refresh: refreshStats } = useRealTimeStats('services', 30000);
+ const fetchServices = async () => {
+  setLoading(true);
+  try {
+    const data = await getServices();
+    const formattedData = Array.isArray(data) ? data : data?.results || [];
+    setServices(formattedData);
+  } catch (error) {
+    message.error(error.message || 'حدث خطأ أثناء جلب البيانات');
+  } finally {
+    setLoading(false);
+  }
+};
 
-  // Animated counters
-  const totalServicesCount = useAnimatedCounter(servicesStats?.totalServices || 0);
-  const activeRequestsCount = useAnimatedCounter(servicesStats?.activeRequests || 0);
-  const completedRequestsCount = useAnimatedCounter(servicesStats?.completedRequests || 0);
-  const pendingRequestsCount = useAnimatedCounter(servicesStats?.pendingRequests || 0);
+  const fetchDropdowns = async () => {
+    try {
+      const [cats, stats] = await Promise.all([
+        getCategories(),
+        getStatuses()
+      ]);
+      setCategories(cats);
+      setStatuses(stats);
+    } catch (error) {
+      message.error('حدث خطأ أثناء جلب القوائم');
+    }
+  };
 
   useEffect(() => {
-    if (activeTab === 'services') {
-      loadServices();
-    } else {
-      loadRequests();
-    }
-  }, [activeTab, currentPage, searchTerm, statusFilter]);
+    fetchServices();
+    fetchDropdowns();
+  }, []);
 
-  const loadServices = async () => {
-    try {
-      setLoading(true);
+ const handleSubmit = async () => {
+  try {
+    const values = await form.validateFields();
+    setLoading(true);
 
-      const params = {
-        page: currentPage,
-        page_size: pageSize
-      };
+    console.log('Form values before submission:', values);
 
-      if (searchTerm) {
-        params.search = searchTerm;
-      }
-
-      const response = await servicesService.getTestServices(params);
-      setServices(response.results || []);
-      setTotal(response.count || 0);
-    } catch (error) {
-      console.error('Failed to load services:', error);
-      message.error('فشل في تحميل الخدمات');
-      setServices([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadRequests = async () => {
-    try {
-      setLoading(true);
-
-      const params = {
-        page: currentPage,
-        page_size: pageSize
-      };
-
-      if (searchTerm) {
-        params.search = searchTerm;
-      }
-
-      if (statusFilter) {
-        params.status = statusFilter;
-      }
-
-      const response = await servicesService.getServiceRequests(params);
-      setRequests(response.results || []);
-      setTotal(response.count || 0);
-    } catch (error) {
-      console.error('Failed to load requests:', error);
-      message.error('فشل في تحميل الطلبات');
-      setRequests([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreateService = () => {
-    setEditingItem(null);
-    form.resetFields();
-    setModalVisible(true);
-  };
-
-  const handleEditService = (service) => {
-    setEditingItem(service);
-    form.setFieldsValue({
-      name: service.name,
-      description: service.description,
-      category: service.category,
-      price: service.price,
-      estimated_duration: service.estimated_duration,
-      available: service.available,
-    });
-    setModalVisible(true);
-  };
-
-  const handleDeleteService = async (service) => {
-    confirm({
-      title: 'تأكيد الحذف',
-      content: 'هل أنت متأكد من حذف هذه الخدمة؟',
-      icon: <ExclamationCircleOutlined />,
-      onOk: async () => {
-        try {
-          await servicesService.deleteTestService(service.id);
-          message.success('تم حذف الخدمة بنجاح');
-          loadServices();
-          refreshStats();
-        } catch (error) {
-          message.error('فشل في حذف الخدمة');
-        }
-      },
-    });
-  };
-
-  const handleSaveService = async (values) => {
-    try {
-      if (editingItem) {
-        await servicesService.updateTestService(editingItem.id, values);
+    if (editingId) {
+      try {
+        await updateService(editingId, values);
         message.success('تم تحديث الخدمة بنجاح');
-      } else {
-        await servicesService.createTestService(values);
-        message.success('تم إنشاء الخدمة بنجاح');
+        setServices(prevServices => 
+          prevServices.map(service => 
+            service.id === editingId ? { ...service, ...values } : service
+          )
+        );
+        setVisible(false);
+        form.resetFields();
+      } catch (error) {
+        handleApiError(error);
       }
-      setModalVisible(false);
-      loadServices();
-      refreshStats();
-    } catch (error) {
-      message.error('فشل في حفظ الخدمة');
-    }
-  };
-
-  const handleAssignTechnician = async (requestId, technicianData) => {
-    try {
-      await servicesService.assignTechnician(requestId, technicianData);
-      message.success('تم تعيين الفني بنجاح');
-      loadRequests();
-      refreshStats();
-    } catch (error) {
-      message.error('فشل في تعيين الفني');
-    }
-  };
-
-  const handleUpdateRequestStatus = async (requestId, status) => {
-    try {
-      await servicesService.updateRequestStatus(requestId, { status });
-      message.success('تم تحديث حالة الطلب بنجاح');
-      loadRequests();
-      refreshStats();
-    } catch (error) {
-      message.error('فشل في تحديث حالة الطلب');
-    }
-  };
-
-  const getStatusTag = (status) => {
-    const statusConfig = {
-      pending: { color: 'orange', text: 'في الانتظار' },
-      in_progress: { color: 'blue', text: 'قيد التنفيذ' },
-      completed: { color: 'green', text: 'مكتمل' },
-      cancelled: { color: 'red', text: 'ملغي' },
-    };
-
-    const config = statusConfig[status] || { color: 'default', text: status };
-    return <Tag color={config.color}>{config.text}</Tag>;
-  };
-
-  const getPriorityTag = (priority) => {
-    const priorityConfig = {
-      high: { color: 'red', text: 'عالية' },
-      medium: { color: 'orange', text: 'متوسطة' },
-      low: { color: 'green', text: 'منخفضة' },
-    };
-
-    const config = priorityConfig[priority] || { color: 'default', text: priority };
-    return <Tag color={config.color}>{config.text}</Tag>;
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return '-';
-    return moment(dateString).format('YYYY-MM-DD HH:mm');
-  };
-
-  const formatDuration = (hours) => {
-    if (!hours) return '-';
-    if (hours < 24) {
-      return `${hours} ساعة`;
     } else {
-      const days = Math.floor(hours / 24);
-      const remainingHours = hours % 24;
-      return remainingHours > 0 ? `${days} يوم ${remainingHours} ساعة` : `${days} يوم`;
+      try {
+        const newService = await createService(values);
+        message.success('تم إضافة الخدمة بنجاح');
+        setServices(prevServices => [...prevServices, newService]);
+        setVisible(false);
+        form.resetFields();
+      } catch (error) {
+        handleApiError(error);
+      }
     }
+  } finally {
+    setLoading(false);
+  }
+};
+
+// Helper to show backend validation errors
+const handleApiError = (error) => {
+  if (error?.response?.data) {
+    const data = error.response.data;
+    if (typeof data === 'object') {
+      const messages = Object.entries(data)
+        .map(([field, errs]) => Array.isArray(errs) ? errs.join(', ') : errs)
+        .join('\n');
+      message.error(messages);
+    } else {
+      message.error(data.toString());
+    }
+  } else {
+    message.error(error.message || 'حدث خطأ أثناء الحفظ');
+  }
+};
+  const handleEdit = (record) => {
+    form.setFieldsValue({
+      ...record,
+      is_free: record.is_free ? 'true' : 'false'
+    });
+    setEditingId(record.id);
+    setVisible(true);
   };
+
+  const handleDelete = async (id) => {
+  try {
+    setLoading(true);
+    await deleteService(id);
+    message.success('تم حذف الخدمة بنجاح');
+    setServices(prevServices => prevServices.filter(service => service.id !== id));
+  } catch (error) {
+    message.error(error.message || 'حدث خطأ أثناء الحذف');
+  } finally {
+    setLoading(false);
+  }
+};
+  const handleCancel = () => {
+    setVisible(false);
+    form.resetFields();
+    setEditingId(null);
+  };
+
+  const columns = [
+    {
+      title: 'اسم الخدمة',
+      dataIndex: 'name',
+      key: 'name',
+    },
+    {
+      title: 'الوصف',
+      dataIndex: 'description',
+      key: 'description',
+      render: (text, record) => {
+        // Try to get description from record if not present directly
+        const desc = text || record?.description || record?.short_description || '';
+        return desc ? (
+          <div style={{ maxWidth: 300, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {desc}
+          </div>
+        ) : '---';
+      }
+    },
+    {
+      title: 'السعر',
+      dataIndex: 'base_price',
+      key: 'base_price',
+      render: (price) => price ? `${price} ر.س` : 'مجاني',
+    },
+    {
+      title: 'المدة المقدرة',
+      dataIndex: 'estimated_duration',
+      key: 'estimated_duration',
+      render: (duration) => duration || '---',
+    },
+    {
+      title: 'الحالة',
+      dataIndex: 'status',
+      key: 'status',
+      render: (status) => (
+        <Tag color={status === 'نشط' ? 'green' : 'red'}>{status}</Tag>
+      ),
+    },
+    {
+      title: 'الإجراءات',
+      key: 'actions',
+      render: (_, record) => (
+        <div>
+          <Button
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+            style={{ marginRight: 8 }}
+          />
+          <Button
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record.id)}
+            danger
+          />
+        </div>
+      ),
+    },
+  ];
 
   return (
-    <div>
-      {/* Page Header */}
-      <div style={{ marginBottom: '24px' }}>
-        <Title level={2}>
-          <ToolOutlined style={{ marginRight: '8px' }} />
-          إدارة الخدمات
-        </Title>
-        <Text type="secondary">
-          إدارة الخدمات المختبرية وطلبات العملاء والفنيين
-        </Text>
-        <RealTimeIndicator />
+    <div style={{ padding: 24 }}>
+      <h1 style={{ marginBottom: 24 }}>إدارة الخدمات</h1>
+      <p style={{ marginBottom: 24 }}>إدارة الخدمات العضوية وطلبات العملاء والتمييز</p>
+
+      <div style={{ marginBottom: 24 }}>
+        <div style={{ display: 'flex', gap: 16 }}>
+          {/* <Card>
+            <Statistic title="الخدمات الشخصية" value={0} suffix="✅" />
+          </Card>
+          <Card>
+            <Statistic title="الخدمات المشغلة" value={0} suffix="✅" />
+          </Card> */}
+          <Card>
+            <Statistic title="إجمالي الخدمات" value={services.length} suffix="✅" />
+          </Card>
+        </div>
       </div>
 
-      {/* Statistics Cards */}
-      <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title="إجمالي الخدمات"
-              value={totalServicesCount.value}
-              prefix={<ToolOutlined />}
-              valueStyle={{
-                color: '#1890ff',
-                transition: 'all 0.3s ease'
-              }}
-              suffix={
-                <Button
-                  type="text"
-                  size="small"
-                  icon={<ReloadOutlined spin={totalServicesCount.isAnimating} />}
-                  onClick={refreshStats}
-                  style={{ marginLeft: '8px' }}
-                />
-              }
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title="الطلبات النشطة"
-              value={activeRequestsCount.value}
-              prefix={<ClockCircleOutlined />}
-              valueStyle={{
-                color: '#faad14',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title="الطلبات المكتملة"
-              value={completedRequestsCount.value}
-              prefix={<CheckOutlined />}
-              valueStyle={{
-                color: '#52c41a',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title="في الانتظار"
-              value={pendingRequestsCount.value}
-              prefix={<CloseOutlined />}
-              valueStyle={{
-                color: '#f5222d',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Card>
-        </Col>
-      </Row>
-
-      {/* Main Content Tabs */}
-      <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="الخدمات المتاحة" key="services">
-            {/* Services Filters and Actions */}
-            <div style={{ marginBottom: '16px' }}>
-              <Row gutter={[16, 16]} align="middle">
-                <Col xs={24} sm={12} md={8}>
-                  <Search
-                    placeholder="البحث في الخدمات..."
-                    allowClear
-                    enterButton={<SearchOutlined />}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onSearch={() => loadServices()}
-                  />
-                </Col>
-                <Col xs={24} sm={12} md={8} style={{ textAlign: 'right' }}>
-                  <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={handleCreateService}
-                  >
-                    إضافة خدمة جديدة
-                  </Button>
-                </Col>
-              </Row>
-            </div>
-
-            {/* Services Table */}
-            <Spin spinning={loading}>
-              <Table
-                columns={[
-                  {
-                    title: 'اسم الخدمة',
-                    dataIndex: 'name',
-                    key: 'name',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'الوصف',
-                    dataIndex: 'description',
-                    key: 'description',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'السعر',
-                    dataIndex: 'price',
-                    key: 'price',
-                    render: (price) => `${price} جنيه`,
-                  },
-                  {
-                    title: 'المدة المقدرة',
-                    dataIndex: 'estimated_duration',
-                    key: 'estimated_duration',
-                    render: (duration) => formatDuration(duration),
-                  },
-                  {
-                    title: 'الحالة',
-                    dataIndex: 'available',
-                    key: 'available',
-                    render: (available) => (
-                      <Tag color={available ? 'green' : 'red'}>
-                        {available ? 'متاحة' : 'غير متاحة'}
-                      </Tag>
-                    ),
-                  },
-                  {
-                    title: 'الإجراءات',
-                    key: 'actions',
-                    render: (_, record) => (
-                      <Space>
-                        <Tooltip title="تعديل">
-                          <Button
-                            type="primary"
-                            size="small"
-                            icon={<EditOutlined />}
-                            onClick={() => handleEditService(record)}
-                          />
-                        </Tooltip>
-                        <Tooltip title="حذف">
-                          <Button
-                            danger
-                            size="small"
-                            icon={<DeleteOutlined />}
-                            onClick={() => handleDeleteService(record)}
-                          />
-                        </Tooltip>
-                      </Space>
-                    ),
-                  },
-                ]}
-                dataSource={services}
-                rowKey="id"
-                pagination={{
-                  current: currentPage,
-                  pageSize: pageSize,
-                  total: total,
-                  onChange: setCurrentPage,
-                  showSizeChanger: false,
-                  showQuickJumper: true,
-                  showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} من ${total} خدمة`,
-                }}
-                locale={{
-                  emptyText: 'لا توجد خدمات',
-                }}
-                scroll={{ x: 800 }}
-              />
-            </Spin>
-          </TabPane>
-
-          <TabPane tab="طلبات الخدمات" key="requests">
-            {/* Requests Filters */}
-            <div style={{ marginBottom: '16px' }}>
-              <Row gutter={[16, 16]} align="middle">
-                <Col xs={24} sm={12} md={8}>
-                  <Search
-                    placeholder="البحث في الطلبات..."
-                    allowClear
-                    enterButton={<SearchOutlined />}
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    onSearch={() => loadRequests()}
-                  />
-                </Col>
-                <Col xs={24} sm={6} md={4}>
-                  <Select
-                    placeholder="تصفية حسب الحالة"
-                    allowClear
-                    style={{ width: '100%' }}
-                    value={statusFilter}
-                    onChange={setStatusFilter}
-                  >
-                    <Option value="">جميع الحالات</Option>
-                    <Option value="pending">في الانتظار</Option>
-                    <Option value="in_progress">قيد التنفيذ</Option>
-                    <Option value="completed">مكتمل</Option>
-                    <Option value="cancelled">ملغي</Option>
-                  </Select>
-                </Col>
-              </Row>
-            </div>
-
-            {/* Requests Table */}
-            <Spin spinning={loading}>
-              <Table
-                columns={[
-                  {
-                    title: 'الخدمة',
-                    dataIndex: 'service_name',
-                    key: 'service_name',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'العميل',
-                    dataIndex: 'client_name',
-                    key: 'client_name',
-                    render: (name, record) => (
-                      <div>
-                        <div style={{ fontWeight: 500 }}>{name}</div>
-                        <Text type="secondary" style={{ fontSize: '12px' }}>
-                          {record.client_email}
-                        </Text>
-                      </div>
-                    ),
-                  },
-                  {
-                    title: 'الحالة',
-                    dataIndex: 'status',
-                    key: 'status',
-                    render: (status) => getStatusTag(status),
-                  },
-                  {
-                    title: 'الأولوية',
-                    dataIndex: 'priority',
-                    key: 'priority',
-                    render: (priority) => getPriorityTag(priority),
-                  },
-                  {
-                    title: 'الفني المعين',
-                    dataIndex: 'assigned_technician',
-                    key: 'assigned_technician',
-                    render: (technician) => technician || 'غير معين',
-                  },
-                  {
-                    title: 'تاريخ الطلب',
-                    dataIndex: 'created_at',
-                    key: 'created_at',
-                    render: (date) => formatDate(date),
-                  },
-                  {
-                    title: 'الإجراءات',
-                    key: 'actions',
-                    render: (_, record) => (
-                      <Dropdown
-                        menu={{
-                          items: [
-                            {
-                              key: 'view',
-                              icon: <EyeOutlined />,
-                              label: 'عرض التفاصيل',
-                            },
-                            {
-                              key: 'assign',
-                              icon: <TeamOutlined />,
-                              label: 'تعيين فني',
-                              disabled: record.status === 'completed',
-                            },
-                            {
-                              key: 'complete',
-                              icon: <CheckOutlined />,
-                              label: 'تمييز كمكتمل',
-                              disabled: record.status === 'completed',
-                              onClick: () => handleUpdateRequestStatus(record.id, 'completed'),
-                            },
-                            {
-                              type: 'divider'
-                            },
-                            {
-                              key: 'cancel',
-                              icon: <CloseOutlined />,
-                              label: 'إلغاء الطلب',
-                              danger: true,
-                              disabled: record.status === 'completed',
-                              onClick: () => handleUpdateRequestStatus(record.id, 'cancelled'),
-                            }
-                          ]
-                        }}
-                        trigger={['click']}
-                      >
-                        <Button size="small" icon={<MoreOutlined />} />
-                      </Dropdown>
-                    ),
-                  },
-                ]}
-                dataSource={requests}
-                rowKey="id"
-                pagination={{
-                  current: currentPage,
-                  pageSize: pageSize,
-                  total: total,
-                  onChange: setCurrentPage,
-                  showSizeChanger: false,
-                  showQuickJumper: true,
-                  showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} من ${total} طلب`,
-                }}
-                locale={{
-                  emptyText: 'لا توجد طلبات',
-                }}
-                scroll={{ x: 1000 }}
-              />
-            </Spin>
-          </TabPane>
-        </Tabs>
-      </Card>
-
-      {/* Create/Edit Service Modal */}
-      <Modal
-        title={editingItem ? 'تعديل الخدمة' : 'إضافة خدمة جديدة'}
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={null}
-        width={800}
-        destroyOnHidden
-      >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSaveService}
+      <div style={{ marginBottom: 16, textAlign: 'right' }}>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => setVisible(true)}
         >
-          <Form.Item
-            name="name"
-            label="اسم الخدمة"
-            rules={[{ required: true, message: 'اسم الخدمة مطلوب' }]}
+          إضافة خدمة جديدة
+        </Button>
+      </div>
+
+      <Table
+        columns={columns}
+        dataSource={services}
+        loading={loading}
+        rowKey="id"
+        bordered
+        pagination={{ pageSize: 10 }}
+      />
+
+      <Modal
+        title={editingId ? "تعديل الخدمة" : "إضافة خدمة جديدة"}
+        open={visible}
+        onOk={handleSubmit}
+        onCancel={handleCancel}
+        confirmLoading={loading}
+        width={800}
+        okText="حفظ"
+        cancelText="إلغاء"
+      >
+        <Form form={form} layout="vertical">
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <Form.Item
+              name="name"
+              label="اسم الخدمة"
+              rules={[{ required: true, message: 'يرجى إدخال اسم الخدمة' }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="service_code"
+              label="كود الخدمة"
+              rules={[{ required: true, message: 'يرجى إدخال كود الخدمة' }]}
+            >
+              <Input />
+            </Form.Item>
+
+<Form.Item
+  name="category"
+  label="الفئة"
+  rules={[{ required: true, message: 'يرجى اختيار الفئة' }]}
+>
+  <Select>
+    <Option value="testing">اختبارات وتحاليل</Option>
+    <Option value="consultation">استشارات</Option>
+    <Option value="equipment_access">الوصول إلى المعدات</Option>
+    <Option value="sample_analysis">تحليل العينات</Option>
+    <Option value="calibration">خدمات المعايرة</Option>
+    <Option value="training">تدريب تقني</Option>
+    <Option value="research_support">دعم البحث</Option>
+    <Option value="other">خدمات أخرى</Option>
+  </Select>
+</Form.Item>
+
+<Form.Item
+  name="status"
+  label="الحالة"
+  rules={[{ required: true, message: 'يرجى اختيار الحالة' }]}
+>
+  <Select>
+    <Option value="active">نشط</Option>
+    <Option value="inactive">غير نشط</Option>
+    <Option value="pending">قيد المراجعة</Option>
+  </Select>
+</Form.Item>
+
+            <Form.Item
+              name="base_price"
+              label="السعر الأساسي"
+              rules={[{ required: true, message: 'يرجى إدخال سعر الخدمة' }]}
+            >
+              <Input type="number" addonAfter="ر.س" />
+            </Form.Item>
+
+           
+
+            <Form.Item
+              name="estimated_duration"
+              label="المدة المقدرة"
+            >
+              <Input addonAfter="دقيقة" />
+            </Form.Item>
+
+            <Form.Item
+              name="contact_email"
+              label="البريد الإلكتروني للتواصل"
+              rules={[{ type: 'email', message: 'يرجى إدخال بريد إلكتروني صحيح' }]}
+            >
+              <Input />
+            </Form.Item>
+
+            <Form.Item
+              name="contact_phone"
+              label="هاتف التواصل"
+            >
+              <Input />
+            </Form.Item>
+          </div>
+
+          {/* <Form.Item
+            name="description"
+            label="الوصف"
           >
-            <Input placeholder="أدخل اسم الخدمة" />
-          </Form.Item>
+            <TextArea rows={3} />
+          </Form.Item> */}
 
           <Form.Item
             name="description"
-            label="وصف الخدمة"
-            rules={[{ required: true, message: 'وصف الخدمة مطلوب' }]}
+            label="وصف مختصر"
+            rules={[{ required: true, message: 'يرجى إدخال وصف' }]}
           >
-            <TextArea rows={3} placeholder="أدخل وصف تفصيلي للخدمة" />
+            <TextArea rows={2} />
+          </Form.Item>
+{/* 
+          <Form.Item
+            name="featured_image"
+            label="الصورة الرئيسية"
+            valuePropName="fileList"
+            getValueFromEvent={(e) => {
+              if (Array.isArray(e)) return e;
+              return e?.fileList;
+            }}
+          >
+            <Upload
+              beforeUpload={() => false}
+              listType="picture-card"
+              maxCount={1}
+            >
+              <div>
+                <PlusOutlined />
+                <div style={{ marginTop: 8 }}>رفع صورة</div>
+              </div>
+            </Upload>
           </Form.Item>
 
-          <Row gutter={16}>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="category"
-                label="فئة الخدمة"
-                rules={[{ required: true, message: 'فئة الخدمة مطلوبة' }]}
-              >
-                <Select placeholder="اختر فئة الخدمة">
-                  <Option value="soil_analysis">تحليل التربة</Option>
-                  <Option value="water_testing">فحص المياه</Option>
-                  <Option value="plant_analysis">تحليل النباتات</Option>
-                  <Option value="pest_control">مكافحة الآفات</Option>
-                  <Option value="consultation">استشارات</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="price"
-                label="السعر (جنيه)"
-                rules={[{ required: true, message: 'السعر مطلوب' }]}
-              >
-                <Input type="number" placeholder="0.00" />
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="estimated_duration"
-                label="المدة المقدرة (ساعات)"
-                rules={[{ required: true, message: 'المدة المقدرة مطلوبة' }]}
-              >
-                <Input type="number" placeholder="24" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} md={12}>
-              <Form.Item
-                name="available"
-                label="متاحة للطلب"
-                valuePropName="checked"
-                initialValue={true}
-              >
-                <Select>
-                  <Option value={true}>متاحة</Option>
-                  <Option value={false}>غير متاحة</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
-
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                {editingItem ? 'تحديث' : 'إنشاء'}
-              </Button>
-              <Button onClick={() => setModalVisible(false)}>
-                إلغاء
-              </Button>
-            </Space>
-          </Form.Item>
+          <Form.Item
+            name="service_brochure"
+            label="بروشور الخدمة"
+            valuePropName="fileList"
+            getValueFromEvent={(e) => {
+              if (Array.isArray(e)) return e;
+              return e?.fileList;
+            }}
+          > */}
+            {/* <Upload
+              beforeUpload={() => false}
+              maxCount={1}
+            >
+              <Button icon={<UploadOutlined />}>رفع ملف</Button>
+            </Upload> */}
+          {/* </Form.Item> */}
         </Form>
       </Modal>
     </div>

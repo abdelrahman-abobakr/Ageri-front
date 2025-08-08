@@ -2,6 +2,7 @@
   "common": {
     "home": "Home",
     "posts": "Posts",
+    "announcements": "Announcements",
     "courses": "Courses",
     "services": "Services",
     "login": "Login",
@@ -85,13 +86,17 @@
     "laboratories": "Laboratories",
     "departments": "Departments",
     "publications": "Publications",
-    "totalUsers": "Total Users"
+    "totalUsers": "Total Users",
+    "enrolledCourses": "Enrolled Courses",
+    "recentActivity": "Recent Activity",
+    "pendingRequests": "Pending Requests",
+    "activeCourses": "Active Courses"
   },
   "homepage": {
     "heroTitle": "Agricultural Research Excellence Institute",
     "heroSubtitle": "Advancing agricultural research and innovation for a sustainable future",
-    "latestNews": "Latest News & Articles",
-    "latestNewsDesc": "Stay updated with the latest research developments, events, and important announcements",
+    "latestNews": "Latest News & Announcements",
+    "latestNewsDesc": "Stay updated with the latest research developments, events, and important announcements from AGERI",
     "upcomingCourses": "Upcoming Training Courses",
     "upcomingCoursesDesc": "Enhance your skills with our professional development programs",
     "registerAsResearcher": "Register as Researcher",
@@ -149,7 +154,7 @@
     "enrolled": "Enrolled",
     "students": "students"
   },
-  "Posts": {
+  "announcements": {
     "title": "Announcements",
     "description": "Stay updated with the latest news, events, and important announcements.",
     "searchPlaceholder": "Search announcements...",
@@ -338,6 +343,7 @@
       "draft": "Draft",
       "archived": "Archived",
       "scheduled": "Scheduled",
+      "title": "Title",
       "content": "Content",
       "author": "Author",
       "publishDate": "Publish Date",
@@ -374,10 +380,10 @@
       "training": "Training",
       "collaboration": "Collaboration",
       "achievement": "Achievement",
-      "isPublic": "Is Public?",
-      "isFeatured": "Is Featured?",
       "type": "Type",
-      "status": "Status"
+      "status": "Status",
+      "isPublic": "Is Public?",
+      "isFeatured": "Is Featured?"
     },
     "systemSettings": {
       "title": "System Settings",

@@ -714,7 +714,8 @@ const NotificationsManagementPage = () => {
         onCancel={() => setModalVisible(false)}
         footer={null}
         width={800}
-destroyOnHidden      >
+        destroyOnHidden      
+        >
         <Form
           form={form}
           layout="vertical"

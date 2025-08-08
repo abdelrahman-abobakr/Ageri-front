@@ -41,7 +41,6 @@ export const useRealTimeStats = (statsType = 'dashboard', refreshInterval = 3000
       }
 
       const data = await service();
-
       if (mountedRef.current) {
         setStats(data);
         setLastUpdated(new Date());
@@ -158,7 +157,6 @@ export const useMultipleStats = (statsTypes = ['dashboard'], refreshInterval = 3
 
       const results = await Promise.all(promises);
       const statsObject = {};
-
       results.forEach(({ type, data }) => {
         statsObject[type] = data;
       });
@@ -241,7 +239,6 @@ export const useTrendIndicator = (currentValue, previousValue) => {
 
     const change = currentValue - previousValue;
     const percentage = Math.abs((change / previousValue) * 100);
-
     let direction = 'stable';
     let isPositive = true;
 

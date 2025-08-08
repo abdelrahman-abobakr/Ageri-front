@@ -1,5 +1,5 @@
 import apiClient from './api';
-import { API_ENDPOINTS } from '../constants';
+import { API_ENDPOINTS } from "../constants/index"
 
 export const servicesService = {
   // Test Services

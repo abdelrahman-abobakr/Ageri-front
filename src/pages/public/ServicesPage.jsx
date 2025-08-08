@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Card, List, Input, Button, Tag, Typography, Row, Col, Pagination, Modal } from 'antd';
 import { SearchOutlined, ToolOutlined, DollarOutlined, ClockCircleOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
-import { useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { servicesService } from '../../services';
 
@@ -12,7 +11,6 @@ const { Search } = Input;
 const ServicesPage = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -33,8 +31,10 @@ const ServicesPage = () => {
       if (search) params.search = search;
 
       const response = await servicesService.getTestServices(params);
-      setServices(response.results || []);
-      setTotal(response.count || 0);
+      // Only show active services
+      const activeServices = (response.results || []).filter(s => s.status === 'active' || s.status === 'نشط');
+      setServices(activeServices);
+      setTotal(activeServices.length);
     } catch (error) {
       console.error('Failed to load services:', error);
       setServices([]);
@@ -62,36 +62,23 @@ const ServicesPage = () => {
   };
 
   const handleRequestService = (serviceId) => {
-    console.log('🔄 Handling service request for service ID:', serviceId);
-    console.log('🔐 User authentication status:', { isAuthenticated, user: user?.email });
-
-    if (isAuthenticated && user) {
-      // Authenticated user - redirect to service request form
-      console.log('✅ User is authenticated, redirecting to service request form');
-      navigate(`/app/services/request/${serviceId}`, {
-        state: { serviceId }
-      });
-    } else {
-      // Not authenticated - redirect to login
-      console.log('❌ User not authenticated, redirecting to login');
-      navigate('/login', {
-        state: {
-          from: `/services`,
-          message: 'Please login to request services',
-          returnTo: `/app/services/request/${serviceId}`
-        }
-      });
-    }
+    // Redirect to login/register for service request
+    navigate('/login', {
+      state: {
+        from: `/services`,
+        message: 'Please login to request services'
+      }
+    });
   };
 
   const formatPrice = (price) => {
-    if (!price) return 'Contact for pricing';
-    return `$${price}`;
+    if (!price) return 'مجاني';
+    return `${price} ر.س`;
   };
 
   const formatDuration = (duration) => {
-    if (!duration) return 'Variable';
-    return `${duration} days`;
+    if (!duration) return 'غير محدد';
+    return `${duration} دقيقة`;
   };
 
   return (
@@ -146,20 +133,7 @@ const ServicesPage = () => {
                   <ToolOutlined style={{ fontSize: '48px', color: 'white' }} />
                 </div>
               }
-              actions={[
-                <Button
-                  type="link"
-                  onClick={() => handleServiceDetails(service)}
-                >
-                  {t('services.viewDetails')}
-                </Button>,
-                <Button
-                  type="primary"
-                  onClick={() => handleRequestService(service.id)}
-                >
-                  {t('services.requestService')}
-                </Button>
-              ]}
+              onClick={() => handleServiceDetails(service)}
             >
               <div style={{ marginBottom: '12px' }}>
                 <Title level={4} style={{ marginBottom: '8px' }}>
@@ -171,7 +145,7 @@ const ServicesPage = () => {
                   )}
                   <Text type="secondary">
                     <DollarOutlined style={{ marginRight: '4px' }} />
-                    {formatPrice(service.price)}
+                    {formatPrice(service.base_price)}
                   </Text>
                 </div>
               </div>
@@ -180,7 +154,7 @@ const ServicesPage = () => {
                 ellipsis={{ rows: 3 }}
                 style={{ marginBottom: '16px' }}
               >
-                {service.description || 'No description available.'}
+                {service.short_description || 'لا يوجد وصف.'}
               </Paragraph>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -188,9 +162,6 @@ const ServicesPage = () => {
                   <ClockCircleOutlined style={{ marginRight: '4px' }} />
                   {formatDuration(service.estimated_duration)}
                 </Text>
-                {service.available && (
-                  <Tag color="green">Available</Tag>
-                )}
               </div>
             </Card>
           </Col>
@@ -219,45 +190,30 @@ const ServicesPage = () => {
         title={selectedService?.name}
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setModalVisible(false)}>
-            Close
-          </Button>,
-          <Button 
-            key="request" 
-            type="primary" 
-            onClick={() => {
-              setModalVisible(false);
-              handleRequestService(selectedService?.id);
-            }}
-          >
-            Request This Service
-          </Button>
-        ]}
+        footer={null}
         width={600}
       >
         {selectedService && (
           <div>
-            <Paragraph>{selectedService.description}</Paragraph>
-            
+            <Paragraph>{selectedService.short_description || 'لا يوجد وصف.'}</Paragraph>
             <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
               <Col span={12}>
-                <Text strong>Price: </Text>
-                <Text>{formatPrice(selectedService.price)}</Text>
+                <Text strong>السعر: </Text>
+                <Text>{formatPrice(selectedService.base_price)}</Text>
               </Col>
               <Col span={12}>
-                <Text strong>Duration: </Text>
+                <Text strong>المدة: </Text>
                 <Text>{formatDuration(selectedService.estimated_duration)}</Text>
               </Col>
               {selectedService.category && (
                 <Col span={12}>
-                  <Text strong>Category: </Text>
+                  <Text strong>الفئة: </Text>
                   <Text>{selectedService.category}</Text>
                 </Col>
               )}
               {selectedService.requirements && (
                 <Col span={24}>
-                  <Text strong>Requirements: </Text>
+                  <Text strong>المتطلبات: </Text>
                   <Paragraph>{selectedService.requirements}</Paragraph>
                 </Col>
               )}
@@ -268,17 +224,24 @@ const ServicesPage = () => {
 
       {/* Empty State */}
       {!loading && services.length === 0 && (
-        <Card style={{ textAlign: 'center', padding: '40px' }}>
+        <Card
+          style={{
+            textAlign: 'center',
+            padding: '40px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            direction: document.documentElement.dir || 'ltr',
+          }}
+        >
           <ToolOutlined style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }} />
-          <Title level={4} type="secondary">No Services Found</Title>
+          <Title level={4} type="secondary">{t('services.noServices')}</Title>
           <Paragraph type="secondary">
-            {searchTerm 
-              ? 'Try adjusting your search criteria.'
-              : 'No services are currently available.'}
+            {searchTerm
+              ? t('announcements.tryAdjusting')
+              : t('services.noServicesDesc')}
           </Paragraph>
-          <Button type="primary" onClick={() => navigate('/register')}>
-            Register to Request Services
-          </Button>
         </Card>
       )}
     </div>

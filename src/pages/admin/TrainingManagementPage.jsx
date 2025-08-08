@@ -298,7 +298,6 @@ const TrainingManagementPage = () => {
       pending: { color: 'orange', text: 'في الانتظار' },
       scheduled: { color: 'cyan', text: 'مجدولة' },
     };
-
     const config = statusConfig[status] || { color: 'default', text: status };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -309,7 +308,6 @@ const TrainingManagementPage = () => {
       intermediate: { color: 'orange', text: 'متوسط' },
       advanced: { color: 'red', text: 'متقدم' },
     };
-
     const config = levelConfig[level] || { color: 'default', text: level };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -375,7 +373,6 @@ const TrainingManagementPage = () => {
             />
           </Card>
         </Col>
-
         <Col xs={24} sm={12} md={6}>
           <Card loading={statsLoading}>
             <Statistic

@@ -266,11 +266,8 @@ const HomePage = () => {
           setSettingsLoading(false);
         }
 
-        // Load content with institute-specific data
+        // Load announcements and posts separately
         try {
-          console.log('🔍 Starting to fetch content...');
-          console.log('🔍 API Base URL:', import.meta.env.VITE_API_BASE_URL);
-
           const [announcementsResponse, postsResponse] = await Promise.allSettled([
             contentService.getPublicAnnouncements({
               page_size: 6,

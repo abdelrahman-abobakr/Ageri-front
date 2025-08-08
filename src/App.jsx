@@ -26,7 +26,7 @@ import UnauthorizedPage from './pages/auth/UnauthorizedPage';
 import HomePage from './pages/public/HomePage';
 import CoursesPage from './pages/public/CoursesPage';
 import ServicesPage from './pages/public/ServicesPage';
-
+import TestPage from './pages/public/TestPage';
 import ResearcherProfilePage from './pages/public/ResearcherProfilePage';
 import LabDetailPage from './pages/public/LabDetailPage';
 import AnnouncementDetailPage from './pages/public/AnnouncementDetailPage';
@@ -53,7 +53,6 @@ import OrganizationManagementPage from './pages/admin/OrganizationManagementPage
 import NotificationsManagementPage from './pages/admin/NotificationsManagementPage';
 import CreateCoursePage from './pages/admin/AddCourseForm.jsx';
 import AdminDashboard from './pages/admin/publications/AdminDashboard.jsx';
-// Import PublicationDetailPage to fix the 'not defined' error
 import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
 import PublicationsPage from './pages/research/PublicationsPage.jsx';
 import PublicationForm from './pages/research/PublicationForm.jsx';
@@ -128,6 +127,7 @@ const AppContent = () => {
               <Route path="/posts/:id" element={<PostDetailPage />} />
               <Route path="/enrollment-lookup" element={<EnrollmentLookupPage />} />
               <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
+              <Route path="/test" element={<TestPage />} />
             </Route>
 
             {/* Authenticated routes with main layout */}
@@ -172,7 +172,6 @@ const AppContent = () => {
                   </ProtectedRoute>
                 }
               />
-              {/* Module routes - now fully implemented */}
               <Route
                 path="research"
                 element={
@@ -237,7 +236,6 @@ const AppContent = () => {
                   </ProtectedRoute>
                 }
               />
-              {/* Admin dashboard route */}
               <Route
                 path="admin"
                 element={

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Layout, Menu, Avatar, Dropdown, Button, theme, Breadcrumb } from 'antd';
+import { Layout, Menu, Avatar, Dropdown, Button, theme, Breadcrumb, Badge, List, Typography } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -23,9 +23,11 @@ import { logoutUser } from '../../store/slices/authSlice';
 import { toggleSidebar } from '../../store/slices/uiSlice';
 import { MENU_ITEMS, USER_ROLES } from '../../constants';
 import LanguageSwitcher from '../common/LanguageSwitcher';
-// import { notificationService } from '../../services';
+
+import { notificationService } from '../../services';
 
 const { Header, Sider, Content } = Layout;
+const { Text } = Typography;
 
 // Icon mapping
 const iconMap = {
@@ -208,7 +210,6 @@ const MainLayout = () => {
     pathSegments.forEach((segment, index) => {
       const path = '/app/' + pathSegments.slice(1, index + 1).join('/');
       const title = segment.charAt(0).toUpperCase() + segment.slice(1);
-
       breadcrumbItems.push({
         title,
         href: path,
