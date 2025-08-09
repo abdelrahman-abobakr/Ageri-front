@@ -28,7 +28,8 @@ import {
   EyeOutlined,
   MoreOutlined,
   ExclamationCircleOutlined,
-  ReloadOutlined
+  ReloadOutlined,
+  UserAddOutlined
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { adminService } from '../../services';
@@ -47,7 +48,7 @@ const UserManagementPage = () => {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState(''); // This will map to is_approved
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
   const pageSize = 10;
@@ -55,11 +56,10 @@ const UserManagementPage = () => {
   // Real-time statistics
   const { stats: userStats, loading: statsLoading, lastUpdated, refresh: refreshStats } = useRealTimeStats('users', 30000);
 
-  // Animated counters for smooth number transitions
+  // Animated counters for smooth number transitions - Updated for new stats
   const totalUsersCount = useAnimatedCounter(userStats?.totalUsers || 0);
-  const pendingApprovalsCount = useAnimatedCounter(userStats?.pendingApprovals || 0);
-  const activeUsersCount = useAnimatedCounter(userStats?.activeUsers || 0);
-  const newRegistrationsCount = useAnimatedCounter(userStats?.newRegistrations || 0);
+  const approvedUsersCount = useAnimatedCounter(userStats?.approvedUsers || 0);
+  const notApprovedUsersCount = useAnimatedCounter(userStats?.notApprovedUsers || 0);
 
   useEffect(() => {
     loadUsers();
@@ -75,7 +75,14 @@ const UserManagementPage = () => {
 
       if (searchTerm) params.search = searchTerm;
       if (roleFilter) params.role = roleFilter;
-      if (statusFilter) params.status = statusFilter;
+
+      // Map status filter to is_approved filter
+      if (statusFilter === 'approved') {
+        params.is_approved = true;
+      } else if (statusFilter === 'pending') {
+        params.is_approved = false;
+      }
+      // If statusFilter is empty or 'all', don't add is_approved filter
 
       const response = await adminService.getUsers(params);
       setUsers(response.results || []);
@@ -87,8 +94,6 @@ const UserManagementPage = () => {
       setLoading(false);
     }
   };
-
-
 
   const handleApproveUser = async (userId) => {
     confirm({
@@ -151,15 +156,13 @@ const UserManagementPage = () => {
     }
   };
 
-  const getStatusTag = (status) => {
-    const statusConfig = {
-      [USER_STATUS.PENDING]: { color: 'orange', text: t('admin.userManagement.pending') },
-      [USER_STATUS.APPROVED]: { color: 'green', text: t('admin.userManagement.approved') },
-      [USER_STATUS.REJECTED]: { color: 'red', text: t('admin.userManagement.rejected') },
-    };
-    
-    const config = statusConfig[status] || { color: 'default', text: status };
-    return <Tag color={config.color}>{config.text}</Tag>;
+  // Updated function to work with is_approved
+  const getStatusTag = (user) => {
+    if (user.is_approved) {
+      return <Tag color="green">{t('admin.userManagement.approved')}</Tag>;
+    } else {
+      return <Tag color="orange">{t('admin.userManagement.pending')}</Tag>;
+    }
   };
 
   const getRoleTag = (role) => {
@@ -169,7 +172,7 @@ const UserManagementPage = () => {
       [USER_ROLES.RESEARCHER]: { color: 'green', text: t('admin.userManagement.researcher') },
       [USER_ROLES.GUEST]: { color: 'default', text: t('admin.userManagement.guest') },
     };
-    
+
     const config = roleConfig[role] || { color: 'default', text: role };
     return <Tag color={config.color}>{config.text}</Tag>;
   };
@@ -183,41 +186,52 @@ const UserManagementPage = () => {
     });
   };
 
-  const getActionMenuItems = (user) => [
-    {
-      key: 'view',
-      icon: <EyeOutlined />,
-      label: t('admin.userManagement.viewProfile'),
-      onClick: () => {
-        // Navigate to user profile or show modal
-        console.log('View user:', user.id);
+  // Updated dropdown menu items based on is_approved
+  const getActionMenuItems = (user) => {
+    const baseItems = [
+      {
+        key: 'view',
+        icon: <EyeOutlined />,
+        label: t('admin.userManagement.viewProfile'),
+        onClick: () => {
+          console.log('View user:', user.id);
+        }
       }
-    },
-    {
-      key: 'approve',
-      icon: <CheckOutlined />,
-      label: t('admin.userManagement.approve'),
-      onClick: () => handleApproveUser(user.id),
-      disabled: user.status === USER_STATUS.APPROVED
-    },
-    {
-      key: 'reject',
-      icon: <CloseOutlined />,
-      label: t('admin.userManagement.reject'),
-      onClick: () => handleRejectUser(user.id),
-      disabled: user.status === USER_STATUS.REJECTED
-    },
-    {
-      type: 'divider'
-    },
-    {
-      key: 'delete',
-      icon: <DeleteOutlined />,
-      label: t('admin.userManagement.deleteUser'),
-      onClick: () => handleDeleteUser(user.id),
-      danger: true
+    ];
+
+    // Add approve/reject based on current approval status
+    if (user.is_approved) {
+      // User is approved, show reject option
+      baseItems.push({
+        key: 'reject',
+        icon: <CloseOutlined />,
+        label: t('admin.userManagement.reject'),
+        onClick: () => handleRejectUser(user.id)
+      });
+    } else {
+      // User is not approved, show approve option
+      baseItems.push({
+        key: 'approve',
+        icon: <CheckOutlined />,
+        label: t('admin.userManagement.approve'),
+        onClick: () => handleApproveUser(user.id)
+      });
     }
-  ];
+
+    // Add divider and delete option
+    baseItems.push(
+      { type: 'divider' },
+      {
+        key: 'delete',
+        icon: <DeleteOutlined />,
+        label: t('admin.userManagement.deleteUser'),
+        onClick: () => handleDeleteUser(user.id),
+        danger: true
+      }
+    );
+
+    return baseItems;
+  };
 
   const columns = [
     {
@@ -226,8 +240,8 @@ const UserManagementPage = () => {
       key: 'username',
       render: (text, record) => (
         <Space>
-          <Avatar 
-            src={record.avatar} 
+          <Avatar
+            src={record.avatar}
             icon={<UserOutlined />}
             size="small"
           />
@@ -259,15 +273,14 @@ const UserManagementPage = () => {
           <Option value={USER_ROLES.ADMIN}>{t('admin.userManagement.admin')}</Option>
           <Option value={USER_ROLES.MODERATOR}>{t('admin.userManagement.moderator')}</Option>
           <Option value={USER_ROLES.RESEARCHER}>{t('admin.userManagement.researcher')}</Option>
-          <Option value={USER_ROLES.GUEST}>{t('admin.userManagement.guest')}</Option>
         </Select>
       ),
     },
     {
       title: t('admin.userManagement.status'),
-      dataIndex: 'status',
-      key: 'status',
-      render: (status) => getStatusTag(status),
+      dataIndex: 'is_approved', // Changed from 'status'
+      key: 'is_approved',
+      render: (is_approved, record) => getStatusTag(record), // Pass the whole record
     },
     {
       title: t('admin.userManagement.registeredOn'),
@@ -286,25 +299,29 @@ const UserManagementPage = () => {
       key: 'actions',
       render: (_, record) => (
         <Space>
-          {record.status === USER_STATUS.PENDING && (
+          {/* Show quick action buttons for pending users */}
+          {!record.is_approved && (
             <>
               <Tooltip title={t('admin.userManagement.approve')}>
                 <Button
                   type="primary"
-                  size="small"
+                  size="large"
                   icon={<CheckOutlined />}
                   onClick={() => handleApproveUser(record.id)}
                 />
               </Tooltip>
-              <Tooltip title={t('admin.userManagement.reject')}>
-                <Button
-                  danger
-                  size="small"
-                  icon={<CloseOutlined />}
-                  onClick={() => handleRejectUser(record.id)}
-                />
-              </Tooltip>
             </>
+          )}
+          {/* Show reject button for approved users */}
+          {record.is_approved && (
+            <Tooltip title={t('admin.userManagement.reject')}>
+              <Button
+                danger
+                size="large"
+                icon={<CloseOutlined />}
+                onClick={() => handleRejectUser(record.id)}
+              />
+            </Tooltip>
           )}
           <Dropdown
             menu={{ items: getActionMenuItems(record) }}
@@ -337,9 +354,9 @@ const UserManagementPage = () => {
         </div>
       </div>
 
-      {/* Statistics Cards */}
+      {/* Statistics Cards - Updated to show Total, Approved, and Not Approved */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card loading={statsLoading}>
             <Statistic
               title={t('admin.userManagement.totalUsers')}
@@ -365,24 +382,11 @@ const UserManagementPage = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card loading={statsLoading}>
             <Statistic
-              title={t('admin.userManagement.pendingApprovals')}
-              value={pendingApprovalsCount.value}
-              prefix={<ExclamationCircleOutlined />}
-              valueStyle={{
-                color: '#faad14',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title={t('admin.userManagement.activeUsers')}
-              value={activeUsersCount.value}
+              title={t('admin.userManagement.approvedUsers')}
+              value={approvedUsersCount.value}
               prefix={<CheckOutlined />}
               valueStyle={{
                 color: '#52c41a',
@@ -391,14 +395,14 @@ const UserManagementPage = () => {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card loading={statsLoading}>
             <Statistic
-              title={t('admin.userManagement.newRegistrations')}
-              value={newRegistrationsCount.value}
-              prefix={<UserOutlined />}
+              title={t('admin.userManagement.notApprovedUsers')}
+              value={notApprovedUsersCount.value}
+              prefix={<ExclamationCircleOutlined />}
               valueStyle={{
-                color: '#722ed1',
+                color: '#faad14',
                 transition: 'all 0.3s ease'
               }}
             />
@@ -443,9 +447,8 @@ const UserManagementPage = () => {
               onChange={setStatusFilter}
             >
               <Option value="">{t('admin.userManagement.allStatuses')}</Option>
-              <Option value={USER_STATUS.PENDING}>{t('admin.userManagement.pending')}</Option>
-              <Option value={USER_STATUS.APPROVED}>{t('admin.userManagement.approved')}</Option>
-              <Option value={USER_STATUS.REJECTED}>{t('admin.userManagement.rejected')}</Option>
+              <Option value="pending">{t('admin.userManagement.pending')}</Option>
+              <Option value="approved">{t('admin.userManagement.approved')}</Option>
             </Select>
           </Col>
         </Row>

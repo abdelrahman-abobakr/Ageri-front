@@ -81,7 +81,9 @@ export const adminService = {
 
   approveUser: async (id) => {
     try {
-      const response = await apiClient.post(API_ENDPOINTS.AUTH.APPROVE_USER(id));
+      const response = await apiClient.post(API_ENDPOINTS.AUTH.APPROVE_USER(id), {
+        is_approved: true  // Send the required field
+      });
       return response.data;
     } catch (error) {
       console.error('Failed to approve user:', error);
@@ -92,9 +94,8 @@ export const adminService = {
 
   rejectUser: async (id) => {
     try {
-      const response = await apiClient.patch(API_ENDPOINTS.AUTH.USER_DETAIL(id), {
+      const response = await apiClient.patch(API_ENDPOINTS.AUTH.APPROVE_USER(id), {
         is_approved: false,
-        status: 'rejected'
       });
       return response.data;
     } catch (error) {

@@ -35,7 +35,7 @@ const profileService = {
     }
 
     console.log('📤 ProfileService: Making PATCH request to auth/profiles/me/');
-    const response = await apiClient.patch('auth/profiles/me/', data, config);
+    const response = await apiClient.patch('api/auth/profiles/me/', data, config);
     console.log('📥 ProfileService: Response status:', response.status);
     console.log('📥 ProfileService: Response headers:', response.headers);
     console.log('📥 ProfileService: Received response data:', JSON.stringify(response.data, null, 2));

@@ -3,7 +3,6 @@ export const USER_ROLES = {
   ADMIN: 'admin',
   MODERATOR: 'moderator',
   RESEARCHER: 'researcher',
-  GUEST: 'guest',
 };
 
 // Publication status
