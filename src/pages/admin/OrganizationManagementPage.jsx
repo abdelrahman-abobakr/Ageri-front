@@ -78,6 +78,10 @@ const OrganizationManagementPage = () => {
   const [assignmentFormVisible, setAssignmentFormVisible] = useState(false);
   const [assignmentForm] = Form.useForm();
 
+  // User management for department heads
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+
   // Real-time organization statistics - temporarily disabled for debugging
   // const { stats: orgStats, loading: statsLoading, refresh: refreshStats } = useRealTimeStats('organization', 30000);
   const statsLoading = false;
@@ -121,6 +125,7 @@ const OrganizationManagementPage = () => {
       const response = await organizationService.getDepartments(params);
       const departmentsData = response.results || response || [];
       console.log('📊 Departments data received:', departmentsData);
+      console.log('📊 First department structure:', departmentsData[0]);
       setDepartments(departmentsData);
       setTotal(response.count || departmentsData.length || 0);
     } catch (error) {
@@ -203,19 +208,55 @@ const OrganizationManagementPage = () => {
     }
   };
 
-  const handleCreateDepartment = () => {
+  // Load available users for department head selection
+  const loadAvailableUsers = async () => {
+    try {
+      setUsersLoading(true);
+      const users = await authService.getAllUsers();
+      const usersData = users.results || users || [];
+      setAvailableUsers(usersData);
+    } catch (error) {
+      console.error('Failed to load users:', error);
+      setAvailableUsers([]);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const handleCreateDepartment = async () => {
     setEditingItem(null);
     form.resetFields();
+    await loadAvailableUsers(); // Load users for new department form
     setModalVisible(true);
   };
 
-  const handleEditDepartment = (department) => {
-    setEditingItem(department);
-    form.setFieldsValue({
-      name: department.name,
-      description: department.description
-    });
-    setModalVisible(true);
+  const handleEditDepartment = async (department) => {
+    try {
+      setLoading(true);
+
+      // Load users for the dropdown
+      await loadAvailableUsers();
+
+      // Fetch full department details from API
+      const fullDepartmentData = await organizationService.getDepartmentById(department.id);
+      console.log('Full department data:', fullDepartmentData);
+
+      setEditingItem(fullDepartmentData);
+
+      // Set form values - use the head's ID for the select dropdown
+      form.setFieldsValue({
+        name: fullDepartmentData.name,
+        description: fullDepartmentData.description,
+        head: fullDepartmentData.head ? fullDepartmentData.head.id : undefined
+      });
+
+      setModalVisible(true);
+    } catch (error) {
+      console.error('Failed to load department details:', error);
+      message.error('فشل في تحميل تفاصيل القسم');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeleteDepartment = async (department) => {
@@ -238,17 +279,29 @@ const OrganizationManagementPage = () => {
 
   const handleSaveDepartment = async (values) => {
     try {
+      console.log('Form values submitted:', values);
+
+      const departmentData = {
+        name: values.name,
+        description: values.description,
+        head_id: values.head, // This will be the user ID
+      };
+
+      console.log('Transformed department data:', departmentData);
+
       if (editingItem) {
-        await organizationService.updateDepartment(editingItem.id, values);
+        await organizationService.updateDepartment(editingItem.id, departmentData);
         message.success('تم تحديث القسم بنجاح');
       } else {
-        await organizationService.createDepartment(values);
+        await organizationService.createDepartment(departmentData);
         message.success('تم إنشاء القسم بنجاح');
       }
       setModalVisible(false);
       loadDepartments();
       refreshStats();
     } catch (error) {
+      console.error('Failed to save department:', error);
+      console.error('Error details:', error.response?.data);
       message.error('فشل في حفظ القسم');
     }
   };
@@ -554,15 +607,46 @@ const OrganizationManagementPage = () => {
                     ellipsis: true,
                   },
                   {
+                    title: 'رئيس القسم',
+                    dataIndex: 'head',
+                    key: 'head',
+                    render: (head) => (
+                      <div>
+                        {head ? (
+                          <>
+                            <div style={{ fontWeight: 500 }}>{head.full_name}</div>
+                            <Text type="secondary" style={{ fontSize: '12px' }}>
+                              {head.email}
+                            </Text>
+                          </>
+                        ) : (
+                          <Text type="secondary">غير محدد</Text>
+                        )}
+                      </div>
+                    ),
+                  },
+                  {
                     title: 'عدد المختبرات',
-                    dataIndex: 'labs',
-                    key: 'labs',
+                    dataIndex: 'total_labs',
+                    key: 'total_labs',
                     render: (labs) => (
                       <Tag color="green">
                         <ExperimentOutlined style={{ marginRight: '4px' }} />
-                        {Array.isArray(labs) ? labs.length : 0}
+                        {labs || 0}
                       </Tag>
                     ),
+                  },
+                  {
+                    title: 'الحالة',
+                    dataIndex: 'status',
+                    key: 'status',
+                    render: (status) => getStatusTag(status),
+                  },
+                  {
+                    title: 'تاريخ الإنشاء',
+                    dataIndex: 'created_at',
+                    key: 'created_at',
+                    render: (date) => formatDate(date),
                   },
                   {
                     title: 'الإجراءات',
@@ -1037,13 +1121,41 @@ const OrganizationManagementPage = () => {
 
           <Row gutter={16}>
             <Col xs={24} md={12}>
-              <Form.Item
-                name={activeTab === 'departments' ? 'head' : 'supervisor'}
-                label={activeTab === 'departments' ? 'رئيس القسم' : 'مشرف المختبر'}
-                rules={[{ required: true, message: activeTab === 'departments' ? 'رئيس القسم مطلوب' : 'مشرف المختبر مطلوب' }]}
-              >
-                <Input placeholder={activeTab === 'departments' ? 'أدخل اسم رئيس القسم' : 'أدخل اسم مشرف المختبر'} />
-              </Form.Item>
+              {activeTab === 'departments' ? (
+                <Form.Item
+                  name="head"
+                  label="رئيس القسم"
+                  rules={[{ required: true, message: 'رئيس القسم مطلوب' }]}
+                >
+                  <Select
+                    placeholder="اختر رئيس القسم"
+                    loading={usersLoading}
+                    showSearch
+                    optionFilterProp="label"  // Changed to filter by label instead of children
+                    filterOption={(input, option) =>
+                      option.label.toLowerCase().includes(input.toLowerCase())
+                    }
+                  >
+                    {availableUsers.map(user => (
+                      <Option
+                        key={user.id}
+                        value={user.id}
+                        label={`${user.full_name} (${user.email})`}  // Add label prop
+                      >
+                        {user.full_name} ({user.email})
+                      </Option>
+                    ))}
+                  </Select>
+                </Form.Item>
+              ) : (
+                <Form.Item
+                  name="supervisor"
+                  label="مشرف المختبر"
+                  rules={[{ required: true, message: 'مشرف المختبر مطلوب' }]}
+                >
+                  <Input placeholder="أدخل اسم مشرف المختبر" />
+                </Form.Item>
+              )}
             </Col>
             {activeTab === 'labs' && (
               <Col xs={24} md={12}>
@@ -1105,8 +1217,6 @@ const OrganizationManagementPage = () => {
               </Col>
             </Row>
           )}
-
-
 
           {activeTab === 'labs' && (
             <Form.Item
