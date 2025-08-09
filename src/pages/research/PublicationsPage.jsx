@@ -47,7 +47,6 @@ const PublicationsListPage = () => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const [filterDrawerVisible, setFilterDrawerVisible] = useState(false);
   const [statistics, setStatistics] = useState(null);
-  const [refreshing, setRefreshing] = useState(false);
 
   // New state for view modal
   const [viewModalVisible, setViewModalVisible] = useState(false);
@@ -149,15 +148,6 @@ const PublicationsListPage = () => {
     setFilters(prev => ({ ...prev, ...newFilters }));
   };
 
-  // Handle search
-  const handleSearch = (value) => {
-    console.log('🔍 Search triggered with value:', value);
-    setFilters(prev => ({ ...prev, search: value }));
-    setPagination(prev => ({ ...prev, current: 1 }));
-
-    loadPublications({ page: 1, search: value });
-  };
-
   // Handle advanced filter
   const handleAdvancedFilter = (values) => {
     const filterParams = {};
@@ -197,19 +187,10 @@ const PublicationsListPage = () => {
     setFilterDrawerVisible(false);
   };
 
-  // Clear filters
-  const clearFilters = () => {
-    setFilters({});
-    filterForm.resetFields();
-    setPagination(prev => ({ ...prev, current: 1 }));
-  };
-
   // Handle refresh
   const handleRefresh = async () => {
-    setRefreshing(true);
     await loadPublications();
     await loadStatistics();
-    setRefreshing(false);
     message.success(t('data_refreshed'));
   };
 
@@ -322,13 +303,21 @@ const PublicationsListPage = () => {
     return moment(dateString).format('MMMM DD, YYYY');
   };
 
-  // Table columns
-  const capitalize = (str) => {
-    if (!str || typeof str !== 'string') return str;
-    return str.charAt(0).toUpperCase() + str.slice(1);
+  const handleApprovePublication = async (id) => {
+    try {
+      await researchService.approvePublication(id);
+      message.success(t('publication_approved_successfully'));
+      loadPublications();
+      loadStatistics();
+    } catch (error) {
+      console.error('❌ Error approving publication:', error);
+      message.error(t('failed_to_approve_publication'));
+    }
   };
 
-
+  const handleDeletePublication = async (id) => {
+    handleDelete(id, publications.find(p => p.id === id)?.title);
+  };
 
   const columns = [
     {

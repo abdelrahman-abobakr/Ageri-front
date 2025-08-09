@@ -32,8 +32,20 @@ apiClient.interceptors.request.use(
 // Response interceptor for token refresh
 apiClient.interceptors.response.use(
   (response) => {
-    // تسجيل الاستجابات الناجحة
-    console.log(`API Response: ${response.status} ${response.config.url}`);
+    // تسجيل تفاصيل الاستجابة الكاملة
+    console.log('API Response Details:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.config.url,
+      method: response.config.method?.toUpperCase(),
+      headers: response.headers,
+      data: response.data,
+      config: response.config
+    });
+
+    // أو إذا كنت تريد تسجيل الكائن كاملاً
+    // console.log('Complete API Response:', response);
+
     return response;
   },
   async (error) => {
@@ -107,7 +119,17 @@ publicApiClient.interceptors.request.use(
 
 publicApiClient.interceptors.response.use(
   (response) => {
-    console.log(`Public API Response: ${response.status} ${response.config.url}`);
+    // تسجيل تفاصيل الاستجابة الكاملة للعميل العام
+    console.log('Public API Response Details:', {
+      status: response.status,
+      statusText: response.statusText,
+      url: response.config.url,
+      method: response.config.method?.toUpperCase(),
+      headers: response.headers,
+      data: response.data,
+      config: response.config
+    });
+
     return response;
   },
   (error) => {

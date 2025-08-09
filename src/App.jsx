@@ -26,7 +26,6 @@ import UnauthorizedPage from './pages/auth/UnauthorizedPage';
 import HomePage from './pages/public/HomePage';
 import CoursesPage from './pages/public/CoursesPage';
 import ServicesPage from './pages/public/ServicesPage';
-import TestPage from './pages/public/TestPage';
 import ResearcherProfilePage from './pages/public/ResearcherProfilePage';
 import LabDetailPage from './pages/public/LabDetailPage';
 import AnnouncementDetailPage from './pages/public/AnnouncementDetailPage';
@@ -127,7 +126,6 @@ const AppContent = () => {
               <Route path="/posts/:id" element={<PostDetailPage />} />
               <Route path="/enrollment-lookup" element={<EnrollmentLookupPage />} />
               <Route path="/announcements/:id" element={<AnnouncementDetailPage />} />
-              <Route path="/test" element={<TestPage />} />
             </Route>
 
             {/* Authenticated routes with main layout */}

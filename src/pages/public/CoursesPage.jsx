@@ -29,6 +29,10 @@ const CoursesPage = () => {
   const [selectedCourse, setSelectedCourse] = useState(null);
   const [enrollmentResult, setEnrollmentResult] = useState(null);
 
+  // Details modal states
+  const [detailsModalVisible, setDetailsModalVisible] = useState(false);
+  const [selectedCourseForDetails, setSelectedCourseForDetails] = useState(null);
+
   const fetchCourses = async (pageNum = 1, currentFilters = filters) => {
     setLoading(true);
     setError("");
@@ -50,8 +54,8 @@ const CoursesPage = () => {
       console.error('❌ Failed to load courses:', err);
       setError(
         err.response?.data?.message ||
-          err.response?.data?.detail ||
-          "Failed to load courses."
+        err.response?.data?.detail ||
+        "Failed to load courses."
       );
       message.error('فشل في تحميل الدورات');
     } finally {
@@ -96,6 +100,17 @@ const CoursesPage = () => {
     };
     const config = typeConfig[type] || { color: 'default', text: type };
     return <Tag color={config.color}>{config.text}</Tag>;
+  };
+
+  // Details modal handlers
+  const handleShowDetails = (course) => {
+    setSelectedCourseForDetails(course);
+    setDetailsModalVisible(true);
+  };
+
+  const handleDetailsModalClose = () => {
+    setDetailsModalVisible(false);
+    setSelectedCourseForDetails(null);
   };
 
   // Enrollment handlers
@@ -201,6 +216,7 @@ const CoursesPage = () => {
           <Text type="secondary">لا توجد دورات متاحة حالياً</Text>
         </Card>
       )}
+
       {/* Courses Grid */}
       {!loading && !error && courses.length > 0 && (
         <Row gutter={[24, 24]}>
@@ -208,7 +224,7 @@ const CoursesPage = () => {
             <Col xs={24} sm={12} lg={8} key={course.id}>
               <Card
                 hoverable
-                style={{ height: '100%' }}
+                style={{ height: '100%', display: 'flex', flexDirection: 'column' }}
                 cover={
                   course.featured_image && (
                     <img
@@ -219,89 +235,106 @@ const CoursesPage = () => {
                     />
                   )
                 }
-                actions={[
-                  <Button type="primary" size="small">
-                    عرض التفاصيل
-                  </Button>,
-                  <Button
-                    size="small"
-                    icon={<FormOutlined />}
-                    onClick={() => handleEnrollClick(course)}
-                    disabled={
-                      course.current_enrollment >= course.max_participants ||
-                      new Date(course.registration_deadline) < new Date()
-                    }
-                  >
-                    {course.current_enrollment >= course.max_participants
-                      ? 'مكتملة العدد'
-                      : new Date(course.registration_deadline) < new Date()
-                      ? 'انتهت فترة التسجيل'
-                      : 'التسجيل'
-                    }
-                  </Button>
-                ]}
               >
-                <Card.Meta
-                  title={
-                    <div>
-                      <div style={{ marginBottom: '8px' }}>
-                        {course.course_name}
-                        {course.is_featured && (
-                          <Tag color="gold" style={{ marginLeft: '8px' }}>
-                            مميز
-                          </Tag>
-                        )}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+                  <Card.Meta
+                    title={
+                      <div>
+                        <div style={{ marginBottom: '8px' }}>
+                          {course.course_name}
+                          {course.is_featured && (
+                            <Tag color="gold" style={{ marginLeft: '8px' }}>
+                              مميز
+                            </Tag>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '12px', fontWeight: 'normal', color: '#666' }}>
+                          كود: {course.course_code}
+                        </div>
                       </div>
-                      <div style={{ fontSize: '12px', fontWeight: 'normal', color: '#666' }}>
-                        كود: {course.course_code}
-                      </div>
-                    </div>
-                  }
-                  description={
-                    <div>
-                      <Paragraph ellipsis={{ rows: 2 }} style={{ marginBottom: '12px' }}>
-                        {course.description}
-                      </Paragraph>
+                    }
+                    description={
+                      <div>
+                        <Paragraph ellipsis={{ rows: 2 }} style={{ marginBottom: '12px' }}>
+                          {course.description}
+                        </Paragraph>
 
-                      <div style={{ marginBottom: '8px' }}>
-                        {getTrainingTypeTag(course.type)}
-                      </div>
+                        <div style={{ marginBottom: '8px' }}>
+                          {getTrainingTypeTag(course.type)}
+                        </div>
 
-                      <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
-                        <UserOutlined style={{ marginRight: '4px' }} />
-                        المدرب: {course.instructor || 'غير محدد'}
-                      </div>
+                        <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                          <UserOutlined style={{ marginRight: '4px' }} />
+                          المدرب: {course.instructor || 'غير محدد'}
+                        </div>
 
-                      <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
-                        <ClockCircleOutlined style={{ marginRight: '4px' }} />
-                        {course.training_hours} ساعة تدريبية
-                      </div>
+                        <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                          <ClockCircleOutlined style={{ marginRight: '4px' }} />
+                          {course.training_hours} ساعة تدريبية
+                        </div>
 
-                      <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
-                        <CalendarOutlined style={{ marginRight: '4px' }} />
-                        من {course.start_date} إلى {course.end_date}
-                      </div>
+                        <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
+                          <CalendarOutlined style={{ marginRight: '4px' }} />
+                          من {course.start_date} إلى {course.end_date}
+                        </div>
 
-                      <div style={{
-                        fontSize: '14px',
-                        fontWeight: 'bold',
-                        color: course.cost === 0 ? '#52c41a' : '#1890ff',
-                        marginBottom: '8px'
-                      }}>
-                        {course.cost === 0 ? 'مجاني' : `${course.cost} جنيه`}
-                      </div>
+                        <div style={{
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          color: course.cost === 0 ? '#52c41a' : '#1890ff',
+                          marginBottom: '8px'
+                        }}>
+                          {course.cost === 0 ? 'مجاني' : `${course.cost} جنيه`}
+                        </div>
 
-                      <div style={{ fontSize: '12px', color: '#999' }}>
-                        المشاركون: {course.current_enrollment || 0} / {course.max_participants}
+                        <div style={{ fontSize: '12px', color: '#999' }}>
+                          المشاركون: {course.current_enrollment || 0} / {course.max_participants}
+                        </div>
                       </div>
-                    </div>
-                  }
-                />
+                    }
+                  />
+
+                  {/* Buttons inside card content */}
+                  <div style={{
+                    marginTop: 'auto',
+                    paddingTop: '16px',
+                    display: 'flex',
+                    gap: '8px',
+                    justifyContent: 'space-between'
+                  }}>
+                    <Button
+                      type="primary"
+                      size="small"
+                      style={{ flex: 1 }}
+                      onClick={() => handleShowDetails(course)}
+                    >
+                      عرض التفاصيل
+                    </Button>
+                    <Button
+                      size="small"
+                      icon={<FormOutlined />}
+                      onClick={() => handleEnrollClick(course)}
+                      disabled={
+                        course.current_enrollment >= course.max_participants ||
+                        new Date(course.registration_deadline) < new Date()
+                      }
+                      style={{ flex: 1 }}
+                    >
+                      {course.current_enrollment >= course.max_participants
+                        ? 'مكتملة'
+                        : new Date(course.registration_deadline) < new Date()
+                          ? 'انتهى التسجيل'
+                          : 'التسجيل'
+                      }
+                    </Button>
+                  </div>
+                </div>
               </Card>
             </Col>
           ))}
         </Row>
       )}
+
       {/* Pagination */}
       {!loading && !error && courses.length > 0 && (
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
@@ -336,6 +369,195 @@ const CoursesPage = () => {
           </Row>
         </div>
       )}
+
+      {/* Course Details Modal */}
+      <Modal
+        title="تفاصيل الدورة"
+        open={detailsModalVisible}
+        onCancel={handleDetailsModalClose}
+        footer={[
+          <Button key="close" onClick={handleDetailsModalClose}>
+            إغلاق
+          </Button>,
+          <Button
+            key="enroll"
+            type="primary"
+            icon={<FormOutlined />}
+            onClick={() => {
+              handleDetailsModalClose();
+              handleEnrollClick(selectedCourseForDetails);
+            }}
+            disabled={
+              selectedCourseForDetails?.current_enrollment >= selectedCourseForDetails?.max_participants ||
+              new Date(selectedCourseForDetails?.registration_deadline) < new Date()
+            }
+          >
+            {selectedCourseForDetails?.current_enrollment >= selectedCourseForDetails?.max_participants
+              ? 'مكتملة العدد'
+              : new Date(selectedCourseForDetails?.registration_deadline) < new Date()
+                ? 'انتهت فترة التسجيل'
+                : 'التسجيل في الدورة'
+            }
+          </Button>
+        ]}
+        width={800}
+      >
+        {selectedCourseForDetails && (
+          <div>
+            {/* Course Header */}
+            <div style={{
+              textAlign: 'center',
+              marginBottom: '24px',
+              padding: '20px',
+              background: 'linear-gradient(135deg, #1890ff 0%, #40a9ff 100%)',
+              borderRadius: '8px',
+              color: 'white'
+            }}>
+              <Title level={3} style={{ color: 'white', margin: 0 }}>
+                {selectedCourseForDetails.course_name}
+              </Title>
+              <Text style={{ color: 'rgba(255,255,255,0.9)' }}>
+                كود الدورة: {selectedCourseForDetails.course_code}
+              </Text>
+              <div style={{ marginTop: '8px' }}>
+                {getTrainingTypeTag(selectedCourseForDetails.type)}
+                {selectedCourseForDetails.is_featured && (
+                  <Tag color="gold" style={{ marginLeft: '8px' }}>مميز</Tag>
+                )}
+              </div>
+            </div>
+
+            {/* Course Description */}
+            <div style={{ marginBottom: '24px' }}>
+              <Title level={5}>وصف الدورة</Title>
+              <Paragraph>{selectedCourseForDetails.description}</Paragraph>
+            </div>
+
+            {/* Course Details Grid */}
+            <Row gutter={[16, 16]}>
+              <Col span={12}>
+                <Card size="small">
+                  <div style={{ textAlign: 'center' }}>
+                    <UserOutlined style={{ fontSize: '24px', color: '#1890ff', marginBottom: '8px' }} />
+                    <div>
+                      <Text strong>المدرب</Text>
+                      <br />
+                      <Text>{selectedCourseForDetails.instructor || 'غير محدد'}</Text>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+
+              <Col span={12}>
+                <Card size="small">
+                  <div style={{ textAlign: 'center' }}>
+                    <ClockCircleOutlined style={{ fontSize: '24px', color: '#52c41a', marginBottom: '8px' }} />
+                    <div>
+                      <Text strong>ساعات التدريب</Text>
+                      <br />
+                      <Text>{selectedCourseForDetails.training_hours} ساعة</Text>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+
+              <Col span={12}>
+                <Card size="small">
+                  <div style={{ textAlign: 'center' }}>
+                    <CalendarOutlined style={{ fontSize: '24px', color: '#fa8c16', marginBottom: '8px' }} />
+                    <div>
+                      <Text strong>تاريخ البداية</Text>
+                      <br />
+                      <Text>{selectedCourseForDetails.start_date}</Text>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+
+              <Col span={12}>
+                <Card size="small">
+                  <div style={{ textAlign: 'center' }}>
+                    <CalendarOutlined style={{ fontSize: '24px', color: '#f5222d', marginBottom: '8px' }} />
+                    <div>
+                      <Text strong>تاريخ النهاية</Text>
+                      <br />
+                      <Text>{selectedCourseForDetails.end_date}</Text>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+
+              <Col span={12}>
+                <Card size="small">
+                  <div style={{ textAlign: 'center' }}>
+                    <Text style={{
+                      fontSize: '24px',
+                      color: selectedCourseForDetails.cost === 0 ? '#52c41a' : '#1890ff',
+                      marginBottom: '8px',
+                      display: 'block'
+                    }}>
+                      💰
+                    </Text>
+                    <div>
+                      <Text strong>التكلفة</Text>
+                      <br />
+                      <Text style={{
+                        color: selectedCourseForDetails.cost === 0 ? '#52c41a' : '#1890ff',
+                        fontSize: '16px',
+                        fontWeight: 'bold'
+                      }}>
+                        {selectedCourseForDetails.cost === 0 ? 'مجاني' : `${selectedCourseForDetails.cost} جنيه`}
+                      </Text>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+
+              <Col span={12}>
+                <Card size="small">
+                  <div style={{ textAlign: 'center' }}>
+                    <UserOutlined style={{ fontSize: '24px', color: '#722ed1', marginBottom: '8px' }} />
+                    <div>
+                      <Text strong>المشاركون</Text>
+                      <br />
+                      <Text>
+                        {selectedCourseForDetails.current_enrollment || 0} / {selectedCourseForDetails.max_participants}
+                      </Text>
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            </Row>
+
+            {/* Registration Status */}
+            <div style={{
+              marginTop: '24px',
+              padding: '16px',
+              borderRadius: '8px',
+              background: selectedCourseForDetails.current_enrollment >= selectedCourseForDetails.max_participants ||
+                new Date(selectedCourseForDetails.registration_deadline) < new Date()
+                ? '#fff2f0' : '#f6ffed',
+              border: selectedCourseForDetails.current_enrollment >= selectedCourseForDetails.max_participants ||
+                new Date(selectedCourseForDetails.registration_deadline) < new Date()
+                ? '1px solid #ffccc7' : '1px solid #b7eb8f'
+            }}>
+              <Text strong style={{
+                color: selectedCourseForDetails.current_enrollment >= selectedCourseForDetails.max_participants ||
+                  new Date(selectedCourseForDetails.registration_deadline) < new Date()
+                  ? '#cf1322' : '#389e0d'
+              }}>
+                حالة التسجيل: {' '}
+                {selectedCourseForDetails.current_enrollment >= selectedCourseForDetails.max_participants
+                  ? 'الدورة مكتملة العدد'
+                  : new Date(selectedCourseForDetails.registration_deadline) < new Date()
+                    ? 'انتهت فترة التسجيل'
+                    : 'التسجيل متاح'
+                }
+              </Text>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       {/* Enrollment Modal */}
       <Modal

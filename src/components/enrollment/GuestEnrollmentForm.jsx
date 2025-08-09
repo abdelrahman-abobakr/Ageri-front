@@ -286,50 +286,9 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
           />
         </Form.Item>
 
-        {/* Important Notice */}
-        <Alert
-          message="تنبيه مهم"
-          description="لن يتم إرسال رسالة تأكيد عبر البريد الإلكتروني. سيتم عرض جميع تفاصيل التسجيل على الشاشة بعد إتمام العملية. يرجى حفظ هذه المعلومات للرجوع إليها لاحقاً."
-          type="warning"
-          showIcon
-          style={{ marginBottom: '24px' }}
-        />
 
-        {/* Test Backend Button */}
-        <Form.Item>
-          <Button
-            type="default"
-            onClick={async () => {
-              try {
-                console.log('🧪 Testing backend endpoint...');
-                const testUrl = `http://localhost:8000/api/training/courses/${course.id}/enroll/`;
-                console.log('🧪 Test URL:', testUrl);
 
-                // Test with a simple GET first to see if endpoint exists
-                const response = await fetch(testUrl.replace('/enroll/', '/'), {
-                  method: 'GET',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  }
-                });
 
-                console.log('🧪 Course endpoint status:', response.status);
-
-                if (response.status === 200) {
-                  message.success('✅ Backend is reachable');
-                } else {
-                  message.error(`❌ Backend returned: ${response.status}`);
-                }
-              } catch (error) {
-                console.error('🧪 Backend test failed:', error);
-                message.error('❌ Cannot reach backend');
-              }
-            }}
-            style={{ marginBottom: '16px' }}
-          >
-            اختبار الاتصال بالخادم
-          </Button>
-        </Form.Item>
 
         {/* Form Actions */}
         <Form.Item>

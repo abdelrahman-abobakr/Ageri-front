@@ -41,7 +41,6 @@ const { Option } = Select;
 
 const AnalyticsPage = () => {
   const { t } = useTranslation();
-  const [loading, setLoading] = useState(false);
   const [dateRange, setDateRange] = useState('last30Days');
 
   // Real-time statistics with multiple data sources
@@ -56,6 +55,7 @@ const AnalyticsPage = () => {
   const publicationsCount = useAnimatedCounter(dashboardStats?.content?.totalPublications || 0);
   const coursesCount = useAnimatedCounter(dashboardStats?.content?.totalCourses || 0);
   const servicesCount = useAnimatedCounter(dashboardStats?.content?.totalServices || 0);
+  const announcementsCount = useAnimatedCounter(dashboardStats?.content?.totalAnnouncements || 0);
 
   // Use system stats from real-time hook
   const systemHealth = systemStats || {
@@ -68,9 +68,9 @@ const AnalyticsPage = () => {
     networkTraffic: 89
   };
 
-  const [userActivityData, setUserActivityData] = useState([]);
-  const [contentMetrics, setContentMetrics] = useState([]);
-  const [topContent, setTopContent] = useState([]);
+  const [userActivityData] = useState([]);
+  const [contentMetrics] = useState([]);
+  const [topContent] = useState([]);
 
   useEffect(() => {
     // Refresh data when date range changes
@@ -208,7 +208,7 @@ const AnalyticsPage = () => {
         </Row>
       </Card>
 
-      <Spin spinning={dashboardLoading}>
+      <Spin spinning={dashboardLoading || systemLoading}>
         {/* Overview Statistics */}
         <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
           <Col xs={24} sm={12} md={6}>

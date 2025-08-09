@@ -10,23 +10,14 @@ import {
   Card,
   Statistic,
   Upload,
-  Tag,
-  Checkbox
+  Tag
 } from 'antd';
 import {
   PlusOutlined,
   EditOutlined,
-  DeleteOutlined,
-  UploadOutlined
+  DeleteOutlined
 } from '@ant-design/icons';
-import {
-  getServices,
-  createService,
-  updateService,
-  deleteService,
-  getCategories,
-  getStatuses
-} from '../../services/servicesApi';
+import { servicesService } from '../../services/servicesService';
 
 const { TextArea } = Input;
 const { Option } = Select;
@@ -37,13 +28,11 @@ const ServicesManagementPage = () => {
   const [visible, setVisible] = useState(false);
   const [form] = Form.useForm();
   const [editingId, setEditingId] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [statuses, setStatuses] = useState([]);
 
  const fetchServices = async () => {
   setLoading(true);
   try {
-    const data = await getServices();
+    const data = await servicesService.getTestServices();
     const formattedData = Array.isArray(data) ? data : data?.results || [];
     setServices(formattedData);
   } catch (error) {
@@ -53,25 +42,11 @@ const ServicesManagementPage = () => {
   }
 };
 
-  const fetchDropdowns = async () => {
-    try {
-      const [cats, stats] = await Promise.all([
-        getCategories(),
-        getStatuses()
-      ]);
-      setCategories(cats);
-      setStatuses(stats);
-    } catch (error) {
-      message.error('حدث خطأ أثناء جلب القوائم');
-    }
-  };
-
   useEffect(() => {
     fetchServices();
-    fetchDropdowns();
   }, []);
 
- const handleSubmit = async () => {
+ const addService = async () => {
   try {
     const values = await form.validateFields();
     setLoading(true);
@@ -80,7 +55,7 @@ const ServicesManagementPage = () => {
 
     if (editingId) {
       try {
-        await updateService(editingId, values);
+        await servicesService.updateTestService(editingId, values);
         message.success('تم تحديث الخدمة بنجاح');
         setServices(prevServices => 
           prevServices.map(service => 
@@ -94,7 +69,7 @@ const ServicesManagementPage = () => {
       }
     } else {
       try {
-        const newService = await createService(values);
+        const newService = await servicesService.createTestService(values);
         message.success('تم إضافة الخدمة بنجاح');
         setServices(prevServices => [...prevServices, newService]);
         setVisible(false);
@@ -114,7 +89,7 @@ const handleApiError = (error) => {
     const data = error.response.data;
     if (typeof data === 'object') {
       const messages = Object.entries(data)
-        .map(([field, errs]) => Array.isArray(errs) ? errs.join(', ') : errs)
+        .map(([, errs]) => Array.isArray(errs) ? errs.join(', ') : errs)
         .join('\n');
       message.error(messages);
     } else {
@@ -124,19 +99,30 @@ const handleApiError = (error) => {
     message.error(error.message || 'حدث خطأ أثناء الحفظ');
   }
 };
-  const handleEdit = (record) => {
-    form.setFieldsValue({
-      ...record,
+  const editService = (record) => {
+    // Ensure proper field mapping for all service fields
+    const formData = {
+      name: record.name || '',
+      service_code: record.service_code || '',
+      category: record.category || '',
+      status: record.status || 'active',
+      base_price: record.base_price || 0,
+      estimated_duration: record.estimated_duration || '',
+      contact_email: record.contact_email || record.email || '',
+      contact_phone: record.contact_phone || record.phone || '',
+      description: record.description || record.short_description || '',
       is_free: record.is_free ? 'true' : 'false'
-    });
+    };
+    
+    form.setFieldsValue(formData);
     setEditingId(record.id);
     setVisible(true);
   };
 
-  const handleDelete = async (id) => {
+  const removeService = async (id) => {
   try {
     setLoading(true);
-    await deleteService(id);
+    await servicesService.deleteTestService(id);
     message.success('تم حذف الخدمة بنجاح');
     setServices(prevServices => prevServices.filter(service => service.id !== id));
   } catch (error) {
@@ -175,7 +161,7 @@ const handleApiError = (error) => {
       title: 'السعر',
       dataIndex: 'base_price',
       key: 'base_price',
-      render: (price) => price ? `${price} ر.س` : 'مجاني',
+      render: (price) => price ? `${price} ج.م` : 'مجاني',
     },
     {
       title: 'المدة المقدرة',
@@ -198,13 +184,15 @@ const handleApiError = (error) => {
         <div>
           <Button
             icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            style={{ marginRight: 8 }}
+            onClick={() => editService(record)}
+            style={{ marginRight: 8, marginLeft: 8 }}
+            size="large"
           />
           <Button
             icon={<DeleteOutlined />}
-            onClick={() => handleDelete(record.id)}
+            onClick={() => removeService(record.id)}
             danger
+            size="large"
           />
         </div>
       ),
@@ -252,7 +240,7 @@ const handleApiError = (error) => {
       <Modal
         title={editingId ? "تعديل الخدمة" : "إضافة خدمة جديدة"}
         open={visible}
-        onOk={handleSubmit}
+        onOk={addService}
         onCancel={handleCancel}
         confirmLoading={loading}
         width={800}
@@ -311,7 +299,7 @@ const handleApiError = (error) => {
               label="السعر الأساسي"
               rules={[{ required: true, message: 'يرجى إدخال سعر الخدمة' }]}
             >
-              <Input type="number" addonAfter="ر.س" />
+              <Input type="number" addonAfter="ج.م" />
             </Form.Item>
 
            
@@ -389,7 +377,6 @@ const handleApiError = (error) => {
               maxCount={1}
             >
               <Button icon={<UploadOutlined />}>رفع ملف</Button>
-            </Upload> */}
           {/* </Form.Item> */}
         </Form>
       </Modal>

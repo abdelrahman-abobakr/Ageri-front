@@ -102,13 +102,7 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
           </Paragraph>
         </div>
 
-        <Alert
-          message="تنبيه مهم: احفظ هذه المعلومات!"
-          description="لن يتم إرسال رسالة تأكيد عبر البريد الإلكتروني. يرجى حفظ تفاصيل التسجيل أدناه للرجوع إليها لاحقاً."
-          type="warning"
-          showIcon
-          style={{ marginTop: '20px' }}
-        />
+
       </Card>
 
       {/* Enrollment ID Card */}
