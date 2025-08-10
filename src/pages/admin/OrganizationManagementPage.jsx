@@ -222,7 +222,6 @@ const OrganizationManagementPage = () => {
       setUsersLoading(false);
     }
   };
-
   const handleCreateDepartment = async () => {
     setEditingItem(null);
     form.resetFields();
@@ -338,28 +337,38 @@ const OrganizationManagementPage = () => {
   };
 
   // Lab Management Handlers
-  const handleCreateLab = () => {
+  const handleCreateLab = async () => {
     setEditingItem(null);
     form.resetFields();
+    await loadAvailableUsers(); // This loads users for the dropdown
     setModalVisible(true);
   };
 
-  const handleEditLab = (lab) => {
-    setEditingItem(lab);
-    form.setFieldsValue({
-      name: lab.name,
-      description: lab.description,
-      department: lab.department_id || lab.department,
-      supervisor: lab.supervisor,
-      specialization: lab.specialization,
-      capacity: lab.capacity,
-      equipment_count: lab.equipment_count,
-      status: lab.status,
-      research_focus: lab.research_focus
-    });
-    setModalVisible(true);
-  };
+  const handleEditLab = async (lab) => {
+    try {
+      setLoading(true);
+      await loadAvailableUsers(); // Load users for dropdown
 
+      const fullLabData = await organizationService.getLabById(lab.id);
+      setEditingItem(fullLabData);
+
+      form.setFieldsValue({
+        name: fullLabData.name,
+        description: fullLabData.description,
+        department_id: fullLabData.department?.id || fullLabData.department_id,
+        head_id: fullLabData.head?.id,
+        specialization: fullLabData.specialization,
+        status: fullLabData.status
+      });
+
+      setModalVisible(true);
+    } catch (error) {
+      console.error('Failed to load lab details:', error);
+      message.error('فشل في تحميل تفاصيل المختبر');
+    } finally {
+      setLoading(false);
+    }
+  };
   const handleDeleteLab = (lab) => {
     Modal.confirm({
       title: 'تأكيد الحذف',
@@ -402,33 +411,213 @@ const OrganizationManagementPage = () => {
 
   const loadAvailableResearchers = async () => {
     try {
+      console.log('🔍 Loading available researchers...');
       const users = await authService.getAllUsers();
-      const researchers = (users.results || users || []).filter(user => user.role === 'researcher');
+      console.log('🔍 All users:', users);
+
+      const usersArray = users.results || users || [];
+      console.log('🔍 Users array:', usersArray);
+
+      // Filter for approved researchers only and those not already in the lab
+      const researchers = usersArray.filter(user => {
+        const isResearcher = user.role === 'researcher' || user.role === 'Researcher';
+        const isApproved = user.is_approved === true; // Only approved researchers
+        const isNotInLab = !labMembers.some(member =>
+          member.id === user.id ||
+          member.researcher_id === user.id ||
+          member.user_id === user.id
+        );
+
+        console.log(`🔍 User ${user.id} (${user.email}):`, {
+          role: user.role,
+          isResearcher,
+          isApproved,
+          isNotInLab,
+          included: isResearcher && isApproved && isNotInLab
+        });
+
+        return isResearcher && isApproved && isNotInLab;
+      });
+
+      console.log('🔍 Filtered approved researchers:', researchers);
       setAvailableResearchers(researchers);
+
+      if (researchers.length === 0) {
+        message.warning('لا يوجد باحثون معتمدون متاحون للتعيين');
+      }
+
     } catch (error) {
-      console.error('Failed to load researchers:', error);
+      console.error('❌ Failed to load researchers:', error);
       setAvailableResearchers([]);
+      message.error('فشل في تحميل قائمة الباحثين');
     }
   };
 
+
   const handleAssignResearcher = async (values) => {
     try {
+      console.log('🔍 Form values received:', values);
+      console.log('🔍 Selected lab:', selectedLab);
+
+      // Validate required data
+      if (!selectedLab || !selectedLab.id) {
+        message.error('لا يوجد مختبر محدد');
+        return;
+      }
+
+      if (!values.researcher_id) {
+        message.error('يرجى اختيار الباحث');
+        return;
+      }
+
+      if (!values.start_date) {
+        message.error('يرجى تحديد تاريخ البداية');
+        return;
+      }
+
+      // Get department_id - this is crucial for the API
+      let departmentId = null;
+      if (selectedLab.department_id) {
+        departmentId = parseInt(selectedLab.department_id);
+      } else if (selectedLab.department?.id) {
+        departmentId = parseInt(selectedLab.department.id);
+      }
+
+      // If we still don't have department_id, try to get it from the labs array
+      if (!departmentId) {
+        const labFromState = labs.find(lab => lab.id === selectedLab.id);
+        if (labFromState?.department_id) {
+          departmentId = parseInt(labFromState.department_id);
+        } else if (labFromState?.department?.id) {
+          departmentId = parseInt(labFromState.department.id);
+        }
+      }
+
+      // If we still don't have department_id, fetch the lab details
+      if (!departmentId) {
+        try {
+          console.log('🔍 Fetching lab details to get department_id...');
+          const labDetails = await organizationService.getLabById(selectedLab.id);
+          console.log('🔍 Lab details:', labDetails);
+
+          if (labDetails.department_id) {
+            departmentId = parseInt(labDetails.department_id);
+          } else if (labDetails.department?.id) {
+            departmentId = parseInt(labDetails.department.id);
+          }
+        } catch (error) {
+          console.error('Failed to fetch lab details:', error);
+        }
+      }
+
+      // Validate that we have department_id
+      if (!departmentId) {
+        message.error('لا يمكن تحديد القسم المرتبط بالمختبر. يرجى المحاولة مرة أخرى.');
+        console.error('❌ Could not determine department_id for lab:', selectedLab);
+        return;
+      }
+
+      console.log('🔍 Determined department_id:', departmentId);
+
+      // Format the date properly
+      const formattedDate = values.start_date;
+      console.log('🔍 Formatted date:', formattedDate);
+
       const assignmentData = {
-        researcher_id: values.researcher_id,
-        lab_id: selectedLab.id,
-        start_date: values.start_date,
+        researcher_id: parseInt(values.researcher_id),
+        lab_id: parseInt(selectedLab.id),
+        department_id: departmentId, // Always include department_id
+        start_date: formattedDate,
         position: values.position || 'Researcher',
         notes: values.notes || `Assignment to ${selectedLab.name} lab`
       };
 
-      await organizationService.createAssignment(assignmentData);
+      console.log('🔍 Final assignment data:', assignmentData);
+
+      // Validate the researcher exists and is available
+      const selectedResearcher = availableResearchers.find(r => r.id === values.researcher_id);
+      if (!selectedResearcher) {
+        message.error('الباحث المحدد غير متوفر');
+        return;
+      }
+
+      // Verify researcher is approved
+      if (!selectedResearcher.is_approved) {
+        message.error('الباحث المحدد غير معتمد بعد');
+        return;
+      }
+
+      console.log('🔍 Selected researcher:', selectedResearcher);
+
+      // Check if researcher is already assigned to this lab
+      const isAlreadyAssigned = labMembers.some(member =>
+        member.id === values.researcher_id || member.researcher_id === values.researcher_id
+      );
+
+      if (isAlreadyAssigned) {
+        message.error('الباحث مُعيّن بالفعل في هذا المختبر');
+        return;
+      }
+
+      // Make the API call
+      const result = await organizationService.createAssignment(assignmentData);
+      console.log('✅ Assignment created successfully:', result);
+
       message.success('تم تعيين الباحث بنجاح');
       loadLabMembers(selectedLab.id);
       setAssignmentFormVisible(false);
       assignmentForm.resetFields();
+
     } catch (error) {
-      console.error('Failed to assign researcher:', error);
-      message.error('فشل في تعيين الباحث');
+      console.error('❌ Assignment creation failed:', error);
+      console.error('❌ Error response:', error.response?.data);
+      console.error('❌ Error status:', error.response?.status);
+
+      // Handle specific error cases
+      if (error.response?.status === 400) {
+        const errorData = error.response.data;
+
+        // Check for specific field errors
+        if (errorData.researcher_id) {
+          if (Array.isArray(errorData.researcher_id)) {
+            if (errorData.researcher_id.some(err => err.includes('must be approved'))) {
+              message.error('يجب الموافقة على الباحث قبل تعيينه');
+            } else if (errorData.researcher_id.some(err => err.includes('not found'))) {
+              message.error('الباحث المحدد غير موجود');
+            } else {
+              message.error(`خطأ في بيانات الباحث: ${errorData.researcher_id[0]}`);
+            }
+          } else {
+            message.error(`خطأ في بيانات الباحث: ${errorData.researcher_id}`);
+          }
+        } else if (errorData.lab_id) {
+          const labError = Array.isArray(errorData.lab_id) ? errorData.lab_id[0] : errorData.lab_id;
+          message.error(`خطأ في بيانات المختبر: ${labError}`);
+        } else if (errorData.department_id) {
+          const deptError = Array.isArray(errorData.department_id) ? errorData.department_id[0] : errorData.department_id;
+          message.error(`خطأ في بيانات القسم: ${deptError}`);
+        } else if (errorData.start_date) {
+          const dateError = Array.isArray(errorData.start_date) ? errorData.start_date[0] : errorData.start_date;
+          message.error(`خطأ في تاريخ البداية: ${dateError}`);
+        } else if (errorData.non_field_errors) {
+          const nonFieldError = Array.isArray(errorData.non_field_errors) ? errorData.non_field_errors[0] : errorData.non_field_errors;
+          message.error(`خطأ: ${nonFieldError}`);
+        } else if (errorData.detail) {
+          message.error(`خطأ: ${errorData.detail}`);
+        } else {
+          // Generic 400 error - show full error data for debugging
+          message.error('بيانات غير صحيحة. يرجى التحقق من جميع الحقول');
+          console.error('Full error data:', errorData);
+        }
+      } else if (error.response?.status === 403) {
+        message.error('ليس لديك صلاحية لإجراء هذا التعيين');
+      } else if (error.response?.status === 404) {
+        message.error('المختبر أو الباحث غير موجود');
+      } else if (error.response?.status === 409) {
+        message.error('الباحث مُعيّن بالفعل في هذا المختبر');
+      } else {
+        message.error('فشل في تعيين الباحث. يرجى المحاولة مرة أخرى');
+      }
     }
   };
 
@@ -490,11 +679,11 @@ const OrganizationManagementPage = () => {
 
       {/* Statistics Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
+        <Col xs={24} sm={12} md={12}>
+          <Card loading={loading}>
             <Statistic
               title="إجمالي الأقسام"
-              value={totalDepartmentsCount.value}
+              value={departments.length}
               prefix={<BankOutlined />}
               valueStyle={{
                 color: '#1890ff',
@@ -504,50 +693,33 @@ const OrganizationManagementPage = () => {
                 <Button
                   type="text"
                   size="small"
-                  icon={<ReloadOutlined spin={totalDepartmentsCount.isAnimating} />}
-                  onClick={refreshStats}
+                  icon={<ReloadOutlined />}
+                  onClick={loadDepartments}
                   style={{ marginLeft: '8px' }}
                 />
               }
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
+        <Col xs={24} sm={12} md={12}>
+          <Card loading={loading}>
             <Statistic
               title="إجمالي المختبرات"
-              value={totalLabsCount.value}
+              value={labs.length}
               prefix={<ExperimentOutlined />}
               valueStyle={{
                 color: '#52c41a',
                 transition: 'all 0.3s ease'
               }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title="إجمالي الموظفين"
-              value={totalStaffCount.value}
-              prefix={<TeamOutlined />}
-              valueStyle={{
-                color: '#faad14',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={6}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title="المشاريع النشطة"
-              value={activeProjectsCount.value}
-              prefix={<SettingOutlined />}
-              valueStyle={{
-                color: '#722ed1',
-                transition: 'all 0.3s ease'
-              }}
+              suffix={
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<ReloadOutlined />}
+                  onClick={loadLabs}
+                  style={{ marginLeft: '8px' }}
+                />
+              }
             />
           </Card>
         </Col>
@@ -590,10 +762,9 @@ const OrganizationManagementPage = () => {
                     title: 'اسم القسم',
                     dataIndex: 'name',
                     key: 'name',
-                    ellipsis: true,
                     render: (text, record) => (
                       <div>
-                        <div style={{ fontWeight: 500, marginBottom: '4px' }}>{text}</div>
+                        <div style={{ fontWeight: 500 }}>{text}</div>
                         <Text type="secondary" style={{ fontSize: '12px' }}>
                           ID: {record.id}
                         </Text>
@@ -601,29 +772,10 @@ const OrganizationManagementPage = () => {
                     ),
                   },
                   {
-                    title: 'الوصف',
-                    dataIndex: 'description',
-                    key: 'description',
-                    ellipsis: true,
-                  },
-                  {
                     title: 'رئيس القسم',
-                    dataIndex: 'head',
-                    key: 'head',
-                    render: (head) => (
-                      <div>
-                        {head ? (
-                          <>
-                            <div style={{ fontWeight: 500 }}>{head.full_name}</div>
-                            <Text type="secondary" style={{ fontSize: '12px' }}>
-                              {head.email}
-                            </Text>
-                          </>
-                        ) : (
-                          <Text type="secondary">غير محدد</Text>
-                        )}
-                      </div>
-                    ),
+                    dataIndex: 'head_name',
+                    key: 'head_name',
+                    render: (head) => head || '-',
                   },
                   {
                     title: 'عدد المختبرات',
@@ -727,56 +879,32 @@ const OrganizationManagementPage = () => {
                     title: 'اسم المختبر',
                     dataIndex: 'name',
                     key: 'name',
-                    ellipsis: true,
                     render: (text, record) => (
                       <div>
-                        <div style={{ fontWeight: 500, marginBottom: '4px' }}>{text}</div>
+                        <div style={{ fontWeight: 500 }}>{text}</div>
                         <Text type="secondary" style={{ fontSize: '12px' }}>
-                          المشرف: {record.supervisor}
+                          ID: {record.id}
                         </Text>
                       </div>
                     ),
                   },
                   {
                     title: 'القسم',
-                    dataIndex: 'department',
-                    key: 'department',
-                    ellipsis: true,
+                    dataIndex: 'department_name',
+                    key: 'department_name',
+                    render: (department) => department || '-',
                   },
                   {
-                    title: 'التخصص',
-                    dataIndex: 'specialization',
-                    key: 'specialization',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'عدد الأجهزة',
-                    dataIndex: 'equipment_count',
-                    key: 'equipment_count',
-                    render: (count) => (
-                      <Tag color="purple">
-                        <SettingOutlined style={{ marginRight: '4px' }} />
-                        {count}
-                      </Tag>
-                    ),
-                  },
-                  {
-                    title: 'السعة',
-                    dataIndex: 'capacity',
-                    key: 'capacity',
-                    render: (capacity) => `${capacity} شخص`,
+                    title: 'المشرف',
+                    dataIndex: 'head_name',
+                    key: 'head_name',
+                    render: (head) => head || '-',
                   },
                   {
                     title: 'الحالة',
                     dataIndex: 'status',
                     key: 'status',
                     render: (status) => getStatusTag(status),
-                  },
-                  {
-                    title: 'تاريخ التأسيس',
-                    dataIndex: 'established_date',
-                    key: 'established_date',
-                    render: (date) => formatDate(date),
                   },
                   {
                     title: 'الإجراءات',
@@ -1147,34 +1275,16 @@ const OrganizationManagementPage = () => {
                     ))}
                   </Select>
                 </Form.Item>
-              ) : (
-                <Form.Item
-                  name="supervisor"
-                  label="مشرف المختبر"
-                  rules={[{ required: true, message: 'مشرف المختبر مطلوب' }]}
-                >
-                  <Input placeholder="أدخل اسم مشرف المختبر" />
-                </Form.Item>
-              )}
+              ) : (<></>)}
             </Col>
-            {activeTab === 'labs' && (
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="capacity"
-                  label="السعة (عدد الأشخاص)"
-                  rules={[{ required: true, message: 'السعة مطلوبة' }]}
-                >
-                  <Input type="number" placeholder="20" />
-                </Form.Item>
-              </Col>
-            )}
+
           </Row>
 
           {activeTab === 'labs' && (
             <Row gutter={16}>
               <Col xs={24} md={12}>
                 <Form.Item
-                  name="department"
+                  name="department_id"
                   label="القسم التابع له"
                   rules={[{ required: true, message: 'القسم مطلوب' }]}
                 >
@@ -1187,51 +1297,32 @@ const OrganizationManagementPage = () => {
               </Col>
               <Col xs={24} md={12}>
                 <Form.Item
-                  name="specialization"
-                  label="التخصص"
-                  rules={[{ required: true, message: 'التخصص مطلوب' }]}
+                  name="head_id"
+                  label="مشرف المختبر"
+                  rules={[{ required: true, message: 'مشرف المختبر مطلوب' }]}
                 >
-                  <Input placeholder="مثال: تحليل التربة" />
+                  <Select
+                    placeholder="اختر مشرف المختبر"
+                    loading={usersLoading}
+                    showSearch
+                    optionFilterProp="label"
+                    filterOption={(input, option) =>
+                      option.label.toLowerCase().includes(input.toLowerCase())
+                    }
+                  >
+                    {availableUsers.map(user => (
+                      <Option
+                        key={user.id}
+                        value={user.id}
+                        label={`${user.full_name} (${user.email})`}
+                      >
+                        {user.full_name} ({user.email})
+                      </Option>
+                    ))}
+                  </Select>
                 </Form.Item>
               </Col>
             </Row>
-          )}
-
-          {activeTab === 'labs' && (
-            <Row gutter={16}>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="equipment_count"
-                  label="عدد الأجهزة"
-                >
-                  <Input type="number" placeholder="10" />
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="research_focus"
-                  label="مجال البحث"
-                >
-                  <Input placeholder="مثال: بحوث المياه والتربة" />
-                </Form.Item>
-              </Col>
-            </Row>
-          )}
-
-          {activeTab === 'labs' && (
-            <Form.Item
-              name="status"
-              label="الحالة"
-              initialValue="active"
-            >
-              <Select>
-                <Option value="active">نشط</Option>
-                <Option value="inactive">غير نشط</Option>
-                <Option value="operational">تشغيلي</Option>
-                <Option value="maintenance">صيانة</Option>
-                <Option value="closed">مغلق</Option>
-              </Select>
-            </Form.Item>
           )}
 
           <Form.Item>
@@ -1264,43 +1355,77 @@ const OrganizationManagementPage = () => {
           <Spin spinning={labMembersLoading}>
             {labMembers.length > 0 ? (
               <div style={{ marginBottom: '16px' }}>
-                {labMembers.map(member => (
-                  <Card key={member.id} size="small" style={{ marginBottom: '8px' }}>
-                    <Row justify="space-between" align="middle">
-                      <Col>
-                        <Space>
-                          <Avatar icon={<UserOutlined />} />
-                          <div>
-                            <Text strong>{member.first_name} {member.last_name}</Text>
-                            <br />
-                            <Text type="secondary">{member.email}</Text>
-                            {member.position && (
-                              <>
-                                <br />
-                                <Text type="secondary">المنصب: {member.position}</Text>
-                              </>
+                {labMembers.map(member => {
+                  // Extract user info from researcher_profile or fallback to member data
+                  const userProfile = member.researcher_profile || member;
+                  const profilePicture = userProfile.profile_picture;
+                  const fullName = userProfile.full_name || `${member.first_name || ''} ${member.last_name || ''}`.trim();
+                  const email = userProfile.email || member.researcher_email || member.email;
+
+                  return (
+                    <Card key={member.id} size="small" style={{ marginBottom: '8px' }}>
+                      <Row justify="space-between" align="middle">
+                        <Col>
+                          <Space>
+                            {/* Display profile picture or default avatar */}
+                            {profilePicture ? (
+                              <Avatar
+                                src={`http://localhost:8000${profilePicture}`}
+                                size={100}
+                                style={{ flexShrink: 0 }}
+                              />
+                            ) : (
+                              <Avatar icon={<UserOutlined />} size={40} />
                             )}
-                            {member.start_date && (
-                              <>
-                                <br />
-                                <Text type="secondary">تاريخ البداية: {new Date(member.start_date).toLocaleDateString('ar-EG')}</Text>
-                              </>
-                            )}
-                          </div>
-                        </Space>
-                      </Col>
-                      <Col>
-                        <Button
-                          danger
-                          size="small"
-                          onClick={() => handleRemoveResearcher(member.assignment_id || member.id)}
-                        >
-                          إزالة
-                        </Button>
-                      </Col>
-                    </Row>
-                  </Card>
-                ))}
+                            <div>
+                              {/* Display full name */}
+                              <Text strong>
+                                {fullName || 'غير محدد'}
+                              </Text>
+                              <br />
+
+                              {/* Display email */}
+                              <Text type="secondary" style={{ fontSize: '12px' }}>
+                                {email || 'البريد الإلكتروني غير متوفر'}
+                              </Text>
+
+                              {/* Display position if available */}
+                              {member.position && (
+                                <>
+                                  <br />
+                                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                                    المنصب: {member.position}
+                                  </Text>
+                                </>
+                              )}
+
+                              {/* Display start date if available */}
+                              {member.start_date && (
+                                <>
+                                  <br />
+                                  <Text type="secondary" style={{ fontSize: '12px' }}>
+                                    تاريخ البداية: {new Date(member.start_date).toLocaleDateString('ar-EG')}
+                                  </Text>
+                                </>
+                              )}
+
+
+                            </div>
+                          </Space>
+                        </Col>
+                        <Col>
+                          <Button
+                            danger
+                            size="small"
+                            onClick={() => handleRemoveResearcher(member.assignment_id || member.id)}
+                          >
+                            إزالة
+                          </Button>
+                        </Col>
+                      </Row>
+                    </Card>
+                  );
+                })}
               </div>
             ) : (
               <Text type="secondary">لا يوجد أعضاء في هذا المختبر</Text>
