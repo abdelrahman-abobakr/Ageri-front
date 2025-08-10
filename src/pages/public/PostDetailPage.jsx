@@ -51,8 +51,29 @@ const PostDetailPage = () => {
       )}
       
       <Card>
-        {/* Featured Image */}
-        {(post.featured_image || post.attachment) && (
+        {/* عرض جميع صور البوست إذا وجدت */}
+        {Array.isArray(post.images) && post.images.length > 0 ? (
+          <div style={{ marginBottom: 24, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+            {post.images.map((imgObj, idx) => (
+              <img
+                key={imgObj.id || idx}
+                src={imgObj.image_url || imgObj.image}
+                alt={imgObj.caption || post.title}
+                style={{
+                  width: '100%',
+                  maxWidth: '320px',
+                  maxHeight: '220px',
+                  objectFit: 'cover',
+                  borderRadius: '8px',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+                }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+            ))}
+          </div>
+        ) : (post.featured_image || post.attachment) && (
           <div style={{ marginBottom: 24 }}>
             <img
               src={post.featured_image || post.attachment}

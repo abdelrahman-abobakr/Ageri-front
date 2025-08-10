@@ -50,8 +50,7 @@ import {
   FireOutlined,
   ThunderboltOutlined,
   CrownOutlined,
-  FileTextOutlined
-} from '@ant-design/icons';
+  FileTextOutlined,PictureOutlined } from '@ant-design/icons';
 import { contentService, organizationService, statisticsService } from '../../services';
 
 const { Title, Paragraph, Text } = Typography;
@@ -222,30 +221,25 @@ const HomePage = () => {
         setLoading(true);
         setStatsLoading(true);
 
-        // Load statistics
         try {
           const statisticsData = await statisticsService.getPublicStatistics();
           console.log('🏠 Homepage received stats:', statisticsData);
           setStats(statisticsData);
         } catch (error) {
           console.error('Failed to load statistics:', error);
-          // Keep default zeros if API fails
         } finally {
           setStatsLoading(false);
         }
 
-        // Load organization settings
         try {
           setSettingsLoading(true);
           const orgData = await organizationService.getPublicSettings();
-          // Override the name to Arabic regardless of API response
           setOrganizationData({
             ...orgData,
             name: "منظمة البحث العلمي"
           });
         } catch (error) {
           console.error('Failed to load organization settings:', error);
-          // Default institute data
           setOrganizationData({
             name: "منظمة البحث العلمي",
             vision: "أن نصبح المعهد الرائد في منطقة الشرق الأوسط في مجال البحث العلمي والابتكار التقني، ونساهم في بناء مجتمع المعرفة وتحقيق التنمية المستدامة",
@@ -300,8 +294,6 @@ const HomePage = () => {
             ) || [];
 
             const transformedPosts = publishedPosts.map(item => {
-
-
               return {
                 id: item.id,
                 title: item.title,
@@ -317,7 +309,8 @@ const HomePage = () => {
                 author: typeof item.author === 'string'
                   ? item.author
                   : item.author?.full_name || item.author?.email || 'فريق البحث العلمي',
-                is_featured: item.is_featured || false
+                is_featured: item.is_featured || false,
+                images: item.images || []
               };
             });
 
@@ -800,168 +793,222 @@ const HomePage = () => {
             </div>
 
             <Row gutter={[32, 32]}>
-              {posts.slice(0, 4).map((post, index) => (
-                <Col xs={24} sm={12} lg={6} key={post.id}>
-                  <Card
-                    hoverable
-                    style={{
-                      height: '100%',
-                      borderRadius: '20px',
-                      border: 'none',
-                      boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
-                      overflow: 'hidden',
-                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                      background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)'
-                    }}
-                    bodyStyle={{ padding: '24px' }}
-                    cover={
-                      <div
-                        style={{
-                          height: '220px',
-                          background: (post.featured_image || post.attachment)
-                            ? `url(${post.featured_image || post.attachment}) center/cover no-repeat`
-                            : getGradientBackground(index + 3),
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          position: 'relative',
-                          overflow: 'hidden',
-                          borderBottom: '1px solid #f0f0f0',
-                        }}
-                      >
-                        {/* Debug overlay */}
-                        {!(post.featured_image || post.attachment) && (
+              {posts.slice(0, 4).map((post, index) => {
+                let images = [];
+                if (Array.isArray(post.images) && post.images.length > 0) {
+                  images = post.images.map(imgObj => {
+                    if (imgObj.image_url && (imgObj.image_url.startsWith('http://') || imgObj.image_url.startsWith('https://'))) {
+                      return imgObj.image_url;
+                    }
+                    if (imgObj.image && (imgObj.image.startsWith('http://') || imgObj.image.startsWith('https://'))) {
+                      return imgObj.image;
+                    }
+                    if (imgObj.image_url) {
+                      if (imgObj.image_url.startsWith('/media')) {
+                        return window.location.origin + imgObj.image_url;
+                      }
+                      if (imgObj.image_url.startsWith('media')) {
+                        return window.location.origin + '/' + imgObj.image_url;
+                      }
+                    }
+                    if (imgObj.image) {
+                      if (imgObj.image.startsWith('/media')) {
+                        return window.location.origin + imgObj.image;
+                      }
+                      if (imgObj.image.startsWith('media')) {
+                        return window.location.origin + '/' + imgObj.image;
+                      }
+                    }
+                    return null;
+                  }).filter(Boolean);
+                }
+                else {
+                  if (post.featured_image) images.push(post.featured_image);
+                  if (post.attachment && post.attachment !== post.featured_image) images.push(post.attachment);
+                }
+                const mainImage = images[0] || null;
+                const extraCount = images.length > 1 ? images.length - 1 : 0;
+
+                return (
+                  <Col xs={24} sm={12} lg={6} key={post.id}>
+                    <Card
+                      hoverable
+                      style={{
+                        height: '100%',
+                        borderRadius: '20px',
+                        border: 'none',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                        overflow: 'hidden',
+                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                        background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)'
+                      }}
+                      bodyStyle={{ padding: '24px' }}
+                      cover={
+                        <div
+                          style={{
+                            height: '220px',
+                            background: mainImage
+                              ? `url(${mainImage}) center/cover no-repeat`
+                              : getGradientBackground(index + 3),
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            borderBottom: '1px solid #f0f0f0',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => navigate(`/posts/${post.id}`)}
+                        >
+                          {/* Debug overlay */}
+                          {!mainImage && (
+                            <div style={{
+                              position: 'absolute',
+                              top: '8px',
+                              left: '8px',
+                              background: 'rgba(0,0,0,0.7)',
+                              color: 'white',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '10px',
+                              zIndex: 3
+                            }}>
+                              لا توجد صورة
+                            </div>
+                          )}
+                          {/* Decorative elements */}
                           <div style={{
                             position: 'absolute',
-                            top: '8px',
-                            left: '8px',
-                            background: 'rgba(0,0,0,0.7)',
-                            color: 'white',
-                            padding: '4px 8px',
-                            borderRadius: '4px',
-                            fontSize: '10px',
-                            zIndex: 3
-                          }}>
-                            لا توجد صورة
-                          </div>
-                        )}
-
-                        {/* Decorative elements */}
-                        <div style={{
-                          position: 'absolute',
-                          top: '-50px',
-                          right: '-50px',
-                          width: '100px',
-                          height: '100px',
-                          borderRadius: '50%',
-                          background: 'rgba(255,255,255,0.1)',
-                        }} />
-                        <div style={{
-                          position: 'absolute',
-                          bottom: '-30px',
-                          left: '-30px',
-                          width: '60px',
-                          height: '60px',
-                          borderRadius: '50%',
-                          background: 'rgba(255,255,255,0.1)',
-                        }} />
-
-                        <div style={{
-                          position: 'absolute',
-                          top: '16px',
-                          right: '16px',
-                          zIndex: 2
-                        }}>
-                          <Tag style={{
-                            background: 'rgba(255,255,255,0.2)',
-                            border: 'none',
-                            color: 'white',
-                            borderRadius: '20px',
-                            padding: '4px 12px',
-                            fontSize: '12px',
-                            fontWeight: '600',
-                            backdropFilter: 'blur(10px)'
-                          }}>
-                            {post.category}
-                          </Tag>
-                        </div>
-
-                        {!(post.featured_image || post.attachment) && (
+                            top: '-50px',
+                            right: '-50px',
+                            width: '100px',
+                            height: '100px',
+                            borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.1)',
+                          }} />
                           <div style={{
-                            color: 'white',
-                            fontSize: '48px',
-                            textShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                            zIndex: 1
+                            position: 'absolute',
+                            bottom: '-30px',
+                            left: '-30px',
+                            width: '60px',
+                            height: '60px',
+                            borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.1)',
+                          }} />
+                          <div style={{
+                            position: 'absolute',
+                            top: '16px',
+                            right: '16px',
+                            zIndex: 2
                           }}>
-                            <BookOutlined />
+                            <Tag style={{
+                              background: 'rgba(255,255,255,0.2)',
+                              border: 'none',
+                              color: 'white',
+                              borderRadius: '20px',
+                              padding: '4px 12px',
+                              fontSize: '12px',
+                              fontWeight: '600',
+                              backdropFilter: 'blur(10px)'
+                            }}>
+                              {post.category}
+                            </Tag>
                           </div>
-                        )}
-                      </div>
-                    }
-
-                    onMouseEnter={(e) => {
-                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-                      e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.15)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                      e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.1)';
-                    }}
-                  >
-                    <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                      <Title level={4} style={{
-                        fontSize: '16px',
-                        color: '#1e293b',
-                        fontWeight: '700',
-                        lineHeight: '1.4',
-                        marginBottom: '12px',
-                        minHeight: '44px'
-                      }}>
-                        {post.title}
-                      </Title>
-
-                      <Paragraph
-                        ellipsis={{ rows: 3 }}
-                        style={{
-                          marginBottom: '20px',
-                          color: '#64748b',
-                          fontSize: '14px',
-                          lineHeight: '1.6',
-                          flex: 1
-                        }}
-                      >
-                        {post.excerpt || post.content}
-                      </Paragraph>
-
-                      <div style={{
-                        display: 'flex',
-                        justifyContent: 'space-between',
-                        alignItems: 'center',
-                        paddingTop: '16px',
-                        borderTop: '1px solid #e2e8f0'
-                      }}>
-                        <div style={{
-                          padding: '6px 12px',
-                          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                          borderRadius: '20px',
-                          color: 'white',
-                          fontSize: '11px',
-                          fontWeight: '600'
-                        }}>
-                          جديد
+                          {/* إذا كان هناك صور إضافية */}
+                          {extraCount > 0 && (
+                            <div style={{
+                              position: 'absolute',
+                              bottom: '16px',
+                              left: '16px',
+                              background: 'rgba(0,0,0,0.7)',
+                              color: 'white',
+                              borderRadius: '16px',
+                              padding: '4px 12px',
+                              fontSize: '16px',
+                              fontWeight: 'bold',
+                              display: 'flex',
+                              alignItems: 'center',
+                              zIndex: 4
+                            }}>
+                              <span style={{ marginRight: '4px' }}>+{extraCount}</span>
+                              <span style={{ fontSize: '18px' }}><PictureOutlined /></span>
+                            </div>
+                          )}
+                          {!mainImage && (
+                            <div style={{
+                              color: 'white',
+                              fontSize: '48px',
+                              textShadow: '0 4px 20px rgba(0,0,0,0.3)',
+                              zIndex: 1
+                            }}>
+                              <BookOutlined />
+                            </div>
+                          )}
                         </div>
-                        <Text style={{
-                          fontSize: '12px',
-                          color: '#94a3b8',
-                          fontWeight: '500'
+                      }
+                      onClick={() => navigate(`/posts/${post.id}`)}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                        e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                        e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.1)';
+                      }}
+                    >
+                      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+                        <Title level={4} style={{
+                          fontSize: '16px',
+                          color: '#1e293b',
+                          fontWeight: '700',
+                          lineHeight: '1.4',
+                          marginBottom: '12px',
+                          minHeight: '44px'
                         }}>
-                          {formatDate(post.date)}
-                        </Text>
+                          {post.title}
+                        </Title>
+                        <Paragraph
+                          ellipsis={{ rows: 3 }}
+                          style={{
+                            marginBottom: '20px',
+                            color: '#64748b',
+                            fontSize: '14px',
+                            lineHeight: '1.6',
+                            flex: 1
+                          }}
+                        >
+                          {post.excerpt || post.content}
+                        </Paragraph>
+                        <div style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          paddingTop: '16px',
+                          borderTop: '1px solid #e2e8f0'
+                        }}>
+                          <div style={{
+                            padding: '6px 12px',
+                            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                            borderRadius: '20px',
+                            color: 'white',
+                            fontSize: '11px',
+                            fontWeight: '600'
+                          }}>
+                            جديد
+                          </div>
+                          <Text style={{
+                            fontSize: '12px',
+                            color: '#94a3b8',
+                            fontWeight: '500'
+                          }}>
+                            {formatDate(post.date)}
+                          </Text>
+                        </div>
                       </div>
-                    </div>
-                  </Card>
-                </Col>
-              ))}
+                    </Card>
+                  </Col>
+                );
+              })}
             </Row>
 
             {posts.length > 4 && (
