@@ -144,12 +144,26 @@ const AnnouncementsPage = () => {
               <Card
                 hoverable
                 style={{ height: '100%' }}
-                cover={
-                  post.featured_image || post.attachment ? (
+                cover={(() => {
+                  let images = [];
+                  if (Array.isArray(post.images) && post.images.length > 0) {
+                    images = post.images.map(imgObj => imgObj.image_url || imgObj.image).filter(Boolean);
+                    images = images.map(img => {
+                      if (img && img.startsWith('/')) {
+                        return window.location.origin + img;
+                      }
+                      return img;
+                    });
+                  } else {
+                    if (post.featured_image) images.push(post.featured_image);
+                    if (post.attachment && post.attachment !== post.featured_image) images.push(post.attachment);
+                  }
+                  const mainImage = images[0];
+                  return mainImage ? (
                     <div style={{ height: '200px', overflow: 'hidden' }}>
                       <img
                         alt={post.title}
-                        src={post.featured_image || post.attachment}
+                        src={mainImage}
                         style={{
                           width: '100%',
                           height: '100%',
@@ -157,8 +171,8 @@ const AnnouncementsPage = () => {
                         }}
                       />
                     </div>
-                  ) : null
-                }
+                  ) : null;
+                })()}
                 actions={[
                   <Button 
                     type="link" 
@@ -266,7 +280,7 @@ const AnnouncementsPage = () => {
           <BookOutlined style={{ fontSize: '48px', color: '#ccc', marginBottom: '16px' }} />
           <Title level={4} type="secondary">لا توجد منشورات</Title>
           <Text type="secondary">
-            {searchTerm ? 'لم يتم العثور على منشورات تطابق بحثك' : 'لا توجد منشورات منشورة حال<|im_start|>'}
+            {searchTerm ? 'لم يتم العثور على منشورات تطابق بحثك' : 'لا توجد منشورات منشورة حالياً'}
           </Text>
         </Card>
       )}

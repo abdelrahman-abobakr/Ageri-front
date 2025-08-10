@@ -75,6 +75,20 @@ const ContentManagementPage = () => {
   const pageSize = 10;
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageList, setImageList] = useState([]);
+
+  // دوال رفع ومعاينة وحذف الصور المتعددة
+  const handleImagesChange = ({ fileList }) => {
+    setImageList(fileList);
+  };
+
+  const handleImagePreview = async (file) => {
+    setPreviewImage(file.url || file.thumbUrl);
+  };
+
+  const handleRemoveImage = (file) => {
+    setImageList(imageList.filter(img => img.uid !== file.uid));
+  };
 
   // Get user data
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
@@ -102,13 +116,6 @@ const ContentManagementPage = () => {
     setImageFile(actualFile);
     form.setFieldsValue({ attachment: actualFile });
   };
-
-  const handleRemoveImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
-    form.setFieldsValue({ attachment: null });
-  };
-
 
   const [stats, setStats] = useState({
     totalContent: 0,
@@ -206,6 +213,11 @@ const ContentManagementPage = () => {
       setContent(filtered);
       setTotal(filtered.length);
     } catch (error) {
+      // معالجة خطأ الصفحة غير موجودة
+      if (error?.response?.data?.detail === 'Invalid page.') {
+        setCurrentPage(1);
+        return;
+      }
       console.error('Failed to load posts:', error);
       message.error('فشل في تحميل المنشورات');
       setContent([]);
@@ -481,87 +493,18 @@ const ContentManagementPage = () => {
     try {
       console.log('🔍 Form values:', values);
       console.log('🔍 Image file:', imageFile);
+      console.log('🔍 Image list:', imageList);
       console.log('🔍 Editing content:', editingContent);
 
       let response;
+      // تجهيز مصفوفة الصور
+      const validImages = imageList.filter(img => img.originFileObj instanceof File);
 
       if (editingContent) {
         // Update existing post
-        if (imageFile instanceof File && imageFile.size > 0) {
-          // Validate file size (5MB limit)
-          if (imageFile.size > 5 * 1024 * 1024) {
-            message.error('حجم الصورة كبير<|im_start|>. الحد الأقصى 5 ميجا');
-            return;
-          }
-
-          // Validate file type
-          if (!imageFile.type.startsWith('image/')) {
-            message.error('يجب أن يكون الملف صورة');
-            return;
-          }
-
-          // Create FormData for file upload
-          const formData = new FormData();
-
-          // Add all form fields except attachment
-          Object.keys(values).forEach(key => {
-            if (key !== 'attachment' && values[key] !== null && values[key] !== undefined && values[key] !== '') {
-              if (key === 'publishDate' && values[key]) {
-                formData.append('publish_at', values[key].toISOString());
-              } else if (key === 'type') {
-                formData.append('category', values[key]);
-              } else if (key === 'event_date' && values[key]) {
-                formData.append('event_date', values[key].format('YYYY-MM-DD'));
-              } else if (key === 'registration_deadline' && values[key]) {
-                formData.append('registration_deadline', values[key].format('YYYY-MM-DD'));
-              } else if (key === 'isPublic') {
-                formData.append('is_public', values[key]);
-              } else if (key === 'isFeatured') {
-                formData.append('is_featured', values[key]);
-              } else {
-                formData.append(key, values[key]);
-              }
-            }
-          });
-
-          // Add the new file with proper name and validation
-          formData.append('attachment', imageFile, imageFile.name);
-
-          console.log('🔍 FormData entries for update:');
-          for (let [key, value] of formData.entries()) {
-            console.log(key, value);
-          }
-
-          response = await contentService.updatePost(editingContent.id, formData);
-        } else {
-          // Update without file - use JSON
-          const updateData = {
-            ...values,
-            category: values.type,
-            is_public: values.isPublic,
-            is_featured: values.isFeatured,
-            publish_at: values.publishDate ? values.publishDate.toISOString() : null,
-            event_date: values.event_date ? values.event_date.format('YYYY-MM-DD') : null,
-            registration_deadline: values.registration_deadline ? values.registration_deadline.format('YYYY-MM-DD') : null,
-          };
-
-          // Remove fields that shouldn't be sent
-          delete updateData.attachment;
-          delete updateData.type;
-          delete updateData.isPublic;
-          delete updateData.isFeatured;
-          delete updateData.publishDate;
-
-          console.log('🔍 JSON update data:', updateData);
-          response = await contentService.updatePost(editingContent.id, updateData);
-        }
-      } else {
-        // Create new post - use FormData
         const formData = new FormData();
-
-        // Add all form fields except attachment
         Object.keys(values).forEach(key => {
-          if (key !== 'attachment' && values[key] !== null && values[key] !== undefined && values[key] !== '') {
+          if (key !== 'images' && key !== 'attachment' && values[key] !== null && values[key] !== undefined && values[key] !== '') {
             if (key === 'publishDate' && values[key]) {
               formData.append('publish_at', values[key].toISOString());
             } else if (key === 'type') {
@@ -579,43 +522,65 @@ const ContentManagementPage = () => {
             }
           }
         });
-
-        // Add file if exists and is valid
-        if (imageFile instanceof File && imageFile.size > 0) {
-          // Validate file
-          if (imageFile.size > 5 * 1024 * 1024) {
-            message.error('حجم الصورة كبير理解和حذف الملف صورة');
-            return;
-          }
-
-          if (!imageFile.type.startsWith('image/')) {
-            message.error('يجب أن يكون الملف صورة');
-            return;
-          }
-
-          formData.append('attachment', imageFile, imageFile.name);
-          console.log('🔍 Adding image file to FormData:', {
-            name: imageFile.name,
-            size: imageFile.size,
-            type: imageFile.type
-          });
+        // لا ترسل الصور هنا، سيتم رفعها بعد التحديث
+        console.log('🔍 FormData entries for update:');
+        for (let [key, value] of formData.entries()) {
+          console.log(key, value);
         }
-
+        response = await contentService.updatePost(editingContent.id, formData);
+        // بعد التحديث، ارفع الصور الجديدة فقط
+        if (validImages.length > 0) {
+          for (const img of validImages) {
+            const imgForm = new FormData();
+            imgForm.append('post', editingContent.id);
+            imgForm.append('image', img.originFileObj, img.name || img.originFileObj.name);
+            await contentService.uploadPostImage(editingContent.id, imgForm);
+          }
+        }
+      } else {
+        // Create new post - use FormData
+        const formData = new FormData();
+        Object.keys(values).forEach(key => {
+          if (key !== 'images' && key !== 'attachment' && values[key] !== null && values[key] !== undefined && values[key] !== '') {
+            if (key === 'publishDate' && values[key]) {
+              formData.append('publish_at', values[key].toISOString());
+            } else if (key === 'type') {
+              formData.append('category', values[key]);
+            } else if (key === 'event_date' && values[key]) {
+              formData.append('event_date', values[key].format('YYYY-MM-DD'));
+            } else if (key === 'registration_deadline' && values[key]) {
+              formData.append('registration_deadline', values[key].format('YYYY-MM-DD'));
+            } else if (key === 'isPublic') {
+              formData.append('is_public', values[key]);
+            } else if (key === 'isFeatured') {
+              formData.append('is_featured', values[key]);
+            } else {
+              formData.append(key, values[key]);
+            }
+          }
+        });
+        // لا ترسل الصور هنا، سيتم رفعها بعد الإنشاء
         console.log('🔍 FormData entries for create:');
         for (let [key, value] of formData.entries()) {
           console.log(key, value);
         }
-
         response = await contentService.createPost(formData);
+        // بعد الإنشاء، ارفع الصور
+        if (response && response.id && validImages.length > 0) {
+          for (const img of validImages) {
+            const imgForm = new FormData();
+            imgForm.append('post', response.id);
+            imgForm.append('image', img.originFileObj, img.name || img.originFileObj.name);
+            await contentService.uploadPostImage(response.id, imgForm);
+          }
+        }
       }
 
       const successMessage = editingContent ? 'تم تحديث المحتوى بنجاح' : 'تم إنشاء المحتوى بنجاح';
       message.success(successMessage);
       setModalVisible(false);
-
       setImageFile(null);
       setImagePreview(null);
-
       loadContent();
       fetchStats();
     } catch (error) {
@@ -1037,11 +1002,17 @@ const ContentManagementPage = () => {
               current: currentPage,
               pageSize: pageSize,
               total: total,
-              onChange: setCurrentPage,
+              onChange: (page) => {
+                // إذا كانت الصفحة المطلوبة تتجاوز عدد العناصر، أعد المستخدم للصفحة الأولى
+                if ((page - 1) * pageSize < total) {
+                  setCurrentPage(page);
+                } else {
+                  setCurrentPage(1);
+                }
+              },
               showSizeChanger: false,
               showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} من ${total} عنصر`,
+              showTotal: (total, range) => `${range[0]}-${range[1]} من ${total} عنصر`,
             }}
             locale={{
               emptyText: t('admin.contentManagement.noContent'),
@@ -1125,59 +1096,29 @@ const ContentManagementPage = () => {
           </Form.Item>
 
           <Form.Item
-            name="attachment"
-            label="الصورة المرفقة (ستُعرض كصورة مميزة)"
+            name="images"
+            label="الصور المرفقة (يمكن رفع أكثر من صورة)"
           >
-            <div>
-              <Upload
-                name="image"
-                listType="picture-card"
-                showUploadList={false}
-                accept="image/*"
-                beforeUpload={() => false} // منع الرفع التلقائي
-                onChange={handleImageUpload}
-              >
-                {imagePreview || (editingContent?.attachment && !imagePreview) ? (
-                  <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-                    <img
-                      src={imagePreview || editingContent?.attachment}
-                      alt="صورة مرفقة"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        borderRadius: '6px'
-                      }}
-                    />
-                    <Button
-                      type="text"
-                      danger
-                      size="small"
-                      icon={<DeleteOutlined />}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleRemoveImage();
-                      }}
-                      style={{
-                        position: 'absolute',
-                        top: '4px',
-                        right: '4px',
-                        backgroundColor: 'rgba(255, 255, 255, 0.8)'
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div>
-                    <UploadOutlined />
-                    <div style={{ marginTop: 8 }}>تحميل صورة</div>
-                  </div>
-                )}
-              </Upload>
-
-              <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px', display: 'block' }}>
-                فضل استخدام صور بمقاس 16:9 وحجم أقل من 5 ميجا
-              </Text>
-            </div>
+            <Upload
+              listType="picture-card"
+              fileList={imageList}
+              multiple
+              accept="image/*"
+              beforeUpload={() => false}
+              onChange={handleImagesChange}
+              onPreview={handleImagePreview}
+              onRemove={handleRemoveImage}
+            >
+              {imageList.length < 8 && (
+                <div>
+                  <UploadOutlined />
+                  <div style={{ marginTop: 8 }}>تحميل صور</div>
+                </div>
+              )}
+            </Upload>
+            <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px', display: 'block' }}>
+              فضل استخدام صور بمقاس 16:9 وحجم أقل من 5 ميجا
+            </Text>
           </Form.Item>
 
 

@@ -517,4 +517,24 @@ export const contentService = {
       };
     }
   },
+
+  /**
+   * رفع صورة جديدة للبوست
+   * @param {number|string} postId
+   * @param {FormData} formData
+   */
+  uploadPostImage: async (postId, formData) => {
+    try {
+      // استخدم الرابط الكامل مع /api/content/
+      const response = await apiClient.post(`/api/content/posts/${postId}/images/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Failed to upload post image:', error);
+      throw error;
+    }
+  },
 };
