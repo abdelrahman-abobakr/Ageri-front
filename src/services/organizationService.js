@@ -19,7 +19,7 @@ export const organizationService = {
   },
 
   updateDepartment: async (id, departmentData) => {
-    const response = await apiClient.put(API_ENDPOINTS.ORGANIZATION.DEPARTMENT_DETAIL(id), departmentData);
+    const response = await apiClient.patch(API_ENDPOINTS.ORGANIZATION.DEPARTMENT_DETAIL(id), departmentData);
     return response.data;
   },
 
