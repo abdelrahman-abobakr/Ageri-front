@@ -1,0 +1,361 @@
+/* Enrollment System Styles */
+
+/* Enrollment Form Styles */
+.enrollment-form-card {
+  max-width: 800px;
+  margin: 0 auto;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.enrollment-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.course-summary {
+  background: #f8f9fa;
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+/* Enrollment Success Styles */
+.enrollment-success-container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 20px;
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.success-header-card {
+  background: linear-gradient(135deg, #52c41a, #389e0d);
+  color: white;
+  border: none;
+}
+
+.success-header {
+  text-align: center;
+  padding: 20px;
+}
+
+.success-icon {
+  font-size: 64px;
+  color: white;
+  margin-bottom: 16px;
+}
+
+.success-title {
+  color: white !important;
+  margin-bottom: 8px;
+}
+
+.success-subtitle {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 16px;
+}
+
+.enrollment-id-card {
+  background: linear-gradient(135deg, #1890ff, #096dd9);
+  color: white;
+  border: none;
+}
+
+.enrollment-id-display {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.enrollment-id {
+  font-family: 'Courier New', monospace;
+  font-size: 18px;
+  font-weight: bold;
+  flex: 1;
+  text-align: center;
+  letter-spacing: 1px;
+  color: white !important;
+}
+
+.id-note {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 14px;
+}
+
+.info-card {
+  height: 100%;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.payment-card {
+  border-left: 4px solid #52c41a;
+}
+
+.payment-item {
+  text-align: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.amount, .balance {
+  color: #52c41a;
+  margin: 8px 0 0 0;
+}
+
+.next-steps-card {
+  border-left: 4px solid #1890ff;
+}
+
+.steps-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step-item {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border-left: 4px solid #1890ff;
+}
+
+.step-number {
+  width: 40px;
+  height: 40px;
+  background: #1890ff;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.step-content h5 {
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.actions-card {
+  text-align: center;
+}
+
+.action-buttons {
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.contact-card, .reference-card {
+  border-left: 4px solid #52c41a;
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.contact-icon {
+  font-size: 20px;
+  color: #1890ff;
+}
+
+.lookup-url {
+  background: #f0f0f0;
+  padding: 12px;
+  border-radius: 6px;
+  margin-top: 12px;
+  text-align: center;
+}
+
+/* Enrollment Lookup Styles */
+.enrollment-lookup-page {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f2f5, #e6f7ff);
+  padding: 40px 20px;
+}
+
+.lookup-container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.lookup-card {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  border-radius: 12px;
+}
+
+.lookup-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.lookup-icon {
+  font-size: 64px;
+  color: #1890ff;
+  margin-bottom: 16px;
+}
+
+.lookup-form {
+  margin-bottom: 32px;
+}
+
+.help-card {
+  height: 100%;
+  border-left: 4px solid #1890ff;
+}
+
+.quick-actions-card {
+  margin-top: 24px;
+  border-left: 4px solid #52c41a;
+}
+
+.enrollment-lookup-container .lookup-header {
+  background: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 24px;
+}
+
+/* Admin Enrollment Management Styles */
+.enrollment-management {
+  padding: 24px;
+}
+
+.enrollment-management .ant-card {
+  margin-bottom: 16px;
+}
+
+.enrollment-management .ant-table-thead > tr > th {
+  background: #fafafa;
+  font-weight: 600;
+}
+
+.enrollment-management .ant-tag {
+  margin: 0;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .enrollment-success-container {
+    padding: 16px;
+  }
+  
+  .enrollment-id-display {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .enrollment-id {
+    font-size: 16px;
+  }
+  
+  .step-item {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .step-number {
+    align-self: center;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .contact-item {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  
+  .lookup-container {
+    padding: 0 16px;
+  }
+  
+  .enrollment-management {
+    padding: 16px;
+  }
+}
+
+/* Print Styles */
+@media print {
+  .action-buttons,
+  .ant-modal-close,
+  .ant-modal-footer {
+    display: none !important;
+  }
+  
+  .enrollment-success-container {
+    box-shadow: none;
+    background: white;
+  }
+  
+  .success-header-card,
+  .enrollment-id-card {
+    background: white !important;
+    color: black !important;
+    border: 1px solid #d9d9d9;
+  }
+  
+  .success-icon {
+    color: #52c41a !important;
+  }
+  
+  .success-title {
+    color: black !important;
+  }
+  
+  .enrollment-id {
+    color: black !important;
+    background: #f0f0f0 !important;
+  }
+  
+  .step-number {
+    background: #f0f0f0 !important;
+    color: black !important;
+  }
+}
+
+/* Animation Effects */
+.enrollment-success-container .ant-card {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.enrollment-id-display {
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(24, 144, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(24, 144, 255, 0);
+  }
+}

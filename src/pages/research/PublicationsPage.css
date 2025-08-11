@@ -1,0 +1,29 @@
+/* Enhanced Publications Table Styles */
+.enhanced-table .ant-table-thead tr th {
+  position: sticky;
+  top: 0;
+  background: #e0e7ff !important;
+  font-weight: 700;
+  font-size: 16px;
+  z-index: 2;
+  border-bottom: 2px solid #4f8cff !important;
+}
+.enhanced-table .ant-table-row.table-row-light {
+  background: #fff;
+}
+.enhanced-table .ant-table-row.table-row-dark {
+  background: #fff;
+}
+.enhanced-table .ant-table-row:hover {
+  background: #f0f5ff !important;
+}
+.enhanced-table .ant-table-cell {
+  padding: 14px 16px;
+  font-size: 15px;
+  vertical-align: middle;
+}
+.enhanced-table .ant-btn {
+  font-size: 15px;
+  font-weight: 600;
+  border-radius: 8px;
+}

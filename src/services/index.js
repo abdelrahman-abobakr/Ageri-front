@@ -1,0 +1,16 @@
+// Export all services for easy importing
+export { authService } from './authService';
+export { default as researchService } from './researchService';
+export { organizationService } from './organizationService';
+export { trainingService, CourseService } from './trainingService';
+export { servicesService } from './servicesService';
+export { contentService } from './contentService';
+export { searchService } from './searchService';
+export { analyticsService } from './analyticsService';
+export { notificationService } from './notificationService';
+export { adminService } from './adminService';
+export { default as EnrollmentService } from './enrollmentService';
+export { statisticsService } from './statisticsService';
+
+// Export API client for direct use if needed
+export { default as apiClient } from './api';

@@ -1,0 +1,212 @@
+/* RTL Support Styles */
+
+/* Basic RTL layout adjustments */
+[dir="rtl"] {
+  text-align: right;
+}
+
+[dir="rtl"] .ant-layout-sider {
+  order: 1;
+}
+
+[dir="rtl"] .ant-layout-content {
+  order: 0;
+}
+
+/* Menu adjustments for RTL */
+[dir="rtl"] .ant-menu-horizontal {
+  direction: rtl;
+}
+
+[dir="rtl"] .ant-menu-item {
+  text-align: right;
+}
+
+/* Button adjustments */
+[dir="rtl"] .ant-btn {
+  direction: rtl;
+}
+
+[dir="rtl"] .ant-btn-icon-only {
+  direction: ltr;
+}
+
+/* Form adjustments */
+[dir="rtl"] .ant-form-item-label {
+  text-align: right;
+}
+
+[dir="rtl"] .ant-input,
+[dir="rtl"] .ant-select,
+[dir="rtl"] .ant-input-password {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Card adjustments */
+[dir="rtl"] .ant-card-head-title {
+  text-align: right;
+}
+
+[dir="rtl"] .ant-card-extra {
+  margin-left: 0;
+  margin-right: auto;
+}
+
+/* Typography adjustments */
+[dir="rtl"] .ant-typography {
+  direction: rtl;
+  text-align: right;
+}
+
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] h4,
+[dir="rtl"] h5,
+[dir="rtl"] h6 {
+  text-align: right;
+}
+
+/* Breadcrumb adjustments */
+[dir="rtl"] .ant-breadcrumb {
+  direction: rtl;
+}
+
+[dir="rtl"] .ant-breadcrumb-separator {
+  transform: scaleX(-1);
+}
+
+/* Table adjustments */
+[dir="rtl"] .ant-table {
+  direction: rtl;
+}
+
+[dir="rtl"] .ant-table-thead > tr > th {
+  text-align: right;
+}
+
+[dir="rtl"] .ant-table-tbody > tr > td {
+  text-align: right;
+}
+
+/* Dropdown adjustments */
+[dir="rtl"] .ant-dropdown-menu {
+  direction: rtl;
+}
+
+/* Notification adjustments */
+[dir="rtl"] .ant-notification {
+  direction: rtl;
+}
+
+/* Message adjustments */
+[dir="rtl"] .ant-message {
+  direction: rtl;
+}
+
+/* Modal adjustments */
+[dir="rtl"] .ant-modal-header {
+  direction: rtl;
+}
+
+[dir="rtl"] .ant-modal-body {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Drawer adjustments */
+[dir="rtl"] .ant-drawer-header {
+  direction: rtl;
+}
+
+[dir="rtl"] .ant-drawer-body {
+  direction: rtl;
+  text-align: right;
+}
+
+/* Custom layout adjustments */
+[dir="rtl"] .header-content {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .language-switcher {
+  margin-left: 0;
+  margin-right: 16px;
+}
+
+/* Flex adjustments for RTL */
+[dir="rtl"] .flex-row {
+  flex-direction: row-reverse;
+}
+
+[dir="rtl"] .justify-between {
+  flex-direction: row-reverse;
+}
+
+/* Icon adjustments - some icons need to be flipped for RTL */
+[dir="rtl"] .ant-menu-submenu-arrow,
+[dir="rtl"] .ant-select-arrow,
+[dir="rtl"] .ant-cascader-picker-arrow {
+  transform: scaleX(-1);
+}
+
+/* Pagination adjustments */
+[dir="rtl"] .ant-pagination {
+  direction: rtl;
+}
+
+[dir="rtl"] .ant-pagination-prev,
+[dir="rtl"] .ant-pagination-next {
+  transform: scaleX(-1);
+}
+
+/* Steps adjustments */
+[dir="rtl"] .ant-steps {
+  direction: rtl;
+}
+
+[dir="rtl"] .ant-steps-item-icon {
+  margin-left: 8px;
+  margin-right: 0;
+}
+
+/* Timeline adjustments */
+[dir="rtl"] .ant-timeline {
+  direction: rtl;
+}
+
+[dir="rtl"] .ant-timeline-item-content {
+  margin-left: 0;
+  margin-right: 20px;
+  text-align: right;
+}
+
+/* Custom spacing for Arabic text */
+[dir="rtl"] .arabic-text {
+  font-family: 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+  line-height: 1.8;
+  letter-spacing: 0.5px;
+}
+
+/* Ensure proper text rendering for Arabic */
+[dir="rtl"] * {
+  font-feature-settings: "liga" 1, "kern" 1;
+}
+
+/* Fix for mixed content (Arabic + English) */
+[dir="rtl"] .mixed-content {
+  unicode-bidi: plaintext;
+}
+
+/* Number formatting for RTL */
+[dir="rtl"] .number {
+  direction: ltr;
+  display: inline-block;
+}
+
+/* Date formatting for RTL */
+[dir="rtl"] .date {
+  direction: ltr;
+  display: inline-block;
+}
