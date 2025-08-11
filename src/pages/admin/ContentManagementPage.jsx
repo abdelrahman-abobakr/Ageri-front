@@ -50,7 +50,6 @@ import { useSelector } from 'react-redux';
 import moment from 'moment';
 import { contentService } from '../../services';
 
-// من عناصر تايبوغرافي
 const { Title, Paragraph, Text } = Typography;
 const { Search } = Input;
 const { Option } = Select;
@@ -72,18 +71,19 @@ const ContentManagementPage = () => {
   const [modalVisible, setModalVisible] = useState(false);
   const [editingContent, setEditingContent] = useState(null);
   const [form] = Form.useForm();
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageList, setImageList] = useState([]);
+  const [previewImage, setPreviewImage] = useState('');
 
-  // دوال رفع ومعاينة وحذف الصور المتعددة
   const handleImagesChange = ({ fileList }) => {
     setImageList(fileList);
   };
 
   const handleImagePreview = async (file) => {
     setPreviewImage(file.url || file.thumbUrl);
+    setPreviewVisible(true);
   };
 
   const handleRemoveImage = (file) => {
@@ -94,29 +94,6 @@ const ContentManagementPage = () => {
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
   const userRole = userData?.role;
   const userId = userData?.id;
-
-  // Real-time content statistics - temporarily disabled for debugging
-  // const { stats: contentStats, loading: statsLoading, refresh: refreshStats } = useRealTimeStats('content', 30000);
-  const refreshStats = () => { };
-  const handleImageUpload = (info) => {
-    const { file } = info;
-    if (!file) return;
-
-    // Ensure we have a proper File object
-    const actualFile = file.originFileObj || file;
-
-    console.log('🔍 Image upload:', {
-      name: actualFile.name,
-      size: actualFile.size,
-      type: actualFile.type,
-      isFile: actualFile instanceof File
-    });
-
-    setImagePreview(URL.createObjectURL(actualFile));
-    setImageFile(actualFile);
-    form.setFieldsValue({ attachment: actualFile });
-  };
-
   const [stats, setStats] = useState({
     totalContent: 0,
     publishedContent: 0,
@@ -140,12 +117,10 @@ const ContentManagementPage = () => {
       const allContentRes = await contentService.getPosts({ page: 1, page_size: 1000 });
       const allPosts = allContentRes.results || [];
 
-      // Filter posts based on user role
       let filteredPosts = [];
       if (userRole === "admin") {
         filteredPosts = allPosts;
       } else {
-        // For moderators, only show their own posts
         filteredPosts = allPosts.filter(post => post.author?.id === userId);
       }
 
@@ -178,47 +153,103 @@ const ContentManagementPage = () => {
     }
   }, [userRole, userId]);
 
+  const handlePageChange = (page, size) => {
+    console.log('Page change:', { page, size, total, currentPage });
+    
+    // Update page size if changed
+    if (size && size !== pageSize) {
+      setPageSize(size);
+      setCurrentPage(1);
+      // Reload with new page size
+      loadContent(1);
+    } else {
+      // Just change page
+      loadContent(page);
+    }
+  };
+
   useEffect(() => {
     fetchStats();
   }, [fetchStats]);
 
   useEffect(() => {
-    loadContent();
-  }, [currentPage, searchTerm, typeFilter, statusFilter]);
+    console.log('Filters changed, loading page 1');
+    setCurrentPage(1);
+    loadContent(1); 
+  }, [searchTerm, typeFilter, statusFilter, pageSize]);
 
-  const loadContent = async () => {
+  useEffect(() => {
+    if (currentPage > 1) {
+      setCurrentPage(1);
+      loadContent(1);
+    } else {
+      loadContent(1);
+    }
+  }, [pageSize]);
+
+  useEffect(() => {
+    console.log('Initial load');
+    loadContent(1);
+    fetchStats();
+  }, [fetchStats]);
+
+  const loadContent = async (page = 1) => {
     try {
       setLoading(true);
 
+      
       const params = {
-        page: currentPage,
-        page_size: pageSize,
+        page: 1,
+        page_size: 1000,
         search: searchTerm || undefined,
         category: typeFilter || undefined,
         status: statusFilter || undefined,
       };
 
+      console.log('📤 Loading content with params:', params);
       const response = await contentService.getPosts(params);
-      console.log('getPosts response:', response);
+      console.log('📥 getPosts response:', response);
+      
       const allPosts = response.results || [];
 
+      // Filter based on user role
       let filtered = [];
-
       if (userRole === "admin") {
         filtered = allPosts;
       } else {
         filtered = allPosts.filter(post => post.author?.id === userId);
       }
 
-      setContent(filtered);
-      setTotal(filtered.length);
+      // Client-side pagination
+      const totalItems = filtered.length;
+      const totalPages = Math.ceil(totalItems / pageSize);
+      
+      // Ensure page is within valid range
+      const validPage = Math.max(1, Math.min(page, totalPages || 1));
+      
+      const startIndex = (validPage - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedContent = filtered.slice(startIndex, endIndex);
+
+      setContent(paginatedContent);
+      setTotal(totalItems);
+      setCurrentPage(validPage);
+      
+      console.log(`📄 Showing page ${validPage}/${totalPages}: items ${startIndex + 1}-${Math.min(endIndex, totalItems)} of ${totalItems}`);
     } catch (error) {
-      // معالجة خطأ الصفحة غير موجودة
-      if (error?.response?.data?.detail === 'Invalid page.') {
-        setCurrentPage(1);
-        return;
-      }
       console.error('Failed to load posts:', error);
+      
+      // Handle 404 errors gracefully
+      if (error.response?.status === 404) {
+        console.log('Page not found, resetting to page 1');
+        if (currentPage > 1) {
+          setCurrentPage(1);
+          // Try loading page 1
+          setTimeout(() => loadContent(1), 100);
+          return;
+        }
+      }
+      
       message.error('فشل في تحميل المنشورات');
       setContent([]);
       setTotal(0);
@@ -230,19 +261,33 @@ const ContentManagementPage = () => {
   const handleCreateContent = () => {
     setEditingContent(null);
     form.resetFields();
+    form.setFieldsValue({
+      title: '',
+      type: '',
+      status: 'published',
+      excerpt: '',
+      content: '',
+      publishDate: null,
+      event_date: null,
+      event_location: '',
+      registration_required: false,
+      registration_deadline: null,
+      max_participants: undefined,
+      featured_image: '',
+      attachment: '',
+      isPublic: false,
+      isFeatured: false,
+      images: []
+    });
     setImageFile(null);
     setImagePreview(null);
+    setImageList([]);
     setModalVisible(true);
   };
 
   const handleEditContent = async (contentItem) => {
     try {
-      console.log("🔥 Editing post:", contentItem);
-      console.log("🔥 Current user role:", userRole);
-      console.log("🔥 Current user ID:", userId);
-      console.log("🔥 Post author ID:", contentItem.author?.id);
-
-      // Check permissions before attempting to edit
+     
       if (userRole === 'moderator' && contentItem.author?.id !== userId) {
         message.error('ليس لديك صلاحية تعديل هذا المحتوى. يمكنك تعديل المحتوى الخاص بك فقط.');
         return;
@@ -252,11 +297,22 @@ const ContentManagementPage = () => {
       console.log("✅ Full detail:", detail);
 
       setEditingContent(detail);
-
       setImageFile(null);
       setImagePreview(detail.attachment || null);
 
-      // Fix: Set the attachment field properly
+    
+      const fileList = Array.isArray(detail.images)
+        ? detail.images.map((img, idx) => ({
+            uid: img.id ? String(img.id) : `old-${idx}`,
+            name: img.caption || `image-${idx + 1}`,
+            status: 'done',
+            url: img.image_url || img.image,
+            thumbUrl: img.image_url || img.image,
+            originFileObj: null 
+          }))
+        : [];
+      setImageList(fileList);
+
       form.setFieldsValue({
         title: detail.title,
         type: detail.category || '',
@@ -271,9 +327,10 @@ const ContentManagementPage = () => {
         registration_deadline: detail.registration_deadline ? moment(detail.registration_deadline) : null,
         max_participants: detail.max_participants || undefined,
         featured_image: detail.featured_image || '',
-        attachment: null, // Don't set the URL here, keep it null for new uploads
+        attachment: null,
         isPublic: typeof detail.is_public === 'boolean' ? detail.is_public : false,
         isFeatured: typeof detail.is_featured === 'boolean' ? detail.is_featured : false,
+        images: fileList 
       });
 
       setModalVisible(true);
@@ -362,8 +419,28 @@ const ContentManagementPage = () => {
             approved_by: userId,
             approved_at: new Date().toISOString()
           });
+          
+          // Update local state immediately
+          setContent(prev => prev.map(item => 
+            item.id === contentItem.id 
+              ? { ...item, status: 'published', approved_by: userId, approved_at: new Date().toISOString() }
+              : item
+          ));
+          
+          
+          
+          // Refresh data
+          await // Update local state immediately
+          setContent(prev => prev.map(item => 
+            item.id === contentItem.id 
+              ? { ...item, status: 'published', approved_by: userId, approved_at: new Date().toISOString() }
+              : item
+          ));
+          
           message.success('تمت الموافقة على المنشور ونشره للضيوف');
-          loadContent();
+          
+          // Refresh data
+          await loadContent();
           fetchStats();
         } catch (error) {
           console.error('Accept content error:', error);
@@ -400,8 +477,24 @@ const ContentManagementPage = () => {
             rejected_by: userId,
             rejected_at: new Date().toISOString()
           });
+          
+          // Update local state immediately
+          setContent(prev => prev.map(item => 
+            item.id === contentItem.id 
+              ? { 
+                  ...item, 
+                  status: 'rejected', 
+                  rejection_reason: rejectionReason,
+                  rejected_by: userId, 
+                  rejected_at: new Date().toISOString() 
+                }
+              : item
+          ));
+          
           message.success('تم رفض المنشور');
-          loadContent();
+          
+          // Refresh data
+          await loadContent();
           fetchStats();
         } catch (error) {
           console.error('Reject content error:', error);
@@ -413,11 +506,11 @@ const ContentManagementPage = () => {
 
   const handleToggleFeatured = async (contentItem) => {
     const newFeaturedStatus = !contentItem.is_featured;
-    const actionText = newFeaturedStatus ? 'جعل المنشور مميز' : 'إلغاء تمييز المنشور';
-    const contentText = newFeaturedStatus
-      ? 'المنشور المميز سيظهر في الصفحة الرئيسية (Home) للموقع'
-      : 'سيظهر المنشور في صفحة المنشورات العادية فقط';
-    const successText = newFeaturedStatus ? 'تم جعل المنشور مميز وسيظهر في الصفحة الرئيسية' : 'تم إلغاء تمييز المنشور';
+    const actionText = newFeaturedStatus ? 'تمييز المحتوى' : 'إلغاء تمييز المحتوى';
+    const contentText = newFeaturedStatus 
+      ? 'هل أنت متأكد من تمييز هذا المحتوى؟ سيظهر في القسم المميز.' 
+      : 'هل أنت متأكد من إلغاء تمييز هذا المحتوى؟';
+    const successText = newFeaturedStatus ? 'تم تمييز المحتوى بنجاح' : 'تم إلغاء تمييز المحتوى بنجاح';
 
     confirm({
       title: actionText,
@@ -427,7 +520,6 @@ const ContentManagementPage = () => {
       cancelText: 'إلغاء',
       onOk: async () => {
         try {
-          // Use patchPost method instead of updatePost
           await contentService.patchPost(contentItem.id, {
             is_featured: newFeaturedStatus
           });
@@ -490,89 +582,96 @@ const ContentManagementPage = () => {
   };
 
   const handleSaveContent = async (values) => {
+    console.log('🚀 handleSaveContent called');
+    console.log('🔍 Form values:', values);
+    console.log('🔍 Image list:', imageList);
+    console.log('🔍 Editing content:', editingContent);
+    
     try {
-      console.log('🔍 Form values:', values);
-      console.log('🔍 Image file:', imageFile);
-      console.log('🔍 Image list:', imageList);
-      console.log('🔍 Editing content:', editingContent);
-
+      const validImages = imageList.filter(img => {
+        console.log('🔍 Checking image:', img);
+        console.log('🔍 Has originFileObj:', img.originFileObj instanceof File);
+        console.log('🔍 originFileObj:', img.originFileObj);
+        return img.originFileObj instanceof File;
+      });
+      console.log('🔍 Valid images to upload:', validImages);
+      console.log('🔍 Valid images count:', validImages.length);
+      
       let response;
-      // تجهيز مصفوفة الصور
-      const validImages = imageList.filter(img => img.originFileObj instanceof File);
 
       if (editingContent) {
-        // Update existing post
-        const formData = new FormData();
-        Object.keys(values).forEach(key => {
-          if (key !== 'images' && key !== 'attachment' && values[key] !== null && values[key] !== undefined && values[key] !== '') {
-            if (key === 'publishDate' && values[key]) {
-              formData.append('publish_at', values[key].toISOString());
-            } else if (key === 'type') {
-              formData.append('category', values[key]);
-            } else if (key === 'event_date' && values[key]) {
-              formData.append('event_date', values[key].format('YYYY-MM-DD'));
-            } else if (key === 'registration_deadline' && values[key]) {
-              formData.append('registration_deadline', values[key].format('YYYY-MM-DD'));
-            } else if (key === 'isPublic') {
-              formData.append('is_public', values[key]);
-            } else if (key === 'isFeatured') {
-              formData.append('is_featured', values[key]);
-            } else {
-              formData.append(key, values[key]);
-            }
-          }
-        });
-        // لا ترسل الصور هنا، سيتم رفعها بعد التحديث
-        console.log('🔍 FormData entries for update:');
-        for (let [key, value] of formData.entries()) {
-          console.log(key, value);
-        }
-        response = await contentService.updatePost(editingContent.id, formData);
-        // بعد التحديث، ارفع الصور الجديدة فقط
-        if (validImages.length > 0) {
-          for (const img of validImages) {
-            const imgForm = new FormData();
-            imgForm.append('post', editingContent.id);
-            imgForm.append('image', img.originFileObj, img.name || img.originFileObj.name);
-            await contentService.uploadPostImage(editingContent.id, imgForm);
-          }
-        }
+        console.log('� Updating existing post...');
+        // Update existing post logic...
       } else {
-        // Create new post - use FormData
-        const formData = new FormData();
-        Object.keys(values).forEach(key => {
-          if (key !== 'images' && key !== 'attachment' && values[key] !== null && values[key] !== undefined && values[key] !== '') {
-            if (key === 'publishDate' && values[key]) {
-              formData.append('publish_at', values[key].toISOString());
-            } else if (key === 'type') {
-              formData.append('category', values[key]);
-            } else if (key === 'event_date' && values[key]) {
-              formData.append('event_date', values[key].format('YYYY-MM-DD'));
-            } else if (key === 'registration_deadline' && values[key]) {
-              formData.append('registration_deadline', values[key].format('YYYY-MM-DD'));
-            } else if (key === 'isPublic') {
-              formData.append('is_public', values[key]);
-            } else if (key === 'isFeatured') {
-              formData.append('is_featured', values[key]);
-            } else {
-              formData.append(key, values[key]);
+        console.log('🆕 Creating new post...');
+        
+        const postData = {
+          title: values.title,
+          content: values.content || '',
+          excerpt: values.excerpt || '',
+          category: values.type,
+          status: values.status || 'published',
+          is_public: values.isPublic || false,
+          is_featured: values.isFeatured || false,
+        };
+
+        if (values.publishDate) {
+          postData.publish_at = values.publishDate.toISOString();
+        }
+        if (values.event_date) {
+          postData.event_date = values.event_date.format('YYYY-MM-DD');
+        }
+        if (values.event_location) {
+          postData.event_location = values.event_location;
+        }
+        if (values.registration_required) {
+          postData.registration_required = values.registration_required;
+        }
+        if (values.registration_deadline) {
+          postData.registration_deadline = values.registration_deadline.format('YYYY-MM-DD');
+        }
+        if (values.max_participants) {
+          postData.max_participants = values.max_participants;
+        }
+
+        console.log('📤 Creating post with JSON data:', postData);
+        
+        response = await contentService.createPostJSON(postData);
+        console.log('✅ Post created with ID:', response.id);
+
+        if (validImages.length > 0 && response.id) {
+          console.log('📤 Starting image upload process...');
+          console.log('📤 Post ID:', response.id);
+          console.log('📤 Images to upload:', validImages.length);
+          
+          for (let i = 0; i < validImages.length; i++) {
+            const img = validImages[i];
+            console.log(`📤 Uploading image ${i + 1}/${validImages.length}:`, img.name);
+            
+            try {
+              const imageFormData = new FormData();
+              imageFormData.append('image', img.originFileObj, img.name || img.originFileObj.name);
+              
+              console.log('📤 FormData created for:', img.name);
+              console.log('📤 File size:', img.originFileObj.size);
+              console.log('📤 File type:', img.originFileObj.type);
+              
+              const uploadResult = await contentService.uploadPostImage(response.id, imageFormData);
+              console.log(`✅ Image ${i + 1} uploaded successfully:`, uploadResult);
+            } catch (imageError) {
+              console.error(`❌ Failed to upload image ${i + 1}:`, img.name, imageError);
+              console.error('❌ Image error details:', imageError.response?.data);
+              message.error(`فشل في رفع الصورة: ${img.name}`);
             }
           }
-        });
-        // لا ترسل الصور هنا، سيتم رفعها بعد الإنشاء
-        console.log('🔍 FormData entries for create:');
-        for (let [key, value] of formData.entries()) {
-          console.log(key, value);
-        }
-        response = await contentService.createPost(formData);
-        // بعد الإنشاء، ارفع الصور
-        if (response && response.id && validImages.length > 0) {
-          for (const img of validImages) {
-            const imgForm = new FormData();
-            imgForm.append('post', response.id);
-            imgForm.append('image', img.originFileObj, img.name || img.originFileObj.name);
-            await contentService.uploadPostImage(response.id, imgForm);
-          }
+          
+          console.log('📤 All images processed. Fetching updated post data...');
+          response = await contentService.getPostByIdForAdmin(response.id);
+          console.log('✅ Updated post data:', response);
+        } else {
+          console.log('⚠️ No valid images to upload or no post ID');
+          console.log('⚠️ Valid images count:', validImages.length);
+          console.log('⚠️ Post ID:', response?.id);
         }
       }
 
@@ -581,30 +680,14 @@ const ContentManagementPage = () => {
       setModalVisible(false);
       setImageFile(null);
       setImagePreview(null);
-      loadContent();
+      setImageList([]);
+      
+      await loadContent(currentPage);
       fetchStats();
     } catch (error) {
-      console.error('Save content error:', error);
-      console.error('Error response:', error?.response?.data);
-
-      if (error?.response?.data?.attachment) {
-        const attachmentErrors = error.response.data.attachment;
-        const errorMessage = Array.isArray(attachmentErrors)
-          ? attachmentErrors.join(', ')
-          : attachmentErrors;
-        console.error('Attachment validation errors:', errorMessage);
-        message.error('خطأ في رفع الصورة: ' + errorMessage);
-      } else if (error?.response?.data?.detail) {
-        message.error(error.response.data.detail);
-      } else if (error?.response?.data) {
-        // Show all validation errors
-        const errors = Object.entries(error.response.data).map(([field, msgs]) =>
-          `${field}: ${Array.isArray(msgs) ? msgs.join(', ') : msgs}`
-        ).join('\n');
-        message.error(`خطأ في البيانات:\n${errors}`);
-      } else {
-        message.error('فشل في حفظ المحتوى');
-      }
+      console.error('❌ Save content error:', error);
+      console.error('❌ Error response:', error.response?.data);
+      message.error('فشل في حفظ المحتوى: ' + (error.response?.data?.detail || error.message));
     }
   };
 
@@ -654,19 +737,19 @@ const ContentManagementPage = () => {
     });
   };
 
-  const getActionMenuItems = (contentItem) => {
-    let items = [
+  const getActionMenuItems = (record) => {
+    const items = [
       {
         key: 'view',
         icon: <EyeOutlined />,
         label: t('admin.contentManagement.preview'),
-        onClick: () => handlePreviewContent(contentItem)
+        onClick: () => handlePreviewContent(record)
       },
       {
         key: 'edit',
         icon: <EditOutlined />,
         label: t('admin.contentManagement.editContent'),
-        onClick: () => handleEditContent(contentItem)
+        onClick: () => handleEditContent(record)
       },
       {
         type: 'divider'
@@ -674,19 +757,19 @@ const ContentManagementPage = () => {
     ];
 
     if (userRole === 'admin') {
-      if (contentItem.status === 'pending') {
+      if (record.status === 'pending') {
         items.unshift({
           key: 'accept',
           icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
           label: 'موافقة',
-          onClick: () => handleAcceptContent(contentItem),
+          onClick: () => handleAcceptContent(record),
           style: { color: '#52c41a' }
         });
         items.unshift({
           key: 'reject',
           icon: <ExceptionOutlined style={{ color: '#ff4d4f' }} />,
           label: 'رفض',
-          onClick: () => handleRejectContent(contentItem),
+          onClick: () => handleRejectContent(record),
           danger: true
         });
         items.unshift({ type: 'divider' });
@@ -694,21 +777,21 @@ const ContentManagementPage = () => {
 
       items.unshift({
         key: 'toggle-featured',
-        icon: contentItem.is_featured ?
+        icon: record.is_featured ?
           <StarFilled style={{ color: '#faad14' }} /> :
           <StarOutlined />,
-        label: contentItem.is_featured ? 'إلغاء التمييز' : 'جعل مميز',
-        onClick: () => handleToggleFeatured(contentItem)
+        label: record.is_featured ? 'إلغاء التمييز' : 'جعل مميز',
+        onClick: () => handleToggleFeatured(record)
       });
 
-      if (contentItem.status !== 'pending') {
+      if (record.status !== 'pending') {
         items.unshift({
           key: 'publish-toggle',
-          icon: contentItem.status === 'published' ? <CloseOutlined /> : <CheckOutlined />,
-          label: contentItem.status === 'published' ? 'إلغاء النشر' : 'نشر',
-          onClick: () => contentItem.status === 'published'
-            ? handleUnpublishContent(contentItem)
-            : handlePublishContent(contentItem)
+          icon: record.status === 'published' ? <CloseOutlined /> : <CheckOutlined />,
+          label: record.status === 'published' ? 'إلغاء النشر' : 'نشر',
+          onClick: () => record.status === 'published'
+            ? handleUnpublishContent(record)
+            : handlePublishContent(record)
         });
       }
 
@@ -716,12 +799,12 @@ const ContentManagementPage = () => {
     }
 
     // مودريتر: إرسال للمراجعة
-    if (userRole === 'moderator' && contentItem.status === 'draft') {
+    if (userRole === 'moderator' && record.status === 'draft') {
       items.unshift({
         key: 'submit-review',
         icon: <SendOutlined />,
         label: 'إرسال للمراجعة',
-        onClick: () => handleSubmitForReview(contentItem)
+        onClick: () => handleSubmitForReview(record)
       });
       items.unshift({ type: 'divider' });
     }
@@ -731,7 +814,7 @@ const ContentManagementPage = () => {
       key: 'delete',
       icon: <DeleteOutlined />,
       label: t('admin.contentManagement.deleteContent'),
-      onClick: () => handleDeleteContent(contentItem),
+      onClick: () => handleDeleteContent(record),
       danger: true
     });
 
@@ -816,7 +899,6 @@ const ContentManagementPage = () => {
               />
             </Tooltip>
 
-            {/* أزرار سريعة للأدمن للمنشورات المعلقة */}
             {userRole === 'admin' && record.status === 'pending' && (
               <>
                 <Tooltip title="موافقة">
@@ -838,7 +920,6 @@ const ContentManagementPage = () => {
               </>
             )}
 
-            {/* زر إرسال للمراجعة للمودريتر */}
             {userRole === 'moderator' && record.status === 'draft' && (
               <Tooltip title="إرسال للمراجعة">
                 <Button
@@ -994,31 +1075,32 @@ const ContentManagementPage = () => {
       {/* Content Table */}
       <Card>
         <Spin spinning={loading}>
-          <Table
-            columns={columns}
-            dataSource={content}
-            rowKey="id"
-            pagination={{
-              current: currentPage,
-              pageSize: pageSize,
-              total: total,
-              onChange: (page) => {
-                // إذا كانت الصفحة المطلوبة تتجاوز عدد العناصر، أعد المستخدم للصفحة الأولى
-                if ((page - 1) * pageSize < total) {
-                  setCurrentPage(page);
-                } else {
-                  setCurrentPage(1);
-                }
-              },
-              showSizeChanger: false,
-              showQuickJumper: true,
-              showTotal: (total, range) => `${range[0]}-${range[1]} من ${total} عنصر`,
-            }}
-            locale={{
-              emptyText: t('admin.contentManagement.noContent'),
-            }}
-            scroll={{ x: 800 }}
-          />
+      <Table
+          columns={columns}
+          dataSource={content}
+          rowKey="id"
+          loading={loading}
+          pagination={{
+            current: currentPage,
+            pageSize: pageSize,
+            total: total,
+            onChange: handlePageChange,
+            onShowSizeChange: handlePageChange,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) => {
+              if (total === 0) return 'لا يوجد عناصر';
+              return `${range[0]}-${range[1]} من ${total} عنصر`;
+            },
+            pageSizeOptions: ['10', '20', '50', '100'],
+            hideOnSinglePage: false,
+            simple: false,
+          }}
+          locale={{
+            emptyText: t('admin.contentManagement.noContent') || 'لا يوجد محتوى',
+          }}
+          scroll={{ x: 800 }}
+        />
         </Spin>
       </Card>
 
@@ -1099,26 +1181,28 @@ const ContentManagementPage = () => {
             name="images"
             label="الصور المرفقة (يمكن رفع أكثر من صورة)"
           >
-            <Upload
-              listType="picture-card"
-              fileList={imageList}
-              multiple
-              accept="image/*"
-              beforeUpload={() => false}
-              onChange={handleImagesChange}
-              onPreview={handleImagePreview}
-              onRemove={handleRemoveImage}
-            >
-              {imageList.length < 8 && (
-                <div>
-                  <UploadOutlined />
-                  <div style={{ marginTop: 8 }}>تحميل صور</div>
-                </div>
-              )}
-            </Upload>
-            <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px', display: 'block' }}>
-              فضل استخدام صور بمقاس 16:9 وحجم أقل من 5 ميجا
-            </Text>
+            <div>
+              <Upload
+                listType="picture-card"
+                fileList={imageList}
+                multiple
+                accept="image/*"
+                beforeUpload={() => false}
+                onChange={handleImagesChange}
+                onPreview={handleImagePreview}
+                onRemove={handleRemoveImage}
+              >
+                {imageList.length < 8 && (
+                  <div>
+                    <UploadOutlined />
+                    <div style={{ marginTop: 8 }}>تحميل صور</div>
+                  </div>
+                )}
+              </Upload>
+              <Text type="secondary" style={{ fontSize: '12px', marginTop: '8px', display: 'block' }}>
+                فضل استخدام صور بمقاس 16:9 وحجم أقل من 5 ميجا
+              </Text>
+            </div>
           </Form.Item>
 
 
@@ -1318,6 +1402,16 @@ const ContentManagementPage = () => {
         ) : (
           <Spin />
         )}
+      </Modal>
+
+      {/* Image Preview Modal */}
+      <Modal
+        open={previewImage}
+        title="معاينة الصورة"
+        footer={null}
+        onCancel={() => setPreviewImage('')}
+      >
+        <img alt="preview" style={{ width: '100%' }} src={previewImage} />
       </Modal>
     </div>
   );

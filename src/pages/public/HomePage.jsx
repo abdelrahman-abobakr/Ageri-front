@@ -72,7 +72,6 @@ const HomePage = () => {
   });
   const [statsLoading, setStatsLoading] = useState(true);
 
-  // Enhanced CSS animations
   const carouselAnimations = `
     @keyframes fadeInUp {
       from {
@@ -348,7 +347,7 @@ const HomePage = () => {
     if (organizationData.vision) {
       slides.push({
         id: 'vision',
-        title: "منظمة البحث العلمي", // Force Arabic title
+        title: t('homepage.orgName'), // Force Arabic title
         content: organizationData.vision,
         backgroundImage: defaultImage,
         icon: <RocketOutlined />,
@@ -647,48 +646,6 @@ const HomePage = () => {
       {/* Main Content Container */}
       <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 24px' }}>
 
-        {/* Statistics Section */}
-        <div style={{ marginTop: '-60px', marginBottom: '80px', position: 'relative', zIndex: 10 }}>
-          <Row gutter={[24, 24]} justify="center">
-            {[
-              { title: 'الباحثون', value: stats.researchers, icon: <TeamOutlined />, suffix: stats.researchers > 0 ? '+' : '' },
-              { title: 'المشاريع البحثية', value: stats.projects, icon: <ExperimentOutlined />, suffix: stats.projects > 0 ? '+' : '' },
-              { title: 'المنشورات العلمية', value: stats.publications, icon: <BookOutlined />, suffix: stats.publications > 0 ? '+' : '' },
-              { title: 'الدورات التدريبية', value: stats.courses, icon: <FileTextOutlined />, suffix: stats.courses > 0 ? '+' : '' }
-            ].map((stat, index) => (
-              <Col xs={12} sm={6} key={index}>
-                <Card className="stats-card professional-card" style={{
-                  textAlign: 'center',
-                  background: getGradientBackground(index),
-                  minHeight: '140px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <div style={{ color: 'white' }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '0.5rem' }}>
-                      {stat.icon}
-                    </div>
-                    <Statistic
-                      value={stat.value}
-                      suffix={stat.suffix}
-                      valueStyle={{
-                        color: 'white',
-                        fontSize: '2rem',
-                        fontWeight: 'bold',
-                        marginBottom: '0.5rem'
-                      }}
-                    />
-                    <Text style={{ color: 'rgba(255,255,255,0.9)', fontSize: '14px', fontWeight: '500' }}>
-                      {stat.title}
-                    </Text>
-                  </div>
-                </Card>
-              </Col>
-            ))}
-          </Row>
-        </div>
-
         {/* Quick Actions Section */}
         <div style={{ marginTop: '60px', marginBottom: '60px' }}>
           <Row gutter={[24, 24]} justify="center">
@@ -835,6 +792,7 @@ const HomePage = () => {
                       hoverable
                       style={{
                         height: '100%',
+                        
                         borderRadius: '20px',
                         border: 'none',
                         boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
@@ -1132,8 +1090,307 @@ const HomePage = () => {
             </Card>
           </div>
         )}
-      </div>
+         {/* Research Excellence Section */}
+        <div style={{ marginBottom: '100px' }}>
+          <div style={{ marginBottom: '48px', textAlign: 'center' }}>
+            <Title level={1} style={{
+              margin: 0,
+              background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              fontSize: '3.5rem',
+              fontWeight: '800',
+              marginBottom: '16px'
+            }}>
+              التميز في البحث العلمي
+            </Title>
+            <Paragraph style={{
+              marginTop: '16px',
+              fontSize: '18px',
+              color: '#6b7280',
+              fontWeight: '500',
+              maxWidth: '600px',
+              margin: '0 auto'
+            }}>
+              نحن نقود الابتكار في مجالات البحث المتقدمة ونساهم في تطوير الحلول العلمية المستدامة
+            </Paragraph>
+          </div>
 
+          <Row gutter={[32, 32]}>
+            {[
+              {
+                title: "الذكاء الاصطناعي",
+                description: "تطوير خوارزميات متقدمة للتعلم الآلي وتطبيقاتها في الحياة العملية",
+                icon: "🤖",
+                gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              },
+              {
+                title: "الطاقة المتجددة",
+                description: "أبحاث متطورة في مجال الطاقة الشمسية وطاقة الرياح والحلول البيئية",
+                icon: "🌱",
+                gradient: "linear-gradient(135deg, #52c41a 0%, #73d13d 100%)",
+              },
+              {
+                title: "التكنولوجيا الحيوية",
+                description: "تطوير العلاجات الجينية والأدوية المبتكرة لمعالجة الأمراض المستعصية",
+                icon: "🧬",
+                gradient: "linear-gradient(135deg, #f759ab 0%, #ff7875 100%)",
+              },
+              {
+                title: "علوم الفضاء",
+                description: "استكشاف الفضاء وتطوير تقنيات الأقمار الصناعية والاتصالات الفضائية",
+                icon: "🚀",
+                gradient: "linear-gradient(135deg, #faad14 0%, #ffc53d 100%)",
+              }
+            ].map((field, index) => (
+              <Col xs={24} sm={12} lg={6} key={index}>
+                <Card
+                  hoverable
+                  style={{
+                    height: '320px',
+                    borderRadius: '24px',
+                    border: 'none',
+                    background: field.gradient,
+                    color: 'white',
+                    overflow: 'hidden',
+                    position: 'relative',
+                    cursor: 'pointer'
+                  }}
+                  bodyStyle={{ 
+                    padding: '32px 24px',
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                    e.currentTarget.style.boxShadow = '0 25px 50px rgba(0,0,0,0.2)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                    e.currentTarget.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
+                  }}
+                >
+                  <div style={{
+                    position: 'absolute',
+                    top: '-50px',
+                    right: '-50px',
+                    width: '150px',
+                    height: '150px',
+                    background: 'rgba(255,255,255,0.1)',
+                    borderRadius: '50%',
+                    zIndex: 1
+                  }} />
+                  
+                  <div style={{ position: 'relative', zIndex: 2 }}>
+                    <div style={{
+                      fontSize: '48px',
+                      marginBottom: '16px',
+                      textAlign: 'center'
+                    }}>
+                      {field.icon}
+                    </div>
+                    
+                    <Title level={4} style={{
+                      color: 'white',
+                      marginBottom: '12px',
+                      textAlign: 'center',
+                      fontSize: '20px'
+                    }}>
+                      {field.title}
+                    </Title>
+                    
+                    <Paragraph style={{
+                      color: 'rgba(255,255,255,0.9)',
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      textAlign: 'center',
+                      marginBottom: '20px'
+                    }}>
+                      {field.description}
+                    </Paragraph>
+                    
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '8px 16px',
+                      background: 'rgba(255,255,255,0.2)',
+                      borderRadius: '20px',
+                      fontSize: '14px',
+                      fontWeight: 'bold'
+                    }}>
+                      {field.stats}
+                    </div>
+                  </div>
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        </div>
+
+        {/* Success Stories Section */}
+        <div style={{ 
+          marginBottom: '100px',
+          background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+          padding: '80px 0',
+          borderRadius: '32px',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          <div style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            width: '200px',
+            height: '200px',
+            background: 'linear-gradient(135deg, rgba(24,144,255,0.1) 0%, rgba(64,169,255,0.1) 100%)',
+            borderRadius: '50%',
+            zIndex: 1
+          }} />
+          
+          <div style={{ position: 'relative', zIndex: 2, maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
+            <div style={{ marginBottom: '48px', textAlign: 'center' }}>
+              <Title level={1} style={{
+                margin: 0,
+                background: 'linear-gradient(135deg, #1890ff 0%, #40a9ff 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                fontSize: '3.5rem',
+                fontWeight: '800',
+                marginBottom: '16px'
+              }}>
+                قصص نجاح ملهمة
+              </Title>
+              <Paragraph style={{
+                marginTop: '16px',
+                fontSize: '18px',
+                color: '#6b7280',
+                fontWeight: '500',
+                maxWidth: '600px',
+                margin: '0 auto'
+              }}>
+                إنجازات حقيقية غيرت مسار البحث العلمي وأثرت إيجاب على المجتمع
+              </Paragraph>
+            </div>
+
+            <Row gutter={[32, 32]}>
+              {[
+                {
+                  title: "علاج السرطان الثوري",
+                  description: "تطوير علاج جيني جديد حقق نسبة شفاء 85% في المراحل المبكرة من سرطان الدم",
+                  achievement: "براءة اختراع دولية",
+                  year: "2024",
+                  icon: "🏆",
+                  color: "#52c41a"
+                },
+                {
+                  title: "تقنية تحلية المياه",
+                  description: "ابتكار نظام تحلية مياه بالطاقة الشمسية بكفاءة 95% وتكلفة أقل بـ 60%",
+                  achievement: "جائزة الابتكار العالمية",
+                  year: "2023",
+                  icon: "💧",
+                  color: "#1890ff"
+                },
+                {
+                  title: "الذكاء الاصطناعي الطبي",
+                  description: "تطوير نظام ذكي لتشخيص الأمراض النادرة بدقة 98% في أقل من دقيقتين",
+                  achievement: "شراكة مع منظمة الصحة العالمية",
+                  year: "2024",
+                  icon: "🔬",
+                  color: "#722ed1"
+                }
+              ].map((story, index) => (
+                <Col xs={24} md={8} key={index}>
+                  <Card
+                    hoverable
+                    style={{
+                      height: '100%',
+                      borderRadius: '20px',
+                      border: 'none',
+                      boxShadow: '0 10px 40px rgba(0,0,0,0.08)',
+                      overflow: 'hidden',
+                      background: 'white'
+                    }}
+                    bodyStyle={{ padding: '32px' }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-8px)';
+                      e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.15)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.08)';
+                    }}
+                  >
+                    <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                      <div style={{
+                        fontSize: '48px',
+                        marginBottom: '16px'
+                      }}>
+                        {story.icon}
+                      </div>
+                      
+                      <Badge
+                        count={story.year}
+                        style={{
+                          backgroundColor: story.color,
+                          fontSize: '12px',
+                          fontWeight: 'bold'
+                        }}
+                      />
+                    </div>
+                    
+                    <Title level={4} style={{
+                      marginBottom: '16px',
+                      textAlign: 'center',
+                      color: '#1f2937'
+                    }}>
+                      {story.title}
+                    </Title>
+                    
+                    <Paragraph style={{
+                      color: '#6b7280',
+                      fontSize: '14px',
+                      lineHeight: '1.6',
+                      marginBottom: '20px',
+                      textAlign: 'center'
+                    }}>
+                      {story.description}
+                    </Paragraph>
+                    
+                    <div style={{
+                      background: `linear-gradient(135deg, ${story.color}15 0%, ${story.color}25 100%)`,
+                      padding: '16px',
+                      borderRadius: '12px',
+                      marginBottom: '16px'
+                    }}>
+                      <Text style={{
+                        color: story.color,
+                        fontWeight: 'bold',
+                        fontSize: '14px'
+                      }}>
+                        {story.achievement}
+                      </Text>
+                    </div>
+                    
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '12px',
+                      background: '#f8fafc',
+                      borderRadius: '8px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      color: '#374151'
+                    }}>
+                      {story.impact}
+                    </div>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+          </div>
+        </div>
+      </div>
+      
       {/* Footer Section */}
       <div style={{
         background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',

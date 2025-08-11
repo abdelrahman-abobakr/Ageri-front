@@ -118,8 +118,9 @@
     "totalUsers": "إجمالي المستخدمين"
   },
   "homepage": {
+    "orgName": "منظمة البحث العلمي",
     "heroTitle": "منظمة البحث العلمي",
-    "heroSubtitle": "تطوير البحوث والابتكار الزراعي من أجل مستقبل مستدام",
+    "heroSubtitle": "قيادة مستقبل البحث والابتكار.",
     "latestNews": "آخر الأخبار والمقالات",
     "latestNewsDesc": "اطلع على أحدث المقالات والأخبار في مجال البحث العلمي والتطوير التكنولوجي",
     "myStatistics": "إحصائياتي",
@@ -141,18 +142,18 @@
     "viewAllNews": "عرض جميع الأخبار",
     "aboutUs": "التميز في البحث العلمي",
     "aboutDesc": "أبحاث الجينات والعلوم الحيوية",
-    "ourVision": "رؤيتنا للمستقبل",
+    "ourVision": "رؤيتنا",
     "ourMission": "مهمتنا",
-    "missionSubtitle": "الابتكار في خدمة المجتمع",
-    "aboutSubtitle": "خبرة عقود في خدمة العلم",
-    "journeyToExcellence": "رحلة نحو التميز",
+    "missionSubtitle": "المهمة",
+    "aboutSubtitle": "عن المنظمة",
+    "journeyToExcellence": "رحلة التميز",
     "scientificResearch": "البحوث العلمية",
     "trainingCourses": "الدورات التدريبية",
     "services": "الخدمات",
     "contactUs": "اتصل بنا",
     "quickLinks": "روابط سريعة",
-    "followUs": "تابعنا",
-    "allRightsReserved": "جميع الحقوق محفوظة",
+    "followUs": "تابعنا على",
+    "rightsReserved": "جميع الحقوق محفوظة.",
     "stats": {
       "researchers": "الباحثون",
       "projects": "المشاريع البحثية",
@@ -174,6 +175,26 @@
       "seminar": "ندوة",
       "workshop": "ورشة عمل",
       "featured": "مميز"
+    },
+    "featuredPosts": {
+      "title": "مقالات مميزة",
+      "description": "استكشف مجموعة من المقالات المميزة التي اخترناها لك.",
+      "viewAll": "عرض الكل"
+    },
+    "successStories": {
+      "title": "قصص نجاح ملهمة",
+      "description": "اكتشف كيف غيرت الأبحاث العلمية حياة الناس والمجتمعات.",
+      "viewAll": "عرض الكل"
+    },
+    "researchAreas": {
+      "title": "مجالات البحث",
+      "description": "استكشف مجالات البحث المتنوعة التي نغطيها.",
+      "viewAll": "عرض الكل"
+    },
+    "upcomingEvents": {
+      "title": "الفعاليات القادمة",
+      "description": "لا تفوت الفعاليات القادمة في مجال البحث العلمي.",
+      "viewAll": "عرض الكل"
     }
   },
   "posts": {
