@@ -314,6 +314,7 @@ export const contentService = {
         : API_ENDPOINTS.CONTENT.POST_DETAIL(id);
 
       const response = await apiClient.delete(endpoint);
+      console.log(response);
       return response.data;
     } catch (error) {
       console.error('Failed to delete content:', error);

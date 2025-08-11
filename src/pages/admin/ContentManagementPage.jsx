@@ -289,7 +289,8 @@ const ContentManagementPage = () => {
       onOk: async () => {
         try {
           const res = await contentService.deleteContent(contentItem.id, 'post');
-
+          console.log('deleted post resuk')
+          console.log(res)
           if (!res || res.success === true || res.status === 204) {
             message.success(t('admin.contentManagement.contentDeleted'));
             setContent((prev) => prev.filter((post) => post.id !== contentItem.id));
@@ -660,13 +661,13 @@ const ContentManagementPage = () => {
         key: 'view',
         icon: <EyeOutlined />,
         label: t('admin.contentManagement.preview'),
-        onClick: () => handlePreviewContent(contentItem)
+        // Remove onClick from here - handle in onMenuClick instead
       },
       {
         key: 'edit',
         icon: <EditOutlined />,
         label: t('admin.contentManagement.editContent'),
-        onClick: () => handleEditContent(contentItem)
+        // Remove onClick from here - handle in onMenuClick instead
       },
       {
         type: 'divider'
@@ -679,14 +680,12 @@ const ContentManagementPage = () => {
           key: 'accept',
           icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
           label: 'موافقة',
-          onClick: () => handleAcceptContent(contentItem),
           style: { color: '#52c41a' }
         });
         items.unshift({
           key: 'reject',
           icon: <ExceptionOutlined style={{ color: '#ff4d4f' }} />,
           label: 'رفض',
-          onClick: () => handleRejectContent(contentItem),
           danger: true
         });
         items.unshift({ type: 'divider' });
@@ -698,7 +697,6 @@ const ContentManagementPage = () => {
           <StarFilled style={{ color: '#faad14' }} /> :
           <StarOutlined />,
         label: contentItem.is_featured ? 'إلغاء التمييز' : 'جعل مميز',
-        onClick: () => handleToggleFeatured(contentItem)
       });
 
       if (contentItem.status !== 'pending') {
@@ -706,9 +704,6 @@ const ContentManagementPage = () => {
           key: 'publish-toggle',
           icon: contentItem.status === 'published' ? <CloseOutlined /> : <CheckOutlined />,
           label: contentItem.status === 'published' ? 'إلغاء النشر' : 'نشر',
-          onClick: () => contentItem.status === 'published'
-            ? handleUnpublishContent(contentItem)
-            : handlePublishContent(contentItem)
         });
       }
 
@@ -721,7 +716,6 @@ const ContentManagementPage = () => {
         key: 'submit-review',
         icon: <SendOutlined />,
         label: 'إرسال للمراجعة',
-        onClick: () => handleSubmitForReview(contentItem)
       });
       items.unshift({ type: 'divider' });
     }
@@ -731,13 +725,47 @@ const ContentManagementPage = () => {
       key: 'delete',
       icon: <DeleteOutlined />,
       label: t('admin.contentManagement.deleteContent'),
-      onClick: () => handleDeleteContent(contentItem),
       danger: true
     });
 
     return items;
   };
+  const handleMenuClick = (menuInfo, contentItem) => {
+    const { key } = menuInfo;
 
+    switch (key) {
+      case 'view':
+        handlePreviewContent(contentItem);
+        break;
+      case 'edit':
+        handleEditContent(contentItem);
+        break;
+      case 'accept':
+        handleAcceptContent(contentItem);
+        break;
+      case 'reject':
+        handleRejectContent(contentItem);
+        break;
+      case 'toggle-featured':
+        handleToggleFeatured(contentItem);
+        break;
+      case 'publish-toggle':
+        if (contentItem.status === 'published') {
+          handleUnpublishContent(contentItem);
+        } else {
+          handlePublishContent(contentItem);
+        }
+        break;
+      case 'submit-review':
+        handleSubmitForReview(contentItem);
+        break;
+      case 'delete':
+        handleDeleteContent(contentItem);
+        break;
+      default:
+        console.log('Unknown action:', key);
+    }
+  };
   const columns = [
     {
       title: t('admin.contentManagement.title'),
@@ -851,7 +879,10 @@ const ContentManagementPage = () => {
             )}
 
             <Dropdown
-              menu={{ items: getActionMenuItems(record) }}
+              menu={{
+                items: getActionMenuItems(record),
+                onClick: (menuInfo) => handleMenuClick(menuInfo, record)
+              }}
               trigger={['click']}
             >
               <Button size="small" icon={<MoreOutlined />} />
@@ -859,7 +890,7 @@ const ContentManagementPage = () => {
           </Space>
         );
       },
-    },
+    }
   ];
   return (
     <div>
