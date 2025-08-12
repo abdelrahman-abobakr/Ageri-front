@@ -113,22 +113,87 @@ export const contentService = {
     return response.data;
   },
   createPost: async (formData) => {
-    const token = localStorage.getItem('access_token');
+    try {
+      console.log('🔍 Create post - FormData entries:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
 
-    const config = {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // Don't set Content-Type for FormData - axios handles it automatically
-      },
-    };
-
-    console.log('🔍 Create post config:', config);
-    console.log('🔍 FormData entries:');
-    for (let [key, value] of formData.entries()) {
-      console.log(key, value);
+      // Don't set any headers for FormData - let axios handle it automatically
+      const response = await apiClient.post(API_ENDPOINTS.CONTENT.POSTS, formData);
+      return response.data;
+    } catch (error) {
+      console.error('createPost error:', error);
+      console.error('Error response data:', error?.response?.data);
+      throw error;
     }
-
-    return apiClient.post(API_ENDPOINTS.CONTENT.POSTS, formData, config);
+  },
+  createPostJSON: async (data) => {
+    try {
+      console.log('🔍 Create post JSON - data:', data);
+      const response = await apiClient.post(API_ENDPOINTS.CONTENT.POSTS, data, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('🔍 Create post JSON - full response:', response);
+      console.log('🔍 Create post JSON - response.data:', response.data);
+      console.log('🔍 Create post JSON - response.data.id:', response.data.id);
+      
+      // If no ID in response, try to get it from Location header or fetch the latest post
+      if (!response.data.id) {
+        console.log('⚠️ No ID in response, trying to find the created post...');
+        
+        // Try to extract ID from Location header
+        const locationHeader = response.headers.location;
+        if (locationHeader) {
+          const idMatch = locationHeader.match(/\/(\d+)\/$/);
+          if (idMatch) {
+            const extractedId = parseInt(idMatch[1]);
+            console.log('✅ Extracted ID from Location header:', extractedId);
+            return { ...response.data, id: extractedId };
+          }
+        }
+        
+        // Fallback: search for the post by title
+        try {
+          console.log('🔍 Searching for post by title:', data.title);
+          const searchResponse = await apiClient.get(API_ENDPOINTS.CONTENT.POSTS, {
+            params: {
+              search: data.title,
+              ordering: '-created_at',
+              page_size: 5
+            }
+          });
+          
+          if (searchResponse.data.results && searchResponse.data.results.length > 0) {
+            // Find the exact match by title
+            const exactMatch = searchResponse.data.results.find(post => 
+              post.title === data.title && 
+              post.content === data.content
+            );
+            
+            if (exactMatch) {
+              console.log('✅ Found created post by search:', exactMatch.id);
+              return { ...response.data, id: exactMatch.id };
+            }
+            
+            // If no exact match, take the first result (most recent)
+            const latestPost = searchResponse.data.results[0];
+            console.log('✅ Using latest post as fallback:', latestPost.id);
+            return { ...response.data, id: latestPost.id };
+          }
+        } catch (searchError) {
+          console.error('❌ Failed to search for created post:', searchError);
+        }
+      }
+      
+      return response.data;
+    } catch (error) {
+      console.error('createPostJSON error:', error);
+      console.error('Error response data:', error?.response?.data);
+      throw error;
+    }
   },
   updatePost: async (id, data) => {
     const token = localStorage.getItem('access_token');
@@ -526,15 +591,39 @@ export const contentService = {
    */
   uploadPostImage: async (postId, formData) => {
     try {
-      // استخدم الرابط الكامل مع /api/content/
+      console.log('🔍 Uploading image for post:', postId);
+      console.log('🔍 FormData entries:');
+      for (let [key, value] of formData.entries()) {
+        console.log(key, value);
+      }
+
       const response = await apiClient.post(`/api/content/posts/${postId}/images/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
+      console.log('✅ Image upload response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Failed to upload post image:', error);
+      console.error('❌ Failed to upload post image:', error);
+      console.error('❌ Error response:', error.response?.data);
+      throw error;
+    }
+  },
+
+  /**
+   * حذف صورة من البوست
+   * @param {number|string} postId
+   * @param {number|string} imageId
+   */
+  deletePostImage: async (postId, imageId) => {
+    try {
+      console.log('🔍 Deleting image', imageId, 'from post', postId);
+      const response = await apiClient.delete(`/api/content/posts/${postId}/images/${imageId}/`);
+      console.log('✅ Image delete response:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('❌ Failed to delete post image:', error);
       throw error;
     }
   },

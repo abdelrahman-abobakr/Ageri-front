@@ -272,6 +272,7 @@ export const API_ENDPOINTS = {
     ANNOUNCEMENT_DETAIL: (id) => `/api/content/posts/${id}/`,
     POSTS: '/api/content/posts/',
     MY_POSTS: '/api/content/posts/my_posts/',
+    POST_IMAGES: (id) => `/api/content/posts/${id}/images/`,
     POST_DETAIL: (id) => `/api/content/posts/${id}/`,
     POST_COMMENTS: (id) => `/api/content/posts/${id}/comments/`,
     COMMENT_DETAIL: (id) => `/api/content/comments/${id}/`,
