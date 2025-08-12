@@ -248,7 +248,7 @@ const HomePage = () => {
             about: "معهد البحوث العلمية والتطوير التقني مؤسسة رائدة في مجال البحث العلمي والابتكار التقني، تأسس عام 1985 ويضم نخبة من العلماء والباحثين المتخصصين في مختلف المجالات العلمية والتقنية. يساهم المعهد في تطوير الحلول العلمية والتقنية المتقدمة لمواجهة التحديات المعاصرة وتحقيق التنمية المستدامة.",
             email: "info@research-institute.org",
             phone: "+966 11 456 7890",
-            address: "شارع الملك فهد، الرياض 11564، المملكة العربية السعودية",
+            address: "Inside Cairo Uni, Oula, Al Giza, Giza Governorate 3725005",
             website: "https://research-institute.org",
             facebook: "https://facebook.com/research-institute",
             twitter: "https://twitter.com/research_institute",

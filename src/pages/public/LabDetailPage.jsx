@@ -117,14 +117,7 @@ const LabDetailPage = () => {
                   </Text>
                 </Col>
               )}
-              {lab.capacity && (
-                <Col>
-                  <Text>
-                    <TeamOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-                    Capacity: {lab.capacity}
-                  </Text>
-                </Col>
-              )}
+              {/* Capacity removed as per request */}
             </Row>
 
             {lab.description && (
@@ -140,50 +133,75 @@ const LabDetailPage = () => {
         {/* Lab Information */}
         <Col xs={24} lg={8}>
           <Card title="Laboratory Information" style={{ marginBottom: '24px' }}>
-            {lab.research_focus && (
-              <div style={{ marginBottom: '16px' }}>
-                <Text strong>Research Focus:</Text>
-                <Paragraph style={{ marginTop: '4px' }}>{lab.research_focus}</Paragraph>
-              </div>
-            )}
-            
-            {lab.equipment && lab.equipment.length > 0 && (
-              <div style={{ marginBottom: '16px' }}>
-                <Text strong>Equipment:</Text>
-                <div style={{ marginTop: '8px' }}>
-                  {lab.equipment.map((item, index) => (
-                    <Tag key={index} style={{ marginBottom: '4px' }}>{item}</Tag>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {lab.established_date && (
+            {/* Department Info */}
+            {lab.department && (
               <div style={{ marginBottom: '12px' }}>
-                <Text strong>Established: </Text>
-                <Text>{new Date(lab.established_date).getFullYear()}</Text>
+                <Text strong>Department: </Text>
+                <Text>{lab.department.name}</Text>
+               
+                
               </div>
             )}
 
-            {lab.contact_email && (
+            {/* Head of Lab */}
+            {lab.head && (
               <div style={{ marginBottom: '12px' }}>
-                <Text strong>Contact: </Text>
-                <Text>
-                  <MailOutlined style={{ marginRight: '4px' }} />
-                  {lab.contact_email}
-                </Text>
+                <Text strong>Head of Lab: </Text>
+                <Text>{lab.head.full_name}</Text>
+                {lab.head.email && (
+                  <div style={{ fontSize: 12 }}>
+                    <MailOutlined style={{ marginRight: 4 }} />{lab.head.email}
+                  </div>
+                )}
               </div>
             )}
 
-            {lab.contact_phone && (
+            {/* Description */}
+            {lab.description && (
+              <div style={{ marginBottom: '12px' }}>
+                <Text strong>Description: </Text>
+                <Paragraph style={{ margin: 0 }}>{lab.description}</Paragraph>
+              </div>
+            )}
+
+            {/* Equipment */}
+            {lab.equipment && (
+              <div style={{ marginBottom: '12px' }}>
+                <Text strong>Equipment: </Text>
+                <Text>{lab.equipment}</Text>
+              </div>
+            )}
+
+            {/* Phone */}
+            {lab.phone && (
               <div style={{ marginBottom: '12px' }}>
                 <Text strong>Phone: </Text>
-                <Text>
-                  <PhoneOutlined style={{ marginRight: '4px' }} />
-                  {lab.contact_phone}
-                </Text>
+                <Text><PhoneOutlined style={{ marginRight: 4 }} />{lab.phone}</Text>
               </div>
             )}
+
+            {/* Current Researchers Count & Available Spots */}
+            <div style={{ marginBottom: '12px' }}>
+              <Text strong>Current Researchers: </Text>
+              <Text>{lab.current_researchers_count}</Text>
+              <br />
+              <Text strong>Available Spots: </Text>
+              <Text>{lab.available_spots}</Text>
+            </div>
+
+            {/* Status */}
+            <div style={{ marginBottom: '12px' }}>
+              <Text strong>Status: </Text>
+              <Tag color={lab.status === 'active' ? 'green' : lab.status === 'pending' ? 'orange' : 'red'}>
+                {lab.status}
+              </Tag>
+            </div>
+
+            {/* Created/Updated At */}
+            <div style={{ fontSize: 12, color: '#888' }}>
+              Created: {lab.created_at && new Date(lab.created_at).toLocaleDateString()}<br />
+              Updated: {lab.updated_at && new Date(lab.updated_at).toLocaleDateString()}
+            </div>
           </Card>
 
           {/* Head of Lab */}
@@ -238,7 +256,7 @@ const LabDetailPage = () => {
 
         {/* Lab Members */}
         <Col xs={24} lg={16}>
-          <Card 
+          <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <TeamOutlined style={{ marginRight: '8px' }} />
@@ -254,57 +272,43 @@ const LabDetailPage = () => {
                 <Text type="secondary">This laboratory doesn't have any assigned members yet.</Text>
               </div>
             ) : (
-              <List
-                dataSource={labMembers}
-                renderItem={(researcher) => (
-                  <List.Item>
-                    <div 
-                      style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        width: '100%',
-                        cursor: 'pointer',
-                        padding: '8px',
-                        borderRadius: '8px',
-                        transition: 'background-color 0.3s'
-                      }}
-                      onClick={() => handleResearcherClick(researcher.id)}
-                      onMouseEnter={(e) => e.target.closest('div').style.backgroundColor = '#f5f5f5'}
-                      onMouseLeave={(e) => e.target.closest('div').style.backgroundColor = 'transparent'}
-                    >
-                      <Avatar 
-                        size={40} 
-                        icon={<UserOutlined />} 
-                        style={{ backgroundColor: '#1890ff', marginRight: '12px' }}
-                      />
-                      <div style={{ flex: 1 }}>
-                        <Text strong style={{ display: 'block' }}>
-                          {researcher.first_name} {researcher.last_name}
+              <Row gutter={[16, 16]}>
+                {labMembers.map((researcher, idx) => {
+                  const profile = researcher.researcher_profile || {};
+                  // Generate a pastel color for each card
+                  const pastelColors = [
+                    '#ffe4e1', '#e0f7fa', '#fff9c4', '#e1bee7', '#f8bbd0', '#dcedc8', '#ffe0b2', '#b3e5fc', '#f0f4c3', '#f3e5f5'
+                  ];
+                  const cardColor = pastelColors[idx % pastelColors.length];
+                  return (
+                    <Col xs={24} sm={12} md={8} key={researcher.id}>
+                      <Card
+                        hoverable
+                        onClick={() => handleResearcherClick(researcher.researcher_id || researcher.id)}
+                        style={{ borderRadius: 12, minHeight: 220, background: cardColor, boxShadow: '0 2px 8px #f0f1f2' }}
+                      >
+                        <Title level={5} style={{ marginBottom: 0, textAlign: 'center' }}>
+                          {profile.full_name || researcher.researcher_name}
+                        </Title>
+                        <Text type="secondary" style={{ display: 'block', textAlign: 'center', fontSize: 13 }}>
+                          {researcher.position || profile.role || 'Researcher'}
                         </Text>
-                        <Text type="secondary" style={{ fontSize: '12px' }}>
-                          {researcher.title || 'Researcher'}
-                        </Text>
-                        {researcher.research_interests && (
-                          <div style={{ marginTop: '4px' }}>
-                            <Text type="secondary" style={{ fontSize: '12px' }}>
-                              {researcher.research_interests.substring(0, 100)}
-                              {researcher.research_interests.length > 100 && '...'}
-                            </Text>
+                        {profile.email && (
+                          <div style={{ textAlign: 'center', marginTop: 4 }}>
+                            <MailOutlined style={{ marginRight: 4 }} />
+                            <Text type="secondary" style={{ fontSize: 12 }}>{profile.email}</Text>
                           </div>
                         )}
-                      </div>
-                      <div>
-                        {researcher.email && (
-                          <Text type="secondary" style={{ fontSize: '12px' }}>
-                            <MailOutlined style={{ marginRight: '4px' }} />
-                            {researcher.email}
-                          </Text>
+                        {profile.bio && (
+                          <Paragraph ellipsis={{ rows: 2 }} style={{ marginTop: 8, fontSize: 12, textAlign: 'center' }}>
+                            {profile.bio}
+                          </Paragraph>
                         )}
-                      </div>
-                    </div>
-                  </List.Item>
-                )}
-              />
+                      </Card>
+                    </Col>
+                  );
+                })}
+              </Row>
             )}
           </Card>
         </Col>

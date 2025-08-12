@@ -34,6 +34,26 @@ export const organizationService = {
   },
 
   // Laboratories
+  // في ملف services/organizationService.js
+getDepartmentLabs: async (departmentId) => {
+  try {
+    const response = await apiClient.get(`/api/organization/departments/${departmentId}/labs/`);
+    return {
+      success: true,
+      data: response.data.results || [] // نركز على استخراج الـ results مباشرة
+    };
+  } catch (error) {
+    console.error('Error fetching department labs:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      error: error.message
+    });
+    return {
+      success: false,
+      error: 'Failed to load labs data'
+    };
+  }
+},
   getLabs: async (params = {}) => {
     const response = await apiClient.get(API_ENDPOINTS.ORGANIZATION.LABS, { params });
     return response.data;

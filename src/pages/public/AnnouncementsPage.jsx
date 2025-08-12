@@ -126,135 +126,145 @@ const AnnouncementsPage = () => {
         </Row>
       </Card>
 
-      {/* Posts Grid */}
+      {/* Posts Grid & Empty State */}
       <Spin spinning={loading}>
-        <List
-          grid={{
-            gutter: 24,
-            xs: 1,
-            sm: 1,
-            md: 2,
-            lg: 2,
-            xl: 3,
-            xxl: 3,
-          }}
-          dataSource={posts}
-          renderItem={(post) => (
-            <List.Item>
-              <Card
-                hoverable
-                style={{ height: '100%' }}
-                cover={(() => {
-                  let images = [];
-                  if (Array.isArray(post.images) && post.images.length > 0) {
-                    images = post.images.map(imgObj => imgObj.image_url || imgObj.image).filter(Boolean);
-                    images = images.map(img => {
-                      if (img && img.startsWith('/')) {
-                        return window.location.origin + img;
-                      }
-                      return img;
-                    });
-                  } else {
-                    if (post.featured_image) images.push(post.featured_image);
-                    if (post.attachment && post.attachment !== post.featured_image) images.push(post.attachment);
-                  }
-                  const mainImage = images[0];
-                  return mainImage ? (
-                    <div style={{ height: '200px', overflow: 'hidden' }}>
-                      <img
-                        alt={post.title}
-                        src={mainImage}
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover'
-                        }}
-                      />
-                    </div>
-                  ) : null;
-                })()}
-                actions={[
-                  <Button 
-                    type="link" 
-                    icon={<EyeOutlined />}
-                    onClick={() => {
-                      try {
-                        navigate(`/posts/${post.id}`);
-                      } catch (error) {
-                        console.error('Navigation error:', error);
-                      }
-                    }}
-                  >
-                    قراءة المزيد
-                  </Button>
-                ]}
-              >
-                <Card.Meta
-                  title={
-                    <div>
-                      <Title level={4} style={{ marginBottom: '8px', lineHeight: '1.3' }}>
-                        {post.title}
-                      </Title>
-                      <div style={{ marginBottom: '12px' }}>
-                        {post.category && (
-                          <Tag color={getCategoryColor(post.category)}>
-                            {getCategoryLabel(post.category)}
-                          </Tag>
-                        )}
-                        {post.is_featured && (
-                          <Tag color="gold">مميز</Tag>
-                        )}
+        {posts.length > 0 ? (
+          <List
+            grid={{
+              gutter: 24,
+              xs: 1,
+              sm: 1,
+              md: 2,
+              lg: 2,
+              xl: 3,
+              xxl: 3,
+            }}
+            dataSource={posts}
+            renderItem={(post) => (
+              <List.Item>
+                <Card
+                  hoverable
+                  style={{ height: '100%' }}
+                  cover={(() => {
+                    let images = [];
+                    if (Array.isArray(post.images) && post.images.length > 0) {
+                      images = post.images.map(imgObj => imgObj.image_url || imgObj.image).filter(Boolean);
+                      images = images.map(img => {
+                        if (img && img.startsWith('/')) {
+                          return window.location.origin + img;
+                        }
+                        return img;
+                      });
+                    } else {
+                      if (post.featured_image) images.push(post.featured_image);
+                      if (post.attachment && post.attachment !== post.featured_image) images.push(post.attachment);
+                    }
+                    const mainImage = images[0];
+                    return mainImage ? (
+                      <div style={{ height: '200px', overflow: 'hidden' }}>
+                        <img
+                          alt={post.title}
+                          src={mainImage}
+                          style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover'
+                          }}
+                        />
                       </div>
-                    </div>
-                  }
-                  description={
-                    <div>
-                      {post.excerpt && (
-                        <Paragraph 
-                          ellipsis={{ rows: 3, expandable: false }}
-                          style={{ marginBottom: '16px', color: '#666' }}
-                        >
-                          {post.excerpt}
-                        </Paragraph>
-                      )}
-                      
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Avatar 
-                            size="small" 
-                            icon={<UserOutlined />}
-                            src={post.author?.avatar}
-                          />
-                          <Text type="secondary" style={{ fontSize: '12px' }}>
-                            {post.author?.full_name || post.author?.email || 'المشرف'}
-                          </Text>
+                    ) : null;
+                  })()}
+                  actions={[
+                    <Button 
+                      type="link" 
+                      icon={<EyeOutlined />}
+                      onClick={() => {
+                        try {
+                          navigate(`/posts/${post.id}`);
+                        } catch (error) {
+                          console.error('Navigation error:', error);
+                        }
+                      }}
+                    >
+                      قراءة المزيد
+                    </Button>
+                  ]}
+                >
+                  <Card.Meta
+                    title={
+                      <div>
+                        <Title level={4} style={{ marginBottom: '8px', lineHeight: '1.3' }}>
+                          {post.title}
+                        </Title>
+                        <div style={{ marginBottom: '12px' }}>
+                          {post.category && (
+                            <Tag color={getCategoryColor(post.category)}>
+                              {getCategoryLabel(post.category)}
+                            </Tag>
+                          )}
+                          {post.is_featured && (
+                            <Tag color="gold">مميز</Tag>
+                          )}
                         </div>
+                      </div>
+                    }
+                    description={
+                      <div>
+                        {post.excerpt && (
+                          <Paragraph 
+                            ellipsis={{ rows: 3, expandable: false }}
+                            style={{ marginBottom: '16px', color: '#666' }}
+                          >
+                            {post.excerpt}
+                          </Paragraph>
+                        )}
                         
-                        {post.created_at && (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <CalendarOutlined style={{ fontSize: '12px', color: '#999' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Avatar 
+                              size="small" 
+                              icon={<UserOutlined />}
+                              src={post.author?.avatar}
+                            />
                             <Text type="secondary" style={{ fontSize: '12px' }}>
-                              {formatDate(post.created_at)}
+                              {post.author?.full_name || post.author?.email || 'المشرف'}
+                            </Text>
+                          </div>
+                          
+                          {post.created_at && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <CalendarOutlined style={{ fontSize: '12px', color: '#999' }} />
+                              <Text type="secondary" style={{ fontSize: '12px' }}>
+                                {formatDate(post.created_at)}
+                              </Text>
+                            </div>
+                          )}
+                        </div>
+
+                        {post.view_count !== undefined && (
+                          <div style={{ marginTop: '8px', textAlign: 'left' }}>
+                            <Text type="secondary" style={{ fontSize: '11px' }}>
+                              <EyeOutlined style={{ marginRight: '4px' }} />
+                              {post.view_count} مشاهدة
                             </Text>
                           </div>
                         )}
                       </div>
-
-                      {post.view_count !== undefined && (
-                        <div style={{ marginTop: '8px', textAlign: 'left' }}>
-                          <Text type="secondary" style={{ fontSize: '11px' }}>
-                            <EyeOutlined style={{ marginRight: '4px' }} />
-                            {post.view_count} مشاهدة
-                          </Text>
-                        </div>
-                      )}
-                    </div>
-                  }
-                />
-              </Card>
-            </List.Item>
-          )}
-        />
+                    }
+                  />
+                </Card>
+              </List.Item>
+            )}
+          />
+        ) : (
+          <Card style={{ textAlign: 'center', padding: '48px' }}>
+            <BookOutlined style={{ fontSize: '48px', color: '#ccc', marginBottom: '16px' }} />
+            <Title level={4} type="secondary">لا توجد منشورات</Title>
+            <Text type="secondary">
+              {searchTerm ? 'لم يتم العثور على منشورات تطابق بحثك' : 'لا توجد منشورات منشورة حالياً'}
+            </Text>
+          </Card>
+        )}
       </Spin>
 
       {/* Pagination */}
@@ -272,17 +282,6 @@ const AnnouncementsPage = () => {
             }
           />
         </div>
-      )}
-
-      {/* Empty State */}
-      {!loading && posts.length === 0 && (
-        <Card style={{ textAlign: 'center', padding: '48px' }}>
-          <BookOutlined style={{ fontSize: '48px', color: '#ccc', marginBottom: '16px' }} />
-          <Title level={4} type="secondary">لا توجد منشورات</Title>
-          <Text type="secondary">
-            {searchTerm ? 'لم يتم العثور على منشورات تطابق بحثك' : 'لا توجد منشورات منشورة حالياً'}
-          </Text>
-        </Card>
       )}
     </div>
   );
