@@ -59,7 +59,7 @@ const SystemSettingsPage = () => {
 
   const [settings, setSettings] = useState({
     // General Settings
-    siteName: 'معهد التميز للبحوث الزراعية',
+    siteName: 'معهد بحوث الهندسة الوراثية الزراعية',
     siteDescription: 'منصة بحثية متقدمة للابتكار الزراعي',
     siteUrl: 'https://ageri.example.com',
     adminEmail: 'admin@ageri.example.com',
@@ -146,7 +146,7 @@ const SystemSettingsPage = () => {
         try {
           // Reset to default values
           const defaultSettings = {
-            siteName: 'معهد التميز للبحوث الزراعية',
+            siteName: 'معهد بحوث الهندسة الوراثية الزراعية',
             siteDescription: 'منصة بحثية متقدمة للابتكار الزراعي',
             defaultLanguage: 'ar',
             enableRegistration: true,

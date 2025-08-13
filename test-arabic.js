@@ -32,7 +32,7 @@ if (fs.existsSync(arTranslationPath)) {
     const keyTranslations = [
       ['common.home', 'الرئيسية'],
       ['auth.loginTitle', 'تسجيل الدخول إلى أجيري'],
-      ['homepage.heroTitle', 'معهد التميز للبحوث الزراعية']
+      ['homepage.heroTitle', 'معهد بحوث الهندسة الوراثية الزراعية']
     ];
     
     console.log('\n📝 Key translations:');

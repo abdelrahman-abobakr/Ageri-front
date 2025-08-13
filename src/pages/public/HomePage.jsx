@@ -235,7 +235,7 @@ const HomePage = () => {
           const orgData = await organizationService.getPublicSettings();
           setOrganizationData({
             ...orgData,
-            name: "منظمة البحث العلمي"
+            name: "معهد بحوث الهندسة الوراثية الزراعية"
           });
         } catch (error) {
           console.error('Failed to load organization settings:', error);
@@ -1102,7 +1102,7 @@ const HomePage = () => {
               fontWeight: '800',
               marginBottom: '16px'
             }}>
-              التميز في البحث العلمي
+              معهد بحوث الهندسة الوراثية الزراعية            
             </Title>
             <Paragraph style={{
               marginTop: '16px',
