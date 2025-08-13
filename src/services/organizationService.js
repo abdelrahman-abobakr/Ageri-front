@@ -159,7 +159,7 @@ getDepartmentLabs: async (departmentId) => {
         about: "منظمة رائدة في مجال البحث العلمي الزراعي، نعمل على تطوير التقنيات الحديثة والحلول المستدامة لتحسين الإنتاج الزراعي وحماية البيئة.",
         email: "info@agri-research.org",
         phone: "+966 11 123 4567",
-        address: "الرياض، المملكة العربية السعودية",
+        address: "جمهورية مصر العربية",
         website: "https://agri-research.org",
         facebook: "https://facebook.com/agri-research",
         twitter: "https://twitter.com/agri_research",

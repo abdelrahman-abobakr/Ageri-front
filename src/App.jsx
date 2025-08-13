@@ -34,6 +34,7 @@ import PostDetailPage from './pages/public/PostDetailPage';
 import EnrollmentLookupPage from './pages/public/EnrollmentLookupPage';
 import PublicResearchPage from './pages/public/PublicResearchPage';
 import PublicResearchersPage from './pages/public/PublicResearchersPage';
+import PublicResearcherProfilePage from './pages/public/PublicResearcherProfilePage';
 
 // Dashboard Pages
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -121,7 +122,7 @@ const AppContent = () => {
               <Route path="/posts" element={<AnnouncementsPage />} />
               <Route path="/research" element={<PublicResearchPage />} />
               <Route path="/researchers" element={<PublicResearchersPage />} />
-              <Route path="/researchers/:id" element={<ResearcherProfilePage />} />
+              <Route path="/researchers/:id" element={<PublicResearcherProfilePage />} />
               <Route path="/labs/:id" element={<LabDetailPage />} />
               <Route path="/posts/:id" element={<PostDetailPage />} />
               <Route path="/enrollment-lookup" element={<EnrollmentLookupPage />} />

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Avatar, Typography, Row, Col, List, Tag, Button, Spin, message, Divider } from 'antd';
+import { Card, Avatar, Typography, Row, Col, Spin, message, Divider, Statistic } from 'antd';
 import { 
   ExperimentOutlined,
   UserOutlined, 
@@ -9,8 +9,7 @@ import {
   MailOutlined,
   PhoneOutlined,
   BankOutlined,
-  EnvironmentOutlined,
-  InfoCircleOutlined
+  UserAddOutlined
 } from '@ant-design/icons';
 import { organizationService } from '../../services';
 
@@ -24,26 +23,32 @@ const LabDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [researchersLoading, setResearchersLoading] = useState(false);
 
-  useEffect(() => {
-    loadLabDetails();
-  }, [id]);
-
-  const loadLabDetails = async () => {
-    try {
-      setLoading(true);
-      // Load lab details
-      const labData = await organizationService.getLabById(id);
-      setLab(labData);
-      
-      // Load lab researchers
-      await loadLabResearchers(id);
-    } catch (error) {
-      console.error('Failed to load lab details:', error);
-      message.error('Failed to load lab details');
-    } finally {
-      setLoading(false);
+  // Utility function to handle profile picture URLs
+  const getProfilePictureUrl = (url) => {
+    if (!url) return null;
+    if (url.startsWith('http')) return url;
+    if (url.startsWith('/media/')) {
+      return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${url}`;
     }
+    return url;
   };
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoading(true);
+        const labData = await organizationService.getLabById(id);
+        setLab(labData);
+        await loadLabResearchers(id);
+      } catch (error) {
+        console.error('Failed to load lab details:', error);
+        message.error('Failed to load lab details');
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadData();
+  }, [id]);
 
   const loadLabResearchers = async (labId) => {
     try {
@@ -71,17 +76,11 @@ const LabDetailPage = () => {
   }
 
   if (!lab) {
-    return (
-      <div style={{ textAlign: 'center', padding: '50px' }}>
-        <Title level={3}>Laboratory Not Found</Title>
-        <Text type="secondary">The laboratory you're looking for doesn't exist.</Text>
-      </div>
-    );
+    return <div>Laboratory not found</div>;
   }
 
-  // Find the head of lab
-  const headOfLab = researchers.find(researcher => researcher.is_head || researcher.role === 'head');
-  const labMembers = researchers.filter(researcher => !researcher.is_head && researcher.role !== 'head');
+  const headOfLab = lab.head || null;
+  const labMembers = researchers.filter(r => !r.is_head);
 
   return (
     <div>
@@ -99,27 +98,20 @@ const LabDetailPage = () => {
             <Title level={2} style={{ marginBottom: '8px' }}>
               {lab.name}
             </Title>
-            
             <Row gutter={[16, 8]} style={{ marginBottom: '16px' }}>
-              {lab.department && (
-                <Col>
-                  <Text>
-                    <BankOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-                    {lab.department.name || lab.department}
-                  </Text>
-                </Col>
-              )}
-              {lab.location && (
-                <Col>
-                  <Text>
-                    <EnvironmentOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-                    {lab.location}
-                  </Text>
-                </Col>
-              )}
-              {/* Capacity removed as per request */}
+              <Col>
+                <Text>
+                  <BankOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                  {lab.department?.name || 'No department specified'}
+                </Text>
+              </Col>
+              <Col>
+                <Text>
+                  <TeamOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
+                  {lab.current_researchers_count}/{lab.capacity} researchers
+                </Text>
+              </Col>
             </Row>
-
             {lab.description && (
               <Paragraph style={{ marginBottom: 0 }}>
                 {lab.description}
@@ -133,125 +125,65 @@ const LabDetailPage = () => {
         {/* Lab Information */}
         <Col xs={24} lg={8}>
           <Card title="Laboratory Information" style={{ marginBottom: '24px' }}>
-            {/* Department Info */}
-            {lab.department && (
-              <div style={{ marginBottom: '12px' }}>
-                <Text strong>Department: </Text>
-                <Text>{lab.department.name}</Text>
-               
-                
-              </div>
-            )}
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>Department: </Text>
+              <Text>{lab.department?.name || 'Not specified'}</Text>
+            </div>
 
-            {/* Head of Lab */}
-            {lab.head && (
-              <div style={{ marginBottom: '12px' }}>
-                <Text strong>Head of Lab: </Text>
-                <Text>{lab.head.full_name}</Text>
-                {lab.head.email && (
-                  <div style={{ fontSize: 12 }}>
-                    <MailOutlined style={{ marginRight: 4 }} />{lab.head.email}
+            {/* Head of Lab Information */}
+            {headOfLab && (
+              <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
+                <Avatar
+                  size={80}
+                  icon={<UserOutlined />}
+                  style={{ backgroundColor: '#faad14', marginBottom: 12 }}
+                />
+                <Title level={4} style={{ marginBottom: 4 }}>
+                  {headOfLab.full_name || lab.department?.head_name || 'Head of Laboratory'}
+                </Title>
+                {headOfLab.email && (
+                  <div style={{ fontSize: 13, marginBottom: 4 }}>
+                    <MailOutlined style={{ marginRight: 4 }} />
+                    <Text type="secondary">{headOfLab.email}</Text>
                   </div>
                 )}
               </div>
             )}
 
-            {/* Description */}
             {lab.description && (
-              <div style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: '16px' }}>
                 <Text strong>Description: </Text>
                 <Paragraph style={{ margin: 0 }}>{lab.description}</Paragraph>
               </div>
             )}
 
-            {/* Equipment */}
-            {lab.equipment && (
-              <div style={{ marginBottom: '12px' }}>
-                <Text strong>Equipment: </Text>
-                <Text>{lab.equipment}</Text>
-              </div>
-            )}
-
-            {/* Phone */}
             {lab.phone && (
-              <div style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: '16px' }}>
                 <Text strong>Phone: </Text>
-                <Text><PhoneOutlined style={{ marginRight: 4 }} />{lab.phone}</Text>
+                <Text>
+                  <PhoneOutlined style={{ marginRight: '4px' }} />
+                  {lab.phone}
+                </Text>
               </div>
             )}
 
-            {/* Current Researchers Count & Available Spots */}
-            <div style={{ marginBottom: '12px' }}>
-              <Text strong>Current Researchers: </Text>
-              <Text>{lab.current_researchers_count}</Text>
-              <br />
+            <Divider />
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>Status: </Text>
+              <Text>{lab.status === 'active' ? 'Active' : 'Inactive'}</Text>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong>Capacity: </Text>
+              <Text>{lab.current_researchers_count}/{lab.capacity} researchers</Text>
+            </div>
+
+            <div>
               <Text strong>Available Spots: </Text>
               <Text>{lab.available_spots}</Text>
             </div>
-
-            {/* Status */}
-            <div style={{ marginBottom: '12px' }}>
-              <Text strong>Status: </Text>
-              <Tag color={lab.status === 'active' ? 'green' : lab.status === 'pending' ? 'orange' : 'red'}>
-                {lab.status}
-              </Tag>
-            </div>
-
-            {/* Created/Updated At */}
-            <div style={{ fontSize: 12, color: '#888' }}>
-              Created: {lab.created_at && new Date(lab.created_at).toLocaleDateString()}<br />
-              Updated: {lab.updated_at && new Date(lab.updated_at).toLocaleDateString()}
-            </div>
           </Card>
-
-          {/* Head of Lab */}
-          {headOfLab && (
-            <Card 
-              title={
-                <div style={{ display: 'flex', alignItems: 'center' }}>
-                  <CrownOutlined style={{ marginRight: '8px', color: '#faad14' }} />
-                  Head of Laboratory
-                </div>
-              }
-              style={{ marginBottom: '24px' }}
-            >
-              <div 
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  cursor: 'pointer',
-                  padding: '8px',
-                  borderRadius: '8px',
-                  transition: 'background-color 0.3s'
-                }}
-                onClick={() => handleResearcherClick(headOfLab.id)}
-                onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
-                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-              >
-                <Avatar 
-                  size={48} 
-                  icon={<UserOutlined />} 
-                  style={{ backgroundColor: '#faad14', marginRight: '12px' }}
-                />
-                <div>
-                  <Text strong style={{ display: 'block' }}>
-                    {headOfLab.first_name} {headOfLab.last_name}
-                  </Text>
-                  <Text type="secondary" style={{ fontSize: '12px' }}>
-                    {headOfLab.title || 'Head of Laboratory'}
-                  </Text>
-                  {headOfLab.email && (
-                    <div style={{ marginTop: '4px' }}>
-                      <Text type="secondary" style={{ fontSize: '12px' }}>
-                        <MailOutlined style={{ marginRight: '4px' }} />
-                        {headOfLab.email}
-                      </Text>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </Card>
-          )}
         </Col>
 
         {/* Lab Members */}
@@ -275,20 +207,35 @@ const LabDetailPage = () => {
               <Row gutter={[16, 16]}>
                 {labMembers.map((researcher, idx) => {
                   const profile = researcher.researcher_profile || {};
-                  // Generate a pastel color for each card
                   const pastelColors = [
-                    '#ffe4e1', '#e0f7fa', '#fff9c4', '#e1bee7', '#f8bbd0', '#dcedc8', '#ffe0b2', '#b3e5fc', '#f0f4c3', '#f3e5f5'
+                    '#ffe4e1', '#e0f7fa', '#fff9c4', '#e1bee7', '#f8bbd0', 
+                    '#dcedc8', '#ffe0b2', '#b3e5fc', '#f0f4c3', '#f3e5f5'
                   ];
                   const cardColor = pastelColors[idx % pastelColors.length];
+                  
                   return (
                     <Col xs={24} sm={12} md={8} key={researcher.id}>
                       <Card
                         hoverable
-                        onClick={() => handleResearcherClick(researcher.researcher_id || researcher.id)}
-                        style={{ borderRadius: 12, minHeight: 220, background: cardColor, boxShadow: '0 2px 8px #f0f1f2' }}
+                        onClick={() => handleResearcherClick(researcher.id)}
+                        style={{ 
+                          borderRadius: 12, 
+                          minHeight: 220, 
+                          background: cardColor, 
+                          boxShadow: '0 2px 8px #f0f1f2',
+                          cursor: 'pointer'
+                        }}
                       >
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: 8 }}>
+                          <Avatar
+                            size={64}
+                            src={getProfilePictureUrl(profile.profile_picture)}
+                            icon={!profile.profile_picture && <UserOutlined />}
+                            style={{ marginBottom: 8, backgroundColor: '#d9d9d9' }}
+                          />
+                        </div>
                         <Title level={5} style={{ marginBottom: 0, textAlign: 'center' }}>
-                          {profile.full_name || researcher.researcher_name}
+                          {profile.full_name || `${researcher.first_name} ${researcher.last_name}`}
                         </Title>
                         <Text type="secondary" style={{ display: 'block', textAlign: 'center', fontSize: 13 }}>
                           {researcher.position || profile.role || 'Researcher'}
