@@ -63,8 +63,14 @@ const LabDetailPage = () => {
     }
   };
 
-  const handleResearcherClick = (researcherId) => {
-    navigate(`/researchers/${researcherId}`);
+  const handleResearcherClick = (researcher) => {
+    // Use the id from researcher_profile if available
+    const profileId = researcher?.researcher_profile?.id;
+    if (profileId) {
+      navigate(`/researchers/${profileId}`);
+    } else {
+      message.info('لا يوجد ملف باحث عام لهذا المستخدم');
+    }
   };
 
   if (loading) {
@@ -105,12 +111,7 @@ const LabDetailPage = () => {
                   {lab.department?.name || 'No department specified'}
                 </Text>
               </Col>
-              <Col>
-                <Text>
-                  <TeamOutlined style={{ marginRight: '8px', color: '#1890ff' }} />
-                  {lab.current_researchers_count}/{lab.capacity} researchers
-                </Text>
-              </Col>
+ 
             </Row>
             {lab.description && (
               <Paragraph style={{ marginBottom: 0 }}>
@@ -217,7 +218,7 @@ const LabDetailPage = () => {
                     <Col xs={24} sm={12} md={8} key={researcher.id}>
                       <Card
                         hoverable
-                        onClick={() => handleResearcherClick(researcher.id)}
+                        onClick={() => handleResearcherClick(researcher)}
                         style={{ 
                           borderRadius: 12, 
                           minHeight: 220, 

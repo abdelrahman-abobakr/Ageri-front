@@ -191,10 +191,15 @@ const UserManagementPage = () => {
     const baseItems = [
       {
         key: 'view',
-        icon: <EyeOutlined />,
+        icon: <EyeOutlined />, 
         label: t('admin.userManagement.viewProfile'),
         onClick: () => {
-          console.log('View user:', user.id);
+          // Open public researcher profile using id in researcher_profile if available
+          if (user.id) {
+            window.open(`/researchers/${user.id}`, '_blank');
+          } else {
+            message.info('لا يوجد ملف باحث عام لهذا المستخدم');
+          }
         }
       }
     ];
@@ -320,6 +325,16 @@ const UserManagementPage = () => {
                 size="large"
                 icon={<CloseOutlined />}
                 onClick={() => handleRejectUser(record.id)}
+              />
+            </Tooltip>
+          )}
+          {/* Direct public profile button */}
+          {record.researcher_profile && record.researcher_profile.id && (
+            <Tooltip title={t('admin.userManagement.viewProfile')}>
+              <Button
+                size="small"
+                icon={<EyeOutlined />}
+                onClick={() => window.open(`/researchers/${record.researcher_profile.id}`, '_blank')}
               />
             </Tooltip>
           )}

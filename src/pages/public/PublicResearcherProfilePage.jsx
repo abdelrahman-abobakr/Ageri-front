@@ -40,14 +40,24 @@ const PublicResearcherProfilePage = () => {
 
   useEffect(() => {
     fetch(`/api/auth/profiles/public/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        setProfile(data);
+      .then(async res => {
+        if (res.status === 404) {
+          setProfile(null);
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        // If the API returns an empty object or missing key fields, treat as not found
+        if (!data || Object.keys(data).length === 0 || data.detail === 'Not found.') {
+          setProfile(null);
+        } else {
+          setProfile(data);
+        }
         setLoading(false);
       })
       .catch((error) => {
         console.error('Failed to load researcher profile:', error);
-        message.error('Failed to load researcher profile');
+        setProfile(null);
         setLoading(false);
       });
   }, [id]);
@@ -376,7 +386,13 @@ const PublicResearcherProfilePage = () => {
           type="default" 
           size="large"
           icon={<HomeOutlined />}
-          onClick={() => navigate(-1)}
+          onClick={() => {
+            if (window.history.length > 2) {
+              navigate(-1);
+            } else {
+              navigate('/');
+            }
+          }}
           style={{ borderRadius: '20px' }}
         >
           Go Back
