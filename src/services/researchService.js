@@ -2,49 +2,61 @@
 import apiClient, { publicApiClient } from './api';
 import { API_ENDPOINTS } from '../constants';
 
-// Error handling utility
+// Enhanced error handling utility that preserves the original error structure
 const handleApiError = (error, context = '') => {
-  console.error(`❌ API Error [${context}]:`, error);
+  console.error(`⌐ API Error [${context}]:`, error);
 
+  // Log detailed error information
   if (error.response) {
-    // Server responded with error status
-    const { status, data } = error.response;
-    console.error(`❌ Status: ${status}`, data);
-
-    // Handle specific error cases
-    switch (status) {
-      case 400:
-        throw new Error(data?.detail || data?.message || 'Bad Request - Please check your input');
-      case 401:
-        throw new Error('Authentication required - Please log in');
-      case 403:
-        throw new Error('Permission denied - You are not authorized to perform this action');
-      case 404:
-        throw new Error('Resource not found');
-      case 413:
-        throw new Error('File too large - Maximum size is 10MB');
-      case 422:
-        // Validation errors
-        if (data && typeof data === 'object') {
-          const validationErrors = Object.entries(data)
-            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
-            .join('; ');
-          throw new Error(`Validation Error: ${validationErrors}`);
-        }
-        throw new Error('Validation failed');
-      case 500:
-        throw new Error('Server error - Please try again later');
-      default:
-        throw new Error(data?.detail || data?.message || `Server error (${status})`);
-    }
+    console.error(`⌐ Status: ${error.response.status}`, error.response.data);
   } else if (error.request) {
-    // Network error
-    console.error('❌ Network Error:', error.request);
-    throw new Error('Network error - Please check your connection');
+    console.error('⌐ Network Error:', error.request);
   } else {
-    // Other error
-    throw new Error(error.message || 'An unexpected error occurred');
+    console.error('⌐ Error:', error.message);
   }
+
+  // For validation errors (400) and other structured errors, preserve the original error
+  // This allows the React component to handle them properly
+  if (error.response && (error.response.status === 400 || error.response.data)) {
+    // Re-throw the original error to preserve the structure
+    throw error;
+  }
+
+  // For network errors or other cases, create a user-friendly error
+  if (!error.response) {
+    const networkError = new Error('Network error - Please check your connection');
+    networkError.isNetworkError = true;
+    throw networkError;
+  }
+
+  // For other status codes, create appropriate errors
+  const { status, data } = error.response;
+  let message;
+
+  switch (status) {
+    case 401:
+      message = 'Authentication required - Please log in';
+      break;
+    case 403:
+      message = 'Permission denied - You are not authorized to perform this action';
+      break;
+    case 404:
+      message = 'Resource not found';
+      break;
+    case 413:
+      message = 'File too large - Maximum size is 10MB';
+      break;
+    case 500:
+      message = 'Server error - Please try again later';
+      break;
+    default:
+      message = data?.detail || data?.message || `Server error (${status})`;
+  }
+
+  const customError = new Error(message);
+  customError.status = status;
+  customError.originalError = error;
+  throw customError;
 };
 
 // Enhanced Research Service
@@ -132,13 +144,43 @@ class EnhancedResearchService {
     try {
       console.log('📤 Creating publication with data:', data);
 
-      // Validate required fields
+      // Client-side validation for better UX
       if (!data.title || data.title.trim().length < 10) {
-        throw new Error('Title is required and must be at least 10 characters long');
+        const validationError = new Error('Validation Error');
+        validationError.response = {
+          status: 400,
+          data: {
+            error_type: 'validation',
+            errors: {
+              title: {
+                messages: ['Title is required and must be at least 10 characters long'],
+                type: 'validation_error'
+              }
+            },
+            message: 'Client-side validation failed',
+            success: false
+          }
+        };
+        throw validationError;
       }
 
       if (!data.publication_type) {
-        throw new Error('Publication type is required');
+        const validationError = new Error('Validation Error');
+        validationError.response = {
+          status: 400,
+          data: {
+            error_type: 'validation',
+            errors: {
+              publication_type: {
+                messages: ['Publication type is required'],
+                type: 'validation_error'
+              }
+            },
+            message: 'Client-side validation failed',
+            success: false
+          }
+        };
+        throw validationError;
       }
 
       // Prepare data for submission
@@ -325,12 +367,42 @@ class EnhancedResearchService {
       ];
 
       if (!allowedTypes.includes(file.type)) {
-        throw new Error('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
+        const validationError = new Error('Invalid file type');
+        validationError.response = {
+          status: 400,
+          data: {
+            error_type: 'validation',
+            errors: {
+              document_file: {
+                messages: ['Invalid file type. Only PDF, DOC, and DOCX files are allowed.'],
+                type: 'validation_error'
+              }
+            },
+            message: 'File validation failed',
+            success: false
+          }
+        };
+        throw validationError;
       }
 
       const maxSize = 10 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
-        throw new Error('File size too large. Maximum size is 10MB.');
+        const validationError = new Error('File too large');
+        validationError.response = {
+          status: 413,
+          data: {
+            error_type: 'validation',
+            errors: {
+              document_file: {
+                messages: ['File size too large. Maximum size is 10MB.'],
+                type: 'validation_error'
+              }
+            },
+            message: 'File size validation failed',
+            success: false
+          }
+        };
+        throw validationError;
       }
 
       const formData = new FormData();
@@ -597,32 +669,47 @@ class EnhancedResearchService {
   }
 
   // Check if DOI already exists
-  async checkDoiExists(doi) {
+  async checkDoiExists(doi, excludeId = null) {
     try {
-      console.log('🔍 Checking DOI existence:', doi);
+      console.log('🔍 Checking DOI existence:', doi, 'excluding ID:', excludeId);
 
       // Use search endpoint to check if DOI exists
       const response = await publicApiClient.get(`${this.baseEndpoints.PUBLICATIONS}`, {
         params: {
           search: doi,
           doi: doi,
-          limit: 1
+          limit: 10 // Get a few results to check
         }
       });
 
       console.log('📋 DOI check response:', response.data);
 
       // Check if any publication has this exact DOI
-      const exists = response.data.results &&
-        response.data.results.some(pub =>
-          pub.doi && pub.doi.toLowerCase() === doi.toLowerCase()
-        );
+      let exists = false;
+      let conflictingPublication = null;
 
-      return { exists, count: response.data.count || 0 };
+      if (response.data.results) {
+        for (const pub of response.data.results) {
+          if (pub.doi && pub.doi.toLowerCase() === doi.toLowerCase()) {
+            // If we're updating a publication, exclude the current publication from the check
+            if (!excludeId || pub.id !== parseInt(excludeId)) {
+              exists = true;
+              conflictingPublication = pub;
+              break;
+            }
+          }
+        }
+      }
+
+      return {
+        exists,
+        count: response.data.count || 0,
+        conflictingPublication
+      };
     } catch (error) {
-      console.error('❌ Error checking DOI:', error);
+      console.error('⌐ Error checking DOI:', error);
       // Return false on error to avoid blocking user
-      return { exists: false, count: 0 };
+      return { exists: false, count: 0, conflictingPublication: null };
     }
   }
 }

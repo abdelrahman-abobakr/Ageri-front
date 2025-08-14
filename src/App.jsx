@@ -51,7 +51,6 @@ import ServicesManagementPage from './pages/admin/ServicesManagementPage';
 import TrainingManagementPage from './pages/admin/TrainingManagementPage';
 import OrganizationManagementPage from './pages/admin/OrganizationManagementPage';
 import NotificationsManagementPage from './pages/admin/NotificationsManagementPage';
-import CreateCoursePage from './pages/admin/AddCourseForm.jsx';
 import AdminDashboard from './pages/admin/publications/AdminDashboard.jsx';
 import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
 import PublicationsPage from './pages/research/PublicationsPage.jsx';
@@ -216,14 +215,6 @@ const AppContent = () => {
                 element={
                   <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
                     <NotificationsManagementPage />
-                  </ProtectedRoute>
-                }
-              />
-              <Route
-                path="AddCourse"
-                element={
-                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                    <CreateCoursePage />
                   </ProtectedRoute>
                 }
               />

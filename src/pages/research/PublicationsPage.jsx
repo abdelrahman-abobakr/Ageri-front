@@ -863,7 +863,7 @@ const PublicationsListPage = () => {
               )}
 
               {/* Action Buttons */}
-              <div className="flex justify-end pt-6 border-t mt-8">
+              <div className="flex justify-end pt-6 border-t mt-8" style={{ marginTop: '16px' }}>
                 <Space size="middle">
                   <Button
                     onClick={() => setViewModalVisible(false)}
