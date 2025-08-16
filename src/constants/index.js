@@ -359,7 +359,6 @@ export const MENU_ITEMS = {
     { key: 'notifications', label: 'Notifications', icon: 'BellOutlined', path: '/notifications' },
   ],
   [USER_ROLES.RESEARCHER]: [
-    { key: 'home', label: 'Home', icon: 'DashboardOutlined', path: '/app/home' },
     { key: 'dashboard', label: 'Dashboard', icon: 'DashboardOutlined', path: '/dashboard' },
     { key: 'research', label: 'My Research', icon: 'BookOutlined', path: '/research/publications' },
     { key: 'profile', label: 'Profile', icon: 'UserOutlined', path: '/profile' },

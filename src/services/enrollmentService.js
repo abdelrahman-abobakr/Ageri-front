@@ -165,6 +165,59 @@ class EnrollmentService {
     }
   }
 
+  // Validate enrollment data
+  static validateEnrollmentData(data) {
+    const errors = {};
+    
+    // Validate required fields
+    if (!data.first_name || data.first_name.trim().length === 0) {
+      errors.first_name = 'الاسم الأول مطلوب';
+    }
+    
+    if (!data.last_name || data.last_name.trim().length === 0) {
+      errors.last_name = 'الاسم الأخير مطلوب';
+    }
+    
+    if (!data.email || data.email.trim().length === 0) {
+      errors.email = 'البريد الإلكتروني مطلوب';
+    } else {
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(data.email)) {
+        errors.email = 'يرجى إدخال بريد إلكتروني صحيح';
+      }
+    }
+    
+    if (!data.experience_level || data.experience_level.trim().length === 0) {
+      errors.experience_level = 'مستوى الخبرة مطلوب';
+    }
+    
+    // Validate phone format if provided
+    if (data.phone && data.phone.trim().length > 0) {
+      const phoneRegex = /^[\+]?[0-9\s\-()]{7,}$/;
+      if (!phoneRegex.test(data.phone)) {
+        errors.phone = 'يرجى إدخال رقم هاتف صحيح';
+      }
+    }
+    
+    // Validate education level if provided
+    const validEducationLevels = ['high_school', 'bachelor', 'master', 'phd', 'other'];
+    if (data.education_level && !validEducationLevels.includes(data.education_level)) {
+      errors.education_level = 'المستوى التعليمي غير صحيح';
+    }
+    
+    // Validate experience level if provided
+    const validExperienceLevels = ['beginner', 'intermediate', 'advanced'];
+    if (data.experience_level && !validExperienceLevels.includes(data.experience_level)) {
+      errors.experience_level = 'مستوى الخبرة غير صحيح';
+    }
+    
+    return {
+      isValid: Object.keys(errors).length === 0,
+      errors
+    };
+  }
+
   // Helper method to calculate stats from enrollments data
   static calculateStatsFromEnrollments(enrollments) {
     const total = enrollments.length;

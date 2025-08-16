@@ -5,16 +5,12 @@ import {
   Button, 
   Row, 
   Col, 
-  Alert, 
   Descriptions, 
-  Tag, 
   Space,
-  Divider,
-  message
+  Divider
 } from 'antd';
 import { 
   CheckCircleOutlined, 
-  CopyOutlined, 
   PrinterOutlined, 
   DownloadOutlined,
   HomeOutlined,
@@ -25,11 +21,6 @@ import {
 const { Title, Text, Paragraph } = Typography;
 
 const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
-  
-  const handleCopyEnrollmentId = () => {
-    navigator.clipboard.writeText(enrollment.enrollment_token);
-    message.success('تم نسخ رقم التسجيل');
-  };
 
   const handlePrintConfirmation = () => {
     window.print();
@@ -39,9 +30,8 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
     const enrollmentInfo = `
 تأكيد التسجيل في الدورة التدريبية
 
-رقم التسجيل: ${enrollment.enrollment_token}
-المشارك: ${enrollment.full_name}
-البريد الإلكتروني: ${enrollment.participant_email}
+المشارك: ${enrollment.full_name || `${enrollment.first_name} ${enrollment.last_name}`}
+البريد الإلكتروني: ${enrollment.participant_email || enrollment.email}
 الهاتف: ${enrollment.phone || 'غير محدد'}
 المؤسسة: ${enrollment.organization || 'غير محدد'}
 
@@ -54,15 +44,6 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
 - المدة: ${course.training_hours} ساعة
 - التكلفة: ${course.cost === 0 ? 'مجاني' : course.cost + ' جنيه'}
 
-معلومات الدفع:
-- المبلغ المطلوب: ${enrollment.amount_due} جنيه
-- حالة الدفع: ${enrollment.payment_status}
-
-ملاحظات مهمة:
-- احفظ رقم التسجيل: ${enrollment.enrollment_token}
-- تبدأ الدورة في ${new Date(course.start_date).toLocaleDateString('ar-EG')}
-- للاستفسارات تواصل مع الدعم الفني
-
 تاريخ الإنشاء: ${new Date().toLocaleString('ar-EG')}
     `;
 
@@ -70,22 +51,9 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `enrollment_${enrollment.enrollment_token}.txt`;
+    link.download = `enrollment_confirmation.txt`;
     link.click();
     URL.revokeObjectURL(url);
-  };
-
-  const getPaymentStatusTag = (status) => {
-    const statusConfig = {
-      not_required: { color: 'green', text: 'غير مطلوب' },
-      pending: { color: 'orange', text: 'في الانتظار' },
-      paid: { color: 'green', text: 'مدفوع' },
-      partial: { color: 'blue', text: 'مدفوع جزئياً' },
-      overdue: { color: 'red', text: 'متأخر' }
-    };
-    
-    const config = statusConfig[status] || { color: 'default', text: status };
-    return <Tag color={config.color}>{config.text}</Tag>;
   };
 
   return (
@@ -105,25 +73,31 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
 
       </Card>
 
-      {/* Enrollment ID Card */}
-      <Card className="enrollment-id-card">
-        <Title level={4}>🎫 رقم التسجيل الخاص بك</Title>
-        <div className="enrollment-id-display">
-          <Text className="enrollment-id" copyable={{ text: enrollment.enrollment_token }}>
-            {enrollment.enrollment_token}
-          </Text>
-          <Button 
-            icon={<CopyOutlined />} 
-            onClick={handleCopyEnrollmentId}
-            type="primary"
-            ghost
-          >
-            نسخ
-          </Button>
-        </div>
-        <Text type="secondary" className="id-note">
-          احتفظ بهذا الرقم بأمان - ستحتاجه لتتبع حالة التسجيل
-        </Text>
+      {/* Participant Information */}
+      <Card title="👤 معلومات المشارك" className="info-card">
+        <Descriptions column={1} size="small">
+          <Descriptions.Item label="الاسم الكامل">
+            {enrollment.full_name || `${enrollment.first_name} ${enrollment.last_name}`}
+          </Descriptions.Item>
+          <Descriptions.Item label="البريد الإلكتروني">
+            {enrollment.participant_email || enrollment.email}
+          </Descriptions.Item>
+          <Descriptions.Item label="الهاتف">
+            {enrollment.phone || 'غير محدد'}
+          </Descriptions.Item>
+          <Descriptions.Item label="المؤسسة">
+            {enrollment.organization || 'غير محدد'}
+          </Descriptions.Item>
+          <Descriptions.Item label="المسمى الوظيفي">
+            {enrollment.job_title || 'غير محدد'}
+          </Descriptions.Item>
+          <Descriptions.Item label="المستوى التعليمي">
+            {enrollment.education_level || 'غير محدد'}
+          </Descriptions.Item>
+          <Descriptions.Item label="مستوى الخبرة">
+            {enrollment.experience_level || 'غير محدد'}
+          </Descriptions.Item>
+        </Descriptions>
       </Card>
 
       <Row gutter={[16, 16]}>
@@ -216,57 +190,9 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
         </Card>
       )}
 
-      {/* Next Steps */}
-      <Card title="📋 الخطوات التالية" className="next-steps-card">
-        <div className="steps-container">
-          <div className="step-item">
-            <div className="step-number">1</div>
-            <div className="step-content">
-              <Title level={5}>احفظ معلوماتك</Title>
-              <Text>استخدم الأزرار أدناه لحفظ أو طباعة تفاصيل التسجيل.</Text>
-            </div>
-          </div>
-          
-          <div className="step-item">
-            <div className="step-number">2</div>
-            <div className="step-content">
-              <Title level={5}>ضع علامة في التقويم</Title>
-              <Text>تبدأ الدورة في {new Date(course.start_date).toLocaleDateString('ar-EG')}</Text>
-            </div>
-          </div>
-          
-          <div className="step-item">
-            <div className="step-number">3</div>
-            <div className="step-content">
-              <Title level={5}>استعد للدورة</Title>
-              <Text>راجع أي متطلبات مسبقة واجمع المواد المطلوبة.</Text>
-            </div>
-          </div>
-          
-          {course.cost > 0 && (
-            <div className="step-item">
-              <div className="step-number">4</div>
-              <div className="step-content">
-                <Title level={5}>أكمل الدفع</Title>
-                <Text>تواصل مع الدعم لترتيب دفع {enrollment.amount_due} جنيه</Text>
-              </div>
-            </div>
-          )}
-        </div>
-      </Card>
-
-      {/* Action Buttons */}
+       {/* Action Buttons */}
       <Card className="actions-card">
         <Space size="large" wrap className="action-buttons">
-          <Button 
-            type="primary" 
-            icon={<DownloadOutlined />} 
-            size="large"
-            onClick={handleSaveInfo}
-          >
-            💾 حفظ معلومات التسجيل
-          </Button>
-          
           <Button 
             icon={<PrinterOutlined />} 
             size="large"
@@ -309,26 +235,9 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
               </div>
             </div>
           </Col>
-          
-          <Col xs={24} sm={8}>
-            <div className="contact-item">
-              <Text strong>ساعات العمل:</Text>
-              <br />
-              <Text>الأحد - الخميس، 9 ص - 5 م</Text>
-            </div>
-          </Col>
         </Row>
       </Card>
 
-      {/* Future Reference */}
-      <Card title="🔍 للمراجعة المستقبلية" className="reference-card">
-        <Text>
-          للاطلاع على حالة التسجيل في المستقبل، قم بزيارة:
-        </Text>
-        <div className="lookup-url">
-          <Text code>/enrollment/{enrollment.enrollment_token}</Text>
-        </div>
-      </Card>
     </div>
   );
 };

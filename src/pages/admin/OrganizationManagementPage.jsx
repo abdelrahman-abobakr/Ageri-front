@@ -130,7 +130,7 @@ const OrganizationManagementPage = () => {
       setTotal(response.count || departmentsData.length || 0);
     } catch (error) {
       console.error('Failed to load departments:', error);
-      message.error('فشل في تحميل الأقسام');
+      message.error(t('admin.organizationManagement.failedToLoadDepartments'));
       setDepartments([]);
       setTotal(0);
     } finally {
@@ -669,10 +669,10 @@ const OrganizationManagementPage = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <ApartmentOutlined style={{ marginRight: '8px' }} />
-          إدارة التنظيم
+          {t('admin.organizationManagement.title')}
         </Title>
         <Text type="secondary">
-          إدارة الأقسام والمختبرات والهيكل التنظيمي
+          {t('admin.organizationManagement.description')}
         </Text>
         {/* <RealTimeIndicator /> */}
       </div>
@@ -682,7 +682,7 @@ const OrganizationManagementPage = () => {
         <Col xs={24} sm={12} md={12}>
           <Card loading={loading}>
             <Statistic
-              title="إجمالي الأقسام"
+              title={t('admin.organizationManagement.totalDepartments')}
               value={departments.length}
               prefix={<BankOutlined />}
               valueStyle={{
@@ -704,7 +704,7 @@ const OrganizationManagementPage = () => {
         <Col xs={24} sm={12} md={12}>
           <Card loading={loading}>
             <Statistic
-              title="إجمالي المختبرات"
+              title={t('admin.organizationManagement.totalLabs')}
               value={labs.length}
               prefix={<ExperimentOutlined />}
               valueStyle={{
@@ -728,13 +728,13 @@ const OrganizationManagementPage = () => {
       {/* Main Content Tabs */}
       <Card>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="الأقسام" key="departments">
+          <TabPane tab={t('admin.organizationManagement.departments')} key="departments">
             {/* Departments Filters and Actions */}
             <div style={{ marginBottom: '16px' }}>
               <Row gutter={[16, 16]} align="middle">
                 <Col xs={24} sm={12} md={8}>
                   <Search
-                    placeholder="البحث في الأقسام..."
+                    placeholder={t('admin.organizationManagement.searchDepartments')}
                     allowClear
                     enterButton={<SearchOutlined />}
                     value={searchTerm}
@@ -748,7 +748,7 @@ const OrganizationManagementPage = () => {
                     icon={<PlusOutlined />}
                     onClick={handleCreateDepartment}
                   >
-                    إضافة قسم جديد
+                    {t('admin.organizationManagement.addDepartment')}
                   </Button>
                 </Col>
               </Row>
@@ -759,7 +759,7 @@ const OrganizationManagementPage = () => {
               <Table
                 columns={[
                   {
-                    title: 'اسم القسم',
+                    title: t('admin.organizationManagement.departmentName'),
                     dataIndex: 'name',
                     key: 'name',
                     render: (text, record) => (
@@ -772,13 +772,13 @@ const OrganizationManagementPage = () => {
                     ),
                   },
                   {
-                    title: 'رئيس القسم',
+                    title: t('admin.organizationManagement.departmentHead'),
                     dataIndex: 'head_name',
                     key: 'head_name',
                     render: (head) => head || '-',
                   },
                   {
-                    title: 'عدد المختبرات',
+                    title: t('admin.organizationManagement.totalLabs'),
                     dataIndex: 'total_labs',
                     key: 'total_labs',
                     render: (labs) => (
@@ -789,23 +789,23 @@ const OrganizationManagementPage = () => {
                     ),
                   },
                   {
-                    title: 'الحالة',
+                    title: t('admin.organizationManagement.status'),
                     dataIndex: 'status',
                     key: 'status',
                     render: (status) => getStatusTag(status),
                   },
                   {
-                    title: 'تاريخ الإنشاء',
+                    title: t('admin.organizationManagement.createdAt'),
                     dataIndex: 'created_at',
                     key: 'created_at',
                     render: (date) => formatDate(date),
                   },
                   {
-                    title: 'الإجراءات',
+                    title: t('common.actions'),
                     key: 'actions',
                     render: (_, record) => (
                       <Space>
-                        <Tooltip title="تعديل">
+                        <Tooltip title={t('common.edit')}>
                           <Button
                             type="primary"
                             size="small"
@@ -813,7 +813,7 @@ const OrganizationManagementPage = () => {
                             onClick={() => handleEditDepartment(record)}
                           />
                         </Tooltip>
-                        <Tooltip title="حذف">
+                        <Tooltip title={t('common.delete')}>
                           <Button
                             danger
                             size="small"
@@ -835,23 +835,23 @@ const OrganizationManagementPage = () => {
                   showSizeChanger: false,
                   showQuickJumper: true,
                   showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} من ${total} قسم`,
+                    `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.department')}`,
                 }}
                 locale={{
-                  emptyText: 'لا توجد أقسام',
+                  emptyText: t('admin.organizationManagement.noDepartments'),
                 }}
                 scroll={{ x: 1000 }}
               />
             </Spin>
           </TabPane>
 
-          <TabPane tab={<span style={{ paddingRight: '20px' }}>المختبرات</span>} key="labs">
+          <TabPane tab={<span style={{ paddingRight: '20px' }}>{t('admin.organizationManagement.laboratories')}</span>} key="labs">
             {/* Labs Filters and Actions */}
             <div style={{ marginBottom: '16px' }}>
               <Row gutter={[16, 16]} align="middle">
                 <Col xs={24} sm={12} md={8}>
                   <Search
-                    placeholder="البحث في المختبرات..."
+                    placeholder={t('admin.organizationManagement.searchLabs')}
                     allowClear
                     enterButton={<SearchOutlined />}
                     value={searchTerm}
@@ -865,7 +865,7 @@ const OrganizationManagementPage = () => {
                     icon={<PlusOutlined />}
                     onClick={handleCreateLab}
                   >
-                    إضافة مختبر جديد
+                    {t('admin.organizationManagement.addLaboratory')}
                   </Button>
                 </Col>
               </Row>
@@ -876,7 +876,7 @@ const OrganizationManagementPage = () => {
               <Table
                 columns={[
                   {
-                    title: 'اسم المختبر',
+                    title: t('admin.organizationManagement.laboratoryName'),
                     dataIndex: 'name',
                     key: 'name',
                     render: (text, record) => (
@@ -889,29 +889,29 @@ const OrganizationManagementPage = () => {
                     ),
                   },
                   {
-                    title: 'القسم',
+                    title: t('admin.organizationManagement.department'),
                     dataIndex: 'department_name',
                     key: 'department_name',
                     render: (department) => department || '-',
                   },
                   {
-                    title: 'المشرف',
+                    title: t('admin.organizationManagement.laboratoryHead'),
                     dataIndex: 'head_name',
                     key: 'head_name',
                     render: (head) => head || '-',
                   },
                   {
-                    title: 'الحالة',
+                    title: t('common.status'),
                     dataIndex: 'status',
                     key: 'status',
                     render: (status) => getStatusTag(status),
                   },
                   {
-                    title: 'الإجراءات',
+                    title: t('common.actions'),
                     key: 'actions',
                     render: (_, record) => (
                       <Space>
-                        <Tooltip title="عرض الأعضاء">
+                        <Tooltip title={t('admin.organizationManagement.viewMembers')}>
                           <Button
                             type="default"
                             size="small"
@@ -919,7 +919,7 @@ const OrganizationManagementPage = () => {
                             onClick={() => handleViewLabMembers(record)}
                           />
                         </Tooltip>
-                        <Tooltip title="تعديل">
+                        <Tooltip title={t('common.edit')}>
                           <Button
                             type="primary"
                             size="small"
@@ -927,7 +927,7 @@ const OrganizationManagementPage = () => {
                             onClick={() => handleEditLab(record)}
                           />
                         </Tooltip>
-                        <Tooltip title="حذف">
+                        <Tooltip title={t('common.delete')}>
                           <Button
                             danger
                             size="small"
@@ -949,94 +949,17 @@ const OrganizationManagementPage = () => {
                   showSizeChanger: false,
                   showQuickJumper: true,
                   showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} من ${total} مختبر`,
+                    `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.laboratory')}`,
                 }}
                 locale={{
-                  emptyText: 'لا توجد مختبرات',
+                  emptyText: t('admin.organizationManagement.noLaboratories'),
                 }}
                 scroll={{ x: 1000 }}
               />
             </Spin>
           </TabPane>
 
-          <TabPane tab="الموظفين" key="staff">
-            {/* Staff Table */}
-            <Spin spinning={loading}>
-              <Table
-                columns={[
-                  {
-                    title: 'الاسم',
-                    dataIndex: 'name',
-                    key: 'name',
-                    render: (text, record) => (
-                      <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <Avatar icon={<UserOutlined />} style={{ marginRight: '8px' }} />
-                        <div>
-                          <div style={{ fontWeight: 500 }}>{text}</div>
-                          <Text type="secondary" style={{ fontSize: '12px' }}>
-                            {record.position}
-                          </Text>
-                        </div>
-                      </div>
-                    ),
-                  },
-                  {
-                    title: 'القسم',
-                    dataIndex: 'department',
-                    key: 'department',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'التخصص',
-                    dataIndex: 'specialization',
-                    key: 'specialization',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'البريد الإلكتروني',
-                    dataIndex: 'email',
-                    key: 'email',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'الهاتف',
-                    dataIndex: 'phone',
-                    key: 'phone',
-                  },
-                  {
-                    title: 'تاريخ التوظيف',
-                    dataIndex: 'hire_date',
-                    key: 'hire_date',
-                    render: (date) => formatDate(date),
-                  },
-                  {
-                    title: 'الحالة',
-                    dataIndex: 'status',
-                    key: 'status',
-                    render: (status) => getStatusTag(status),
-                  },
-                ]}
-                dataSource={staff}
-                rowKey="id"
-                pagination={{
-                  current: currentPage,
-                  pageSize: pageSize,
-                  total: total,
-                  onChange: setCurrentPage,
-                  showSizeChanger: false,
-                  showQuickJumper: true,
-                  showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} من ${total} موظف`,
-                }}
-                locale={{
-                  emptyText: 'لا يوجد موظفين',
-                }}
-                scroll={{ x: 1000 }}
-              />
-            </Spin>
-          </TabPane>
-
-          <TabPane tab="إعدادات المنظمة" key="settings">
+          <TabPane tab={t('admin.organizationManagement.orgSettings')} key="settings">
             <Spin spinning={settingsLoading}>
               <Form
                 form={settingsForm}
@@ -1047,25 +970,25 @@ const OrganizationManagementPage = () => {
                 <Row gutter={[24, 16]}>
                   {/* Basic Information */}
                   <Col span={24}>
-                    <Title level={4}>المعلومات الأساسية</Title>
+                    <Title level={4}>{ }{t('admin.organizationManagement.basicInformation')}</Title>
                   </Col>
 
                   <Col xs={24} md={12}>
                     <Form.Item
                       name="name"
-                      label="اسم المنظمة"
-                      rules={[{ required: true, message: 'اسم المنظمة مطلوب' }]}
+                      label={t('admin.organizationManagement.orgName')}
+                      rules={[{ required: true, message: t('validation.required') }]}
                     >
-                      <Input placeholder="أدخل اسم المنظمة" />
+                      <Input placeholder={t('admin.organizationManagement.orgNamePlaceholder')} />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} md={12}>
                     <Form.Item
                       name="email"
-                      label="البريد الإلكتروني"
+                      label={t('common.email')}
                       rules={[
-                        { type: 'email', message: 'يرجى إدخال بريد إلكتروني صحيح' }
+                        { type: 'email', message: t('validation.invalidEmail') }
                       ]}
                     >
                       <Input placeholder="example@organization.com" />
@@ -1075,16 +998,16 @@ const OrganizationManagementPage = () => {
                   <Col xs={24} md={12}>
                     <Form.Item
                       name="phone"
-                      label="رقم الهاتف"
+                      label={t('common.phoneNumber')}
                     >
-                      <Input placeholder="+966 XX XXX XXXX" />
+                      <Input placeholder="+20 xxx xxx xxxx" />
                     </Form.Item>
                   </Col>
 
                   <Col xs={24} md={12}>
                     <Form.Item
                       name="website"
-                      label="الموقع الإلكتروني"
+                      label={t('admin.organizationManagement.website')}
                     >
                       <Input placeholder="https://www.organization.com" />
                     </Form.Item>
@@ -1093,53 +1016,53 @@ const OrganizationManagementPage = () => {
                   <Col span={24}>
                     <Form.Item
                       name="address"
-                      label="العنوان"
+                      label={t('admin.organizationManagement.address')}
                     >
-                      <TextArea rows={2} placeholder="أدخل عنوان المنظمة" />
+                      <TextArea rows={2} placeholder={t('admin.organizationManagement.addressPlaceholder')} />
                     </Form.Item>
                   </Col>
 
                   {/* Vision and Mission */}
                   <Col span={24}>
-                    <Title level={4}>الرؤية والرسالة</Title>
+                    <Title level={4}>{t('admin.organizationManagement.visionAndMission')}</Title>
                   </Col>
 
                   <Col span={24}>
                     <Form.Item
                       name="vision"
-                      label="الرؤية"
+                      label={t('admin.organizationManagement.vision')}
                     >
-                      <TextArea rows={3} placeholder="أدخل رؤية المنظمة" />
+                      <TextArea rows={3} placeholder={t('admin.organizationManagement.visionPlaceholder')} />
                     </Form.Item>
                   </Col>
 
                   <Col span={24}>
                     <Form.Item
                       name="mission"
-                      label="الرسالة"
+                      label={t('admin.organizationManagement.mission')}
                     >
-                      <TextArea rows={3} placeholder="أدخل رسالة المنظمة" />
+                      <TextArea rows={3} placeholder={t('admin.organizationManagement.missionPlaceholder')} />
                     </Form.Item>
                   </Col>
 
                   <Col span={24}>
                     <Form.Item
                       name="about"
-                      label="نبذة عن المنظمة"
+                      label={t('admin.organizationManagement.about')}
                     >
-                      <TextArea rows={4} placeholder="أدخل نبذة تعريفية عن المنظمة" />
+                      <TextArea rows={4} placeholder={t('admin.organizationManagement.aboutPlaceholder')} />
                     </Form.Item>
                   </Col>
 
                   {/* Social Media */}
                   <Col span={24}>
-                    <Title level={4}>وسائل التواصل الاجتماعي</Title>
+                    <Title level={4}>{t('admin.organizationManagement.socialMedia')}</Title>
                   </Col>
 
                   <Col xs={24} md={12}>
                     <Form.Item
                       name="facebook"
-                      label="فيسبوك"
+                      label={t('admin.organizationManagement.facebook')}
                     >
                       <Input placeholder="https://facebook.com/organization" />
                     </Form.Item>
@@ -1148,7 +1071,7 @@ const OrganizationManagementPage = () => {
                   <Col xs={24} md={12}>
                     <Form.Item
                       name="twitter"
-                      label="تويتر"
+                      label={t('admin.organizationManagement.twitter')}
                     >
                       <Input placeholder="https://twitter.com/organization" />
                     </Form.Item>
@@ -1157,7 +1080,7 @@ const OrganizationManagementPage = () => {
                   <Col xs={24} md={12}>
                     <Form.Item
                       name="linkedin"
-                      label="لينكد إن"
+                      label={t('admin.organizationManagement.linkedin')}
                     >
                       <Input placeholder="https://linkedin.com/company/organization" />
                     </Form.Item>
@@ -1166,25 +1089,9 @@ const OrganizationManagementPage = () => {
                   <Col xs={24} md={12}>
                     <Form.Item
                       name="instagram"
-                      label="إنستغرام"
+                      label={t('admin.organizationManagement.instagram')}
                     >
                       <Input placeholder="https://instagram.com/organization" />
-                    </Form.Item>
-                  </Col>
-
-                  {/* Settings */}
-                  <Col span={24}>
-                    <Title level={4}>إعدادات النظام</Title>
-                  </Col>
-
-                  <Col span={24}>
-                    <Form.Item
-                      name="enable_registration"
-                      valuePropName="checked"
-                    >
-                      <Checkbox>
-                        تفعيل التسجيل للمستخدمين الجدد
-                      </Checkbox>
                     </Form.Item>
                   </Col>
 
@@ -1196,13 +1103,13 @@ const OrganizationManagementPage = () => {
                         htmlType="submit"
                         loading={settingsLoading}
                       >
-                        حفظ الإعدادات
+                        {t('admin.organizationManagement.saveSettings')}
                       </Button>
                       <Button onClick={() => settingsForm.resetFields()}>
-                        إعادة تعيين
+                        {t('admin.organizationManagement.reset')}
                       </Button>
                       <Button onClick={loadSettings}>
-                        تحديث
+                        {t('common.update')}
                       </Button>
                     </Space>
                   </Col>
@@ -1217,8 +1124,8 @@ const OrganizationManagementPage = () => {
       <Modal
         title={
           activeTab === 'departments'
-            ? (editingItem ? 'تعديل القسم' : 'إضافة قسم جديد')
-            : (editingItem ? 'تعديل المختبر' : 'إضافة مختبر جديد')
+            ? (editingItem ? t('admin.organizationManagement.editDepartment') : t('admin.organizationManagement.addDepartment'))
+            : (editingItem ? t('admin.organizationManagement.editLaboratory') : t('admin.organizationManagement.addLaboratory'))
         }
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
@@ -1233,18 +1140,18 @@ const OrganizationManagementPage = () => {
         >
           <Form.Item
             name="name"
-            label={activeTab === 'departments' ? 'اسم القسم' : 'اسم المختبر'}
-            rules={[{ required: true, message: activeTab === 'departments' ? 'اسم القسم مطلوب' : 'اسم المختبر مطلوب' }]}
+            label={activeTab === 'departments' ? t('admin.organizationManagement.departmentName') : t('admin.organizationManagement.laboratoryName')}
+            rules={[{ required: true, message: activeTab === 'departments' ? t('validation.departmentNameRequired') : t('validation.laboratoryNameRequired') }]}
           >
-            <Input placeholder={activeTab === 'departments' ? 'أدخل اسم القسم' : 'أدخل اسم المختبر'} />
+            <Input placeholder={activeTab === 'departments' ? t('validation.departmentNamePlaceholder') : t('validation.laboratoryNamePlaceholder')} />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label={activeTab === 'departments' ? 'وصف القسم' : 'وصف المختبر'}
-            rules={[{ required: true, message: activeTab === 'departments' ? 'وصف القسم مطلوب' : 'وصف المختبر مطلوب' }]}
+            label={activeTab === 'departments' ? t('admin.organizationManagement.departmentDescription') : t('admin.organizationManagement.laboratoryDescription')}
+            rules={[{ required: true, message: activeTab === 'departments' ? t('validation.departmentDescriptionRequired') : t('validation.laboratoryDescriptionRequired') }]}
           >
-            <TextArea rows={3} placeholder={activeTab === 'departments' ? 'أدخل وصف تفصيلي للقسم' : 'أدخل وصف تفصيلي للمختبر'} />
+            <TextArea rows={3} placeholder={activeTab === 'departments' ? t('validation.departmentDescriptionPlaceholder') : t('validation.laboratoryDescriptionPlaceholder')} />
           </Form.Item>
 
           <Row gutter={16}>
@@ -1252,11 +1159,11 @@ const OrganizationManagementPage = () => {
               {activeTab === 'departments' ? (
                 <Form.Item
                   name="head"
-                  label="رئيس القسم"
-                  rules={[{ required: true, message: 'رئيس القسم مطلوب' }]}
+                  label={t('admin.organizationManagement.departmentHead')}
+                  rules={[{ required: true, message: t('validation.departmentHeadRequired') }]}
                 >
                   <Select
-                    placeholder="اختر رئيس القسم"
+                    placeholder={t('admin.organizationManagement.selectDepartmentHead')}
                     loading={usersLoading}
                     showSearch
                     optionFilterProp="label"  // Changed to filter by label instead of children
@@ -1285,10 +1192,10 @@ const OrganizationManagementPage = () => {
               <Col xs={24} md={12}>
                 <Form.Item
                   name="department_id"
-                  label="القسم التابع له"
-                  rules={[{ required: true, message: 'القسم مطلوب' }]}
+                  label={t('admin.organizationManagement.belongingDepartment')}
+                  rules={[{ required: true, message: t('validation.departmentRequired') }]}
                 >
-                  <Select placeholder="اختر القسم">
+                  <Select placeholder={t('validation.selectDepartment')}>
                     {departments.map(dept => (
                       <Option key={dept.id} value={dept.id}>{dept.name}</Option>
                     ))}
@@ -1298,11 +1205,11 @@ const OrganizationManagementPage = () => {
               <Col xs={24} md={12}>
                 <Form.Item
                   name="head_id"
-                  label="مشرف المختبر"
-                  rules={[{ required: true, message: 'مشرف المختبر مطلوب' }]}
+                  label={t('admin.organizationManagement.labSupervisor')}
+                  rules={[{ required: true, message: t('validation.labSupervisorRequired') }]}
                 >
                   <Select
-                    placeholder="اختر مشرف المختبر"
+                    placeholder={t('admin.organizationManagement.selectLabSupervisor')}
                     loading={usersLoading}
                     showSearch
                     optionFilterProp="label"
@@ -1328,10 +1235,10 @@ const OrganizationManagementPage = () => {
           <Form.Item>
             <Space>
               <Button type="primary" htmlType="submit">
-                {editingItem ? 'تحديث' : 'إنشاء'}
+                {editingItem ? t('common.update') : t('common.create')}
               </Button>
               <Button onClick={() => setModalVisible(false)}>
-                إلغاء
+                {t('common.cancel')}
               </Button>
             </Space>
           </Form.Item>
@@ -1340,18 +1247,18 @@ const OrganizationManagementPage = () => {
 
       {/* Lab Members Management Modal */}
       <Modal
-        title={`إدارة أعضاء المختبر: ${selectedLab?.name || ''}`}
+        title={`${t('admin.organizationManagement.labMembersManagement')}: ${selectedLab?.name || ''}`}
         open={labMembersModalVisible}
         onCancel={() => setLabMembersModalVisible(false)}
         width={800}
         footer={[
           <Button key="close" onClick={() => setLabMembersModalVisible(false)}>
-            إغلاق
+            {t('common.close')}
           </Button>
         ]}
       >
         <div style={{ marginBottom: '16px' }}>
-          <Title level={4}>الأعضاء الحاليون</Title>
+          <Title level={4}>{t('admin.organizationManagement.currentMembers')}</Title>
           <Spin spinning={labMembersLoading}>
             {labMembers.length > 0 ? (
               <div style={{ marginBottom: '16px' }}>
@@ -1380,13 +1287,13 @@ const OrganizationManagementPage = () => {
                             <div>
                               {/* Display full name */}
                               <Text strong>
-                                {fullName || 'غير محدد'}
+                                {fullName || t('common.undefined')}
                               </Text>
                               <br />
 
                               {/* Display email */}
                               <Text type="secondary" style={{ fontSize: '12px' }}>
-                                {email || 'البريد الإلكتروني غير متوفر'}
+                                {email || t('common.undefined')}
                               </Text>
 
                               {/* Display position if available */}
@@ -1394,7 +1301,7 @@ const OrganizationManagementPage = () => {
                                 <>
                                   <br />
                                   <Text type="secondary" style={{ fontSize: '12px' }}>
-                                    المنصب: {member.position}
+                                    {t('common.position')}: {member.position}
                                   </Text>
                                 </>
                               )}
@@ -1404,7 +1311,7 @@ const OrganizationManagementPage = () => {
                                 <>
                                   <br />
                                   <Text type="secondary" style={{ fontSize: '12px' }}>
-                                    تاريخ البداية: {new Date(member.start_date).toLocaleDateString('ar-EG')}
+                                    {t('common.startDate')}: {new Date(member.start_date).toLocaleDateString('ar-EG')}
                                   </Text>
                                 </>
                               )}
@@ -1419,7 +1326,7 @@ const OrganizationManagementPage = () => {
                             size="small"
                             onClick={() => handleRemoveResearcher(member.assignment_id || member.id)}
                           >
-                            إزالة
+                            {t('common.delete')}
                           </Button>
                         </Col>
                       </Row>
@@ -1428,13 +1335,12 @@ const OrganizationManagementPage = () => {
                 })}
               </div>
             ) : (
-              <Text type="secondary">لا يوجد أعضاء في هذا المختبر</Text>
+              <Text type="secondary">{t('admin.organizationManagement.noMembers')}</Text>
             )}
           </Spin>
         </div>
 
         <div>
-          <Title level={4}>إضافة عضو جديد</Title>
           <Button
             type="primary"
             onClick={() => {
@@ -1442,14 +1348,14 @@ const OrganizationManagementPage = () => {
               loadAvailableResearchers();
             }}
           >
-            إضافة باحث جديد
+            {t('admin.organizationManagement.assignNewResearcher')}
           </Button>
         </div>
       </Modal>
 
       {/* Assignment Form Modal */}
       <Modal
-        title="تعيين باحث للمختبر"
+        title={t('admin.organizationManagement.assignNewResearcher')}
         open={assignmentFormVisible}
         onCancel={() => {
           setAssignmentFormVisible(false);
@@ -1465,10 +1371,10 @@ const OrganizationManagementPage = () => {
         >
           <Form.Item
             name="researcher_id"
-            label="الباحث"
-            rules={[{ required: true, message: 'يرجى اختيار الباحث' }]}
+            label={t('admin.organizationManagement.Researcher')}
+            rules={[{ required: true, message: t('validation.researcherRequired') }]}
           >
-            <Select placeholder="اختر الباحث">
+            <Select placeholder={t('admin.organizationManagement.selectResearcher')}>
               {availableResearchers
                 .filter(researcher => !labMembers.some(member => member.id === researcher.id))
                 .map(researcher => (
@@ -1483,7 +1389,7 @@ const OrganizationManagementPage = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="start_date"
-                label="تاريخ البداية"
+                label={t('common.startDate')}
                 rules={[{ required: true, message: 'تاريخ البداية مطلوب' }]}
               >
                 <Input type="date" />

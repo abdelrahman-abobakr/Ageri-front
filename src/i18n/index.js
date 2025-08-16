@@ -20,7 +20,7 @@ i18n
   .use(initReactI18next)
   .init({
     resources,
-    fallbackLng: 'ar', // Default to Arabic
+    fallbackLng: 'ar', 
     lng: 'ar', // Set Arabic as the initial language
     debug: process.env.NODE_ENV === 'development',
 

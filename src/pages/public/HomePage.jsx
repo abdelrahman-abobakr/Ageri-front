@@ -259,7 +259,7 @@ const HomePage = () => {
           setSettingsLoading(false);
         }
 
-        // Load announcements and posts separately
+        // Load announcements and posts separately - now only fetch featured posts
         try {
           const [announcementsResponse, postsResponse] = await Promise.allSettled([
             contentService.getPublicAnnouncements({
@@ -268,31 +268,32 @@ const HomePage = () => {
             }),
             contentService.getPublicPosts({
               page_size: 8,
-              ordering: '-created_at'
+              ordering: '-created_at',
+              is_featured: true  // Only fetch featured posts
             })
           ]);
 
-          console.log('🔍 Posts Response:', postsResponse);
-          console.log('🔍 Posts Response Status:', postsResponse.status);
+          console.log('🔍 Featured Posts Response:', postsResponse);
+          console.log('🔍 Featured Posts Response Status:', postsResponse.status);
           if (postsResponse.status === 'rejected') {
-            console.error('🔍 Posts Error:', postsResponse.reason);
+            console.error('🔍 Featured Posts Error:', postsResponse.reason);
           }
 
           if (postsResponse.status === 'fulfilled') {
-            console.log('🔍 All Posts:', postsResponse.value.results);
-            console.log('🔍 Posts Response Data:', postsResponse.value);
+            console.log('🔍 Featured Posts:', postsResponse.value.results);
+            console.log('🔍 Featured Posts Response Data:', postsResponse.value);
 
             // Check if we have results
             if (!postsResponse.value.results || postsResponse.value.results.length === 0) {
-              console.warn('🔍 No posts found in response');
+              console.warn('🔍 No featured posts found in response');
             }
 
-            // Show all published posts instead of just featured ones
-            const publishedPosts = postsResponse.value.results?.filter(item =>
-              item.status === 'published' && item.is_public
+            // Filter for published and public featured posts
+            const featuredPosts = postsResponse.value.results?.filter(item =>
+              item.status === 'published' && item.is_public && item.is_featured
             ) || [];
 
-            const transformedPosts = publishedPosts.map(item => {
+            const transformedPosts = featuredPosts.map(item => {
               return {
                 id: item.id,
                 title: item.title,
@@ -313,14 +314,12 @@ const HomePage = () => {
               };
             });
 
-            // Sort posts to show featured ones first
-            const sortedPosts = transformedPosts.sort((a, b) => {
-              if (a.is_featured && !b.is_featured) return -1;
-              if (!a.is_featured && b.is_featured) return 1;
-              return new Date(b.date) - new Date(a.date);
-            });
+            // Sort by date (newest first) since all are featured
+            const sortedPosts = transformedPosts.sort((a, b) => 
+              new Date(b.date) - new Date(a.date)
+            );
 
-            console.log('🔍 Final Sorted Posts:', sortedPosts);
+            console.log('🔍 Final Featured Posts:', sortedPosts);
             setPosts(sortedPosts);
           }
 
@@ -610,31 +609,11 @@ const HomePage = () => {
                       lineHeight: '1.8',
                       textShadow: '1px 1px 3px rgba(0,0,0,0.5)',
                       maxWidth: '900px',
-                      margin: '0 auto 3rem auto',
+                      margin: '0 auto',
                       animation: 'fadeInUp 1s ease-out 0.6s both'
                     }}>
                       {slide.content}
                     </Paragraph>
-
-                    <div style={{ animation: 'fadeInUp 1s ease-out 0.8s both' }}>
-                      <Button
-                        type="primary"
-                        size="large"
-                        style={{
-                          height: '60px',
-                          padding: '0 40px',
-                          fontSize: '18px',
-                          borderRadius: '30px',
-                          background: 'rgba(255, 255, 255, 0.2)',
-                          backdropFilter: 'blur(10px)',
-                          border: '2px solid rgba(255, 255, 255, 0.3)',
-                          fontWeight: '600'
-                        }}
-                        onClick={() => navigate('/about')}
-                      >
-                        اكتشف المزيد
-                      </Button>
-                    </div>
                   </div>
                 </div>
               </div>
@@ -731,7 +710,7 @@ const HomePage = () => {
                 fontWeight: '800',
                 marginBottom: '16px'
               }}>
-                آخر الأخبار والمقالات
+                المقالات المميزة
               </Title>
               <Paragraph style={{
                 marginTop: '16px',
@@ -741,7 +720,7 @@ const HomePage = () => {
                 maxWidth: '600px',
                 margin: '0 auto'
               }}>
-                اطلع على أحدث المقالات والأخبار في مجال البحث العلمي والتطوير التكنولوجي
+                اطلع على أهم المقالات والأخبار المميزة في مجال البحث العلمي والتطوير التكنولوجي
               </Paragraph>
               {/* Debug info */}
               <div style={{ marginTop: '16px', fontSize: '14px', color: '#999' }}>
@@ -995,7 +974,7 @@ const HomePage = () => {
                     e.target.style.boxShadow = '0 8px 32px rgba(102, 126, 234, 0.3)';
                   }}
                 >
-                  عرض جميع المنشورات
+                  عرض جميع المقالات
                 </Button>
               </div>
             )}
