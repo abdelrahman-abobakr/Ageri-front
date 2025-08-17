@@ -1390,7 +1390,7 @@ const OrganizationManagementPage = () => {
               <Form.Item
                 name="start_date"
                 label={t('common.startDate')}
-                rules={[{ required: true, message: 'تاريخ البداية مطلوب' }]}
+                rules={[{ required: true, message: t('admin.organizationManagement.startDateRequired') }]}
               >
                 <Input type="date" />
               </Form.Item>
@@ -1398,8 +1398,8 @@ const OrganizationManagementPage = () => {
             <Col xs={24} md={12}>
               <Form.Item
                 name="position"
-                label="المنصب"
-                rules={[{ required: true, message: 'المنصب مطلوب' }]}
+                label={t('common.role')}
+                rules={[{ required: true, message: t('admin.organizationManagement.roleRequired') }]}
               >
                 <Select placeholder="اختر المنصب">
                   <Option value="PhD Student">طالب دكتوراه</Option>

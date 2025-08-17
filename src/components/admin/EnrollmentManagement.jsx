@@ -678,15 +678,6 @@ const EnrollmentManagement = () => {
                 addonAfter="جنيه"
               />
             </Form.Item>
-
-            <Alert
-              message="ملاحظة"
-              description="لن يتم إرسال إشعار بالبريد الإلكتروني للمشارك. قد تحتاج للتواصل معه مباشرة لتأكيد الدفع."
-              type="info"
-              showIcon
-              style={{ marginBottom: '16px' }}
-            />
-
             <Form.Item>
               <Space>
                 <Button onClick={() => setPaymentModalVisible(false)}>
@@ -839,26 +830,6 @@ const EnrollmentManagement = () => {
               </Col>
             </Row>
 
-            {/* Training Progress Information */}
-            <Row gutter={[16, 16]} style={{ marginTop: '16px' }}>
-              <Col span={24}>
-                <Card size="small" title="بيانات التدريب">
-                  {enrollmentDetails.grade && (
-                    <p><strong>الدرجة:</strong> {enrollmentDetails.grade}</p>
-                  )}
-                  {enrollmentDetails.attendance_percentage !== null && (
-                    <p><strong>نسبة الحضور:</strong> {enrollmentDetails.attendance_percentage}%</p>
-                  )}
-                  {enrollmentDetails.completion_date && (
-                    <p><strong>تاريخ الإنجاز:</strong> {new Date(enrollmentDetails.completion_date).toLocaleDateString('ar-EG')}</p>
-                  )}
-                  {!enrollmentDetails.grade && !enrollmentDetails.attendance_percentage && !enrollmentDetails.completion_date && (
-                    <p style={{ color: '#999', fontStyle: 'italic' }}>لا توجد بيانات تدريب متاحة</p>
-                  )}
-                </Card>
-              </Col>
-
-            </Row>
 
             {/* Notes Section */}
             {(enrollmentDetails.notes || enrollmentDetails.admin_notes) && (

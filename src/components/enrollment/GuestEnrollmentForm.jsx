@@ -41,12 +41,12 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
     { value: 'advanced', label: 'متقدم' }
   ];
 
+  // Enhanced handleSubmit function with better error handling
   const handleSubmit = async (values) => {
     setLoading(true);
     setErrors({});
 
     try {
-      // Validate data
       const validation = EnrollmentService.validateEnrollmentData(values);
       if (!validation.isValid) {
         setErrors(validation.errors);
@@ -54,23 +54,95 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
         return;
       }
 
-      // Submit enrollment
       const result = await EnrollmentService.enrollInCourse(course.id, values);
-      
       message.success('تم التسجيل بنجاح!');
-      
-      // Call success callback with enrollment data
-      if (onSuccess) {
-        onSuccess(result);
-      }
+      if (onSuccess) onSuccess(result);
 
     } catch (error) {
       console.error('Enrollment error:', error);
-      message.error(error.message || 'فشل في التسجيل');
+      console.error('Error response:', error.response);
+      console.error('Error response data:', error.response?.data);
+
+      // Handle 400 Bad Request with field errors
+      if (error.response?.status === 400) {
+        const errorData = error.response.data;
+        console.log('400 Error data:', errorData);
+
+        // Transform backend errors to match form expectations
+        const formattedErrors = {};
+
+        // Handle different error formats
+        if (typeof errorData === 'object') {
+          // Check if errors are nested in a 'details' object
+          let errorsToProcess = errorData;
+          if (errorData.details && typeof errorData.details === 'object') {
+            console.log('Found nested errors in details:', errorData.details);
+            errorsToProcess = errorData.details;
+          }
+
+          Object.keys(errorsToProcess).forEach(key => {
+            console.log(`Processing error for field ${key}:`, errorsToProcess[key]);
+
+            // Skip non-field error keys like 'error' or 'message'
+            if (key === 'error' || key === 'message') {
+              return;
+            }
+
+            // If error is an array, join messages
+            if (Array.isArray(errorsToProcess[key])) {
+              formattedErrors[key] = errorsToProcess[key].join(', ');
+            }
+            // If error is a string
+            else if (typeof errorsToProcess[key] === 'string') {
+              formattedErrors[key] = errorsToProcess[key];
+            }
+            // If error is an object (nested errors), try to extract field errors
+            else if (typeof errorsToProcess[key] === 'object') {
+              // Try to extract field-specific errors from nested object
+              const nestedErrors = errorsToProcess[key];
+              Object.keys(nestedErrors).forEach(nestedKey => {
+                if (Array.isArray(nestedErrors[nestedKey])) {
+                  formattedErrors[nestedKey] = nestedErrors[nestedKey].join(', ');
+                } else if (typeof nestedErrors[nestedKey] === 'string') {
+                  formattedErrors[nestedKey] = nestedErrors[nestedKey];
+                }
+              });
+            }
+          });
+        }
+
+        console.log('Formatted errors:', formattedErrors);
+        setErrors(formattedErrors);
+
+        // Show general error message
+        if (Object.keys(formattedErrors).length === 0) {
+          // No field-specific errors, show general message
+          const generalMessage = errorData?.error || errorData?.message || errorData?.detail || 'يوجد أخطاء في البيانات المدخلة';
+          message.error(generalMessage);
+        } else {
+          // Show field-specific error message
+          message.error('يرجى تصحيح الأخطاء المبينة في النموذج');
+
+          // Also show the general error if it exists
+          if (errorData?.error && errorData.error !== 'Invalid enrollment data') {
+            message.warning(errorData.error);
+          }
+        }
+      }
+      // Handle other error cases
+      else {
+        console.error('Non-400 error:', error);
+        const errorMessage = error.response?.data?.message ||
+          error.response?.data?.detail ||
+          error.message ||
+          'حدث خطأ أثناء التسجيل';
+        message.error(errorMessage);
+      }
     } finally {
       setLoading(false);
     }
   };
+
 
   const handleCancel = () => {
     form.resetFields();
@@ -175,10 +247,10 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
                 { type: 'email', message: 'يرجى إدخال بريد إلكتروني صحيح' }
               ]}
               validateStatus={errors.email ? 'error' : ''}
-              help={errors.email}
+              help={errors.email || ''}  // Ensure empty string if no error
             >
-              <Input 
-                prefix={<MailOutlined />} 
+              <Input
+                prefix={<MailOutlined />}
                 placeholder="example@email.com"
                 size="large"
               />

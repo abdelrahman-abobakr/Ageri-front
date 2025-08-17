@@ -55,9 +55,6 @@ const MainLayout = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  // Notification state
-  // const [notifications, setNotifications] = useState([]);
-  // const [notificationLoading, setNotificationLoading] = useState(false);
 
   // Mobile responsive state
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -76,48 +73,14 @@ const MainLayout = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [dispatch, sidebarCollapsed]);
 
-  // Load notifications on component mount (commented out for now)
-  // useEffect(() => {
-  //   const loadNotifications = async () => {
-  //     try {
-  //       setNotificationLoading(true);
-  //       const response = await notificationService.getNotifications({ page_size: 10 });
-  //       setNotifications(response.results || []);
-  //     } catch (error) {
-  //       console.error('Failed to load notifications:', error);
-  //       // Set empty notifications array on error to prevent UI issues
-  //       setNotifications([]);
-  //     } finally {
-  //       setNotificationLoading(false);
-  //     }
-  //   };
 
-  //   if (user) {
-  //     loadNotifications();
-  //   }
-  // }, [user]);
 
   const handleLogout = () => {
     dispatch(logoutUser());
     navigate('/login');
   };
 
-  // Notification click handler (commented out for now)
-  // const handleNotificationClick = async (notification) => {
-  //   try {
-  //     await notificationService.markAsRead(notification.id);
-  //     // Update local state to mark as read
-  //     setNotifications(prev =>
-  //       prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-  //     );
-  //   } catch (error) {
-  //     console.error('Failed to mark notification as read:', error);
-  //     // Still update local state even if API call fails (for better UX)
-  //     setNotifications(prev =>
-  //       prev.map(n => n.id === notification.id ? { ...n, read: true } : n)
-  //     );
-  //   }
-  // };
+
 
 
 
@@ -131,7 +94,6 @@ const MainLayout = () => {
       'training': t('navigation.training'),
       'services': t('navigation.services'),
       'content': t('navigation.content'),
-      'analytics': t('navigation.analytics'),
       'notifications': t('navigation.notifications'),
       'settings': t('navigation.settings'),
       'profile': t('navigation.profile'),

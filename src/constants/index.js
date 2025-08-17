@@ -150,13 +150,7 @@ export const PERMISSIONS = {
     [USER_ROLES.GUEST]: false,
   },
 
-  // System Access
-  ACCESS_ANALYTICS: {
-    [USER_ROLES.ADMIN]: true,
-    [USER_ROLES.MODERATOR]: false,
-    [USER_ROLES.RESEARCHER]: false,
-    [USER_ROLES.GUEST]: false,
-  },
+
   ACCESS_ADMIN_PANEL: {
     [USER_ROLES.ADMIN]: true,
     [USER_ROLES.MODERATOR]: false,
@@ -278,15 +272,11 @@ export const API_ENDPOINTS = {
     COMMENT_DETAIL: (id) => `/api/content/comments/${id}/`,
   },
 
-  // Search & Analytics
+  // Search 
   SEARCH: {
     GLOBAL: '/api/search/',
     PUBLICATIONS: '/api/search/publications/',
     USERS: '/api/search/users/'
-  },
-
-  ANALYTICS: {
-    DASHBOARD: '/dashboard/analytics/'
   },
 
   // Notifications
@@ -347,7 +337,6 @@ export const MENU_ITEMS = {
     { key: 'training', label: 'Training', icon: 'ReadOutlined', path: '/training' },
     { key: 'services', label: 'Services', icon: 'ToolOutlined', path: '/services' },
     { key: 'content', label: 'Content', icon: 'FileTextOutlined', path: '/content' },
-    { key: 'analytics', label: 'Analytics', icon: 'BarChartOutlined', path: '/analytics' },
     { key: 'settings', label: 'Settings', icon: 'SettingOutlined', path: '/settings' },
   ],
   [USER_ROLES.MODERATOR]: [

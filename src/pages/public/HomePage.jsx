@@ -247,7 +247,7 @@ const HomePage = () => {
             mission_image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
             about: "معهد البحوث العلمية والتطوير التقني مؤسسة رائدة في مجال البحث العلمي والابتكار التقني، تأسس عام 1985 ويضم نخبة من العلماء والباحثين المتخصصين في مختلف المجالات العلمية والتقنية. يساهم المعهد في تطوير الحلول العلمية والتقنية المتقدمة لمواجهة التحديات المعاصرة وتحقيق التنمية المستدامة.",
             email: "info@research-institute.org",
-            phone: "+966 11 456 7890",
+            phone: "+20",
             address: "Inside Cairo Uni, Oula, Al Giza, Giza Governorate 3725005",
             website: "https://research-institute.org",
             facebook: "https://facebook.com/research-institute",
@@ -633,7 +633,7 @@ const HomePage = () => {
                 type="primary"
                 size="large"
                 icon={<BookOutlined />}
-                onClick={() => navigate('/research')}
+                onClick={() => navigate('/posts')}
                 style={{
                   height: '56px',
                   fontSize: '18px',
@@ -641,7 +641,7 @@ const HomePage = () => {
                   borderRadius: '28px'
                 }}
               >
-                البحوث العلمية
+                المنشورات
               </Button>
             </Col>
             <Col>

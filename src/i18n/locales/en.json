@@ -40,7 +40,8 @@
     "create":"Create",
     "undefined": "Undefined",
     "position": "Position",
-    "startDate":"Start Date"
+    "startDate":"Start Date",
+    "role":"Role"
   },
   "navigation": {
     "home": "Home",
@@ -288,7 +289,8 @@
       "totalUsers": "Total Users",
       "pendingApprovals": "Pending Approvals",
       "activeUsers": "Active Users",
-      "newRegistrations": "New Registrations"
+      "newRegistrations": "New Registrations",
+      "status":"Status"
     },
     "analytics": {
       "title": "Analytics Dashboard",
@@ -519,7 +521,9 @@
       "noMembers": "No Members Found",
       "assignNewResearcher": "Assign New Researcher",
       "Researcher":"Researcher",
-      "selectResearcher": "Select Researcher"
+      "selectResearcher": "Select Researcher",
+      "startDateRequired":"Start Date is required",
+      "roleRequired":"Role is required"
     }
   }
 }

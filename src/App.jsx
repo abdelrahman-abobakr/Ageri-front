@@ -43,7 +43,6 @@ import CreateProfilePage from './pages/profile/CreateProfilePage';
 
 // Admin Pages
 import UserManagementPage from './pages/admin/UserManagementPage';
-import AnalyticsPage from './pages/admin/AnalyticsPage';
 import ContentManagementPage from './pages/admin/ContentManagementPage';
 import SystemSettingsPage from './pages/admin/SystemSettingsPage';
 import ResearchManagementPage from './pages/admin/ResearchManagementPage';
@@ -162,14 +161,7 @@ const AppContent = () => {
                   </ProtectedRoute>
                 }
               />
-              <Route
-                path="analytics"
-                element={
-                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
-                    <AnalyticsPage />
-                  </ProtectedRoute>
-                }
-              />
+
               <Route
                 path="research"
                 element={

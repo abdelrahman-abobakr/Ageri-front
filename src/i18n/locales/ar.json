@@ -69,7 +69,8 @@
     "create":"إنشاء",
     "undefined":"غير محدد",
     "position":"المنصب",
-    "startDate":"تاريخ البدء"
+    "startDate":"تاريخ البدء",
+    "role":"الدور"
   },
   "navigation": {
     "home": "الرئيسية",
@@ -381,7 +382,8 @@
       "totalUsers": "إجمالي المستخدمين",
       "pendingApprovals": "الموافقات المعلقة",
       "activeUsers": "المستخدمون النشطون",
-      "newRegistrations": "التسجيلات الجديدة"
+      "newRegistrations": "التسجيلات الجديدة",
+      "status":"الحالة"
     },
     "analytics": {
       "title": "لوحة التحليلات",
@@ -612,7 +614,10 @@
       "noMembers": "لا يوجد أعضاء في هذا المختبر",
       "assignNewResearcher": "إضافة باحث جديد",
       "Researcher":"الباحث",
-      "selectResearcher": "اختر باحثًا"
+      "selectResearcher": "اختر باحثًا",
+      "startDateRequired":"تاريخ البدء مطلوب",
+      "roleRequired":"الدور مطلوب"
+    
     }
   }
 }
