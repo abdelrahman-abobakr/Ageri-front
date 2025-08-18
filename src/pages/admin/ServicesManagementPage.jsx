@@ -47,22 +47,28 @@ const ServicesManagementPage = () => {
 
   // Helper function to get full image URL
   const getImageUrl = (service) => {
+    if (!service) return null;
+    
     if (service.featured_image) {
       // If featured_image is a full URL, use it directly
-      if (service.featured_image.startsWith('http')) {
+      if (typeof service.featured_image === 'string' && service.featured_image.startsWith('http')) {
         return service.featured_image;
       }
       // If it's a relative path, construct the full URL
-      return `${window.location.origin}${service.featured_image}`;
+      if (typeof service.featured_image === 'string') {
+        return `${window.location.origin}${service.featured_image}`;
+      }
     }
 
     if (service.image_url && service.has_image) {
       // If image_url is a full URL, use it directly
-      if (service.image_url.startsWith('http')) {
+      if (typeof service.image_url === 'string' && service.image_url.startsWith('http')) {
         return service.image_url;
       }
       // If it's a relative path, construct the full URL
-      return `${window.location.origin}${service.image_url}`;
+      if (typeof service.image_url === 'string') {
+        return `${window.location.origin}${service.image_url}`;
+      }
     }
 
     return null;

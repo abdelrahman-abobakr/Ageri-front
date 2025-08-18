@@ -7,7 +7,9 @@ import {
   Col, 
   Descriptions, 
   Space,
-  Divider
+  Divider,
+  Tag,
+  Alert
 } from 'antd';
 import { 
   CheckCircleOutlined, 
@@ -56,6 +58,17 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
     URL.revokeObjectURL(url);
   };
 
+  const getPaymentStatusTag = (status) => {
+    const statusConfig = {
+      pending: { color: 'orange', text: 'قيد الانتظار' },
+      paid: { color: 'green', text: 'مدفوع' },
+      failed: { color: 'red', text: 'فشل' },
+      refunded: { color: 'blue', text: 'مسترد' }
+    };
+    const config = statusConfig[status] || { color: 'default', text: status || 'غير محدد' };
+    return <Tag color={config.color}>{config.text}</Tag>;
+  };
+
   return (
     <div className="enrollment-success-container">
       {/* Success Header */}
@@ -73,32 +86,7 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
 
       </Card>
 
-      {/* Participant Information */}
-      <Card title="👤 معلومات المشارك" className="info-card">
-        <Descriptions column={1} size="small">
-          <Descriptions.Item label="الاسم الكامل">
-            {enrollment.full_name || `${enrollment.first_name} ${enrollment.last_name}`}
-          </Descriptions.Item>
-          <Descriptions.Item label="البريد الإلكتروني">
-            {enrollment.participant_email || enrollment.email}
-          </Descriptions.Item>
-          <Descriptions.Item label="الهاتف">
-            {enrollment.phone || 'غير محدد'}
-          </Descriptions.Item>
-          <Descriptions.Item label="المؤسسة">
-            {enrollment.organization || 'غير محدد'}
-          </Descriptions.Item>
-          <Descriptions.Item label="المسمى الوظيفي">
-            {enrollment.job_title || 'غير محدد'}
-          </Descriptions.Item>
-          <Descriptions.Item label="المستوى التعليمي">
-            {enrollment.education_level || 'غير محدد'}
-          </Descriptions.Item>
-          <Descriptions.Item label="مستوى الخبرة">
-            {enrollment.experience_level || 'غير محدد'}
-          </Descriptions.Item>
-        </Descriptions>
-      </Card>
+
 
       <Row gutter={[16, 16]}>
         {/* Participant Information */}
@@ -106,10 +94,10 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
           <Card title="👤 معلومات المشارك" className="info-card">
             <Descriptions column={1} size="small">
               <Descriptions.Item label="الاسم">
-                {enrollment.full_name}
+                {enrollment.full_name || `${enrollment.first_name} ${enrollment.last_name}`}
               </Descriptions.Item>
               <Descriptions.Item label="البريد الإلكتروني">
-                {enrollment.participant_email}
+                {enrollment.participant_email || enrollment.email}
               </Descriptions.Item>
               <Descriptions.Item label="الهاتف">
                 {enrollment.phone || 'غير محدد'}
@@ -154,41 +142,7 @@ const EnrollmentSuccess = ({ enrollment, course, onBackToCourses }) => {
         </Col>
       </Row>
 
-      {/* Payment Information */}
-      {course.cost > 0 && (
-        <Card title="💰 معلومات الدفع" className="payment-card">
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={8}>
-              <div className="payment-item">
-                <Text type="secondary">المبلغ المطلوب:</Text>
-                <Title level={4} className="amount">{enrollment.amount_due} جنيه</Title>
-              </div>
-            </Col>
-            <Col xs={24} sm={8}>
-              <div className="payment-item">
-                <Text type="secondary">حالة الدفع:</Text>
-                <div>{getPaymentStatusTag(enrollment.payment_status)}</div>
-              </div>
-            </Col>
-            <Col xs={24} sm={8}>
-              <div className="payment-item">
-                <Text type="secondary">المبلغ المتبقي:</Text>
-                <Title level={4} className="balance">
-                  {enrollment.amount_due - enrollment.amount_paid} جنيه
-                </Title>
-              </div>
-            </Col>
-          </Row>
-          
-          <Alert
-            message="معلومات الدفع"
-            description="يمكن إتمام الدفع من خلال إدارة الدورة. تواصل مع الدعم الفني للحصول على تعليمات الدفع."
-            type="info"
-            showIcon
-            style={{ marginTop: '16px' }}
-          />
-        </Card>
-      )}
+
 
        {/* Action Buttons */}
       <Card className="actions-card">

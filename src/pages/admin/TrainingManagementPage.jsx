@@ -390,8 +390,30 @@ const TrainingManagementPage = () => {
 
       {/* Main Content Tabs */}
       <Card>
-        <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab="الدورات التدريبية" key="courses">
+        <Tabs
+          activeKey={activeTab}
+          onChange={setActiveTab}
+          tabBarStyle={{
+            marginBottom: 24,
+            gap: '48px', // Increased from 32px
+            paddingLeft: '16px', // Add some left padding
+            paddingRight: '16px' // Add some right padding
+          }}
+          tabBarGutter={96} // Increased from 64
+          style={{
+            '& .ant-tabs-tab': {
+              marginRight: '48px !important' // Force more space between tabs
+            }
+          }}
+        >
+          <TabPane
+            tab={
+              <span style={{ padding: '8px 16px' }}>
+                الدورات التدريبية
+              </span>
+            }
+            key="courses"
+          >
             {/* Courses Filters and Actions */}
             <div style={{ marginBottom: '16px' }}>
               <Row gutter={[16, 16]} align="middle">
@@ -623,83 +645,16 @@ const TrainingManagementPage = () => {
             </Spin>
           </TabPane>
 
-          <TabPane tab="الجلسات التدريبية" key="sessions">
-            {/* Sessions Table */}
-            <Spin spinning={loading}>
-              <Table
-                columns={[
-                  {
-                    title: 'الدورة',
-                    dataIndex: 'course_title',
-                    key: 'course_title',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'عنوان الجلسة',
-                    dataIndex: 'title',
-                    key: 'title',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'التاريخ والوقت',
-                    dataIndex: 'session_date',
-                    key: 'session_date',
-                    render: (date) => formatDate(date),
-                  },
-                  {
-                    title: 'المدة',
-                    dataIndex: 'duration',
-                    key: 'duration',
-                    render: (duration) => formatDuration(duration),
-                  },
-                  {
-                    title: 'المدرب',
-                    dataIndex: 'instructor',
-                    key: 'instructor',
-                  },
-                  {
-                    title: 'المكان',
-                    dataIndex: 'location',
-                    key: 'location',
-                    ellipsis: true,
-                  },
-                  {
-                    title: 'الحضور',
-                    key: 'attendance',
-                    render: (_, record) => (
-                      <Text>
-                        {record.attendees_count}/{record.max_attendees}
-                      </Text>
-                    ),
-                  },
-                  {
-                    title: 'الحالة',
-                    dataIndex: 'status',
-                    key: 'status',
-                    render: (status) => getStatusTag(status),
-                  },
-                ]}
-                dataSource={sessions}
-                rowKey="id"
-                pagination={{
-                  current: currentPage,
-                  pageSize: pageSize,
-                  total: total,
-                  onChange: setCurrentPage,
-                  showSizeChanger: false,
-                  showQuickJumper: true,
-                  showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} من ${total} جلسة`,
-                }}
-                locale={{
-                  emptyText: 'لا توجد جلسات',
-                }}
-                scroll={{ x: 1000 }}
-              />
-            </Spin>
-          </TabPane>
 
-          <TabPane tab="إدارة التسجيلات" key="enrollments">
+
+          <TabPane
+            tab={
+              <span style={{ padding: '8px 16px' }}>
+                إدارة التسجيلات
+              </span>
+            }
+            key="enrollments"
+          >
             <EnrollmentManagement />
           </TabPane>
         </Tabs>
