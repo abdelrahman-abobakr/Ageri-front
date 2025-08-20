@@ -43,12 +43,9 @@ const ServiceRequestForm = () => {
   const loadServiceDetails = async (id) => {
     try {
       setServiceLoading(true);
-      console.log('📤 Loading service details for ID:', id);
       const serviceData = await servicesService.getTestServiceById(id);
-      console.log('📥 Service details loaded:', serviceData);
       setService(serviceData);
     } catch (error) {
-      console.error('❌ Failed to load service details:', error);
       message.error('Failed to load service details');
     } finally {
       setServiceLoading(false);
@@ -58,7 +55,6 @@ const ServiceRequestForm = () => {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      console.log('📤 Submitting service request:', values);
       
       // Prepare request data
       const requestData = {
@@ -86,27 +82,20 @@ const ServiceRequestForm = () => {
         // Add file
         formData.append('attachment', fileList[0].originFileObj);
         
-        console.log('📤 Sending FormData with file');
         const response = await servicesService.createServiceRequest(formData);
-        console.log('📥 Response with file:', response);
       } else {
         // Send JSON payload without file
-        console.log('📤 Sending JSON payload without file');
         const response = await servicesService.createServiceRequest(requestData);
-        console.log('📥 Response without file:', response);
       }
 
       message.success('Service request submitted successfully!');
       navigate('/app/services/my-requests');
       
     } catch (error) {
-      console.error('❌ Error submitting service request:', error);
       
       // Handle validation errors
       if (error.response?.data) {
-        const errorData = error.response.data;
-        console.error('📋 Backend validation errors:', errorData);
-        
+        const errorData = error.response.data;        
         // Show specific field errors
         Object.keys(errorData).forEach(field => {
           if (Array.isArray(errorData[field])) {
@@ -145,7 +134,6 @@ const ServiceRequestForm = () => {
   };
 
   const handleFileChange = ({ fileList: newFileList }) => {
-    console.log('📁 File list changed:', newFileList);
     setFileList(newFileList);
   };
 
@@ -172,7 +160,6 @@ const ServiceRequestForm = () => {
       await form.validateFields();
       setCurrentStep(currentStep + 1);
     } catch (error) {
-      console.error('❌ Form validation failed:', error);
       message.error('Please fill in all required fields');
     }
   };

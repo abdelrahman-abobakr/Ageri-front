@@ -19,7 +19,6 @@ const PostDetailPage = () => {
       const response = await contentService.getPublicPost(id);
       setPost(response);
     } catch (error) {
-      console.error('Failed to load post details:', error);
       message.error('فشل في تحميل تفاصيل المنشور');
     } finally {
       setLoading(false);

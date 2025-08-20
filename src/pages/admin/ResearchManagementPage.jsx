@@ -683,7 +683,6 @@ const AdminDashboard = () => {
       setTotal(response.count || response.results.length);
       setPage(pageNum);
     } catch (error) {
-      console.error('Error fetching publications:', error);
       showToast('Failed to fetch publications', 'error');
       if (error.response && error.response.status === 401) {
         showToast('Session expired. Please login again.', 'error');

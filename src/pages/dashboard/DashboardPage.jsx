@@ -59,7 +59,7 @@ const DashboardPage = () => {
       });
       setAnnouncements(response.results || []);
     } catch (error) {
-      console.error('Failed to load announcements:', error);
+      message.error('Failed to load announcements:');
       setAnnouncements([]);
     } finally {
       setAnnouncementsLoading(false);
@@ -220,7 +220,7 @@ const DashboardPage = () => {
       });
       setRecentPublications(response.results || []);
     } catch (error) {
-      console.error('Failed to load recent publications:', error);
+      message.error('Failed to load recent publications:');
     } finally {
       setPublicationsLoading(false);
     }

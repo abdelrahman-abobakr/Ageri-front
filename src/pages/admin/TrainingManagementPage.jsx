@@ -108,13 +108,10 @@ const TrainingManagementPage = () => {
         params.status = statusFilter;
       }
 
-      console.log('📚 Loading courses with params:', params);
       const response = await CourseService.getCourses(params);
       setCourses(response.results || []);
       setTotal(response.count || 0);
-      console.log('✅ Courses loaded:', response.results?.length || 0);
     } catch (error) {
-      console.error('❌ Failed to load courses:', error);
       message.error('فشل في تحميل الدورات');
       setCourses([]);
       setTotal(0);
@@ -140,7 +137,6 @@ const TrainingManagementPage = () => {
       setSessions(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {
-      console.error('Failed to load sessions:', error);
       message.error('فشل في تحميل الجلسات');
       setSessions([]);
       setTotal(0);
@@ -170,7 +166,6 @@ const TrainingManagementPage = () => {
       setEnrollments(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {
-      console.error('Failed to load enrollments:', error);
       message.error('فشل في تحميل التسجيلات');
       setEnrollments([]);
       setTotal(0);
@@ -191,11 +186,9 @@ const TrainingManagementPage = () => {
   };
 
   const handleDeleteCourse = async (course) => {
-    console.log('🗑️ Delete clicked for course:', course);
 
     // Direct DELETE request - no modal
     try {
-      console.log(`🔄 Sending DELETE to: http://localhost:8000/api/training/courses/${course.id}/`);
 
       const response = await fetch(`http://localhost:8000/api/training/courses/${course.id}/`, {
         method: 'DELETE',
@@ -205,16 +198,12 @@ const TrainingManagementPage = () => {
         }
       });
 
-      console.log('📡 API Response Status:', response.status);
-      console.log('📡 API Response:', response);
 
       // Try to get response text
       let responseText = '';
       try {
         responseText = await response.text();
-        console.log('📡 Response Text:', responseText);
       } catch (e) {
-        console.log('📡 No response text');
       }
 
       // Show API response to user
@@ -227,7 +216,6 @@ const TrainingManagementPage = () => {
       }
 
     } catch (error) {
-      console.error('❌ Network Error:', error);
       message.error(`❌ خطأ في الشبكة: ${error.message}`);
     }
   };
@@ -282,7 +270,6 @@ const TrainingManagementPage = () => {
           refreshStats();
 
         } catch (error) {
-          console.error('Bulk delete error:', error);
           message.error('فشل في حذف بعض الدورات');
         }
       }
@@ -616,7 +603,6 @@ const TrainingManagementPage = () => {
                             icon={<DeleteOutlined />}
                             onClick={(e) => {
                               e.stopPropagation();
-                              console.log('🗑️ Table delete button clicked for:', record);
                               handleDeleteCourse(record);
                             }}
                           />

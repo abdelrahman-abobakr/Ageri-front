@@ -4,16 +4,6 @@ import { API_ENDPOINTS } from '../constants';
 
 // Enhanced error handling utility that preserves the original error structure
 const handleApiError = (error, context = '') => {
-  console.error(`⌐ API Error [${context}]:`, error);
-
-  // Log detailed error information
-  if (error.response) {
-    console.error(`⌐ Status: ${error.response.status}`, error.response.data);
-  } else if (error.request) {
-    console.error('⌐ Network Error:', error.request);
-  } else {
-    console.error('⌐ Error:', error.message);
-  }
 
   // For validation errors (400) and other structured errors, preserve the original error
   // This allows the React component to handle them properly
@@ -96,19 +86,12 @@ class EnhancedResearchService {
       }
     });
 
-    // Log FormData contents for debugging
-    console.log('📤 FormData contents:');
-    for (let [key, value] of formData.entries()) {
-      console.log(`  ${key}:`, value instanceof File ? `[File: ${value.name}]` : value);
-    }
-
     return formData;
   }
 
   // Publications CRUD Operations
   async getAllPublications(params = {}) {
     try {
-      console.log('📤 Fetching all publications with params:', params);
 
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
@@ -122,7 +105,6 @@ class EnhancedResearchService {
       });
 
       const response = await apiClient.get(`${this.baseEndpoints.PUBLICATIONS}?${queryParams}`);
-      console.log('📥 Publications response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'getAllPublications');
@@ -131,9 +113,7 @@ class EnhancedResearchService {
 
   async getPublicationById(id) {
     try {
-      console.log('📤 Fetching publication with ID:', id);
       const response = await apiClient.get(`${this.baseEndpoints.PUBLICATIONS}${id}/`);
-      console.log('📥 Publication detail response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'getPublicationById');
@@ -142,7 +122,6 @@ class EnhancedResearchService {
 
   async createPublication(data) {
     try {
-      console.log('📤 Creating publication with data:', data);
 
       // Client-side validation for better UX
       if (!data.title || data.title.trim().length < 10) {
@@ -213,9 +192,7 @@ class EnhancedResearchService {
         };
       }
 
-      console.log('📤 Submitting publication data:', submitData);
       const response = await apiClient.post(this.baseEndpoints.PUBLICATIONS, submitData, config);
-      console.log('📥 Publication created successfully:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'createPublication');
@@ -224,7 +201,6 @@ class EnhancedResearchService {
 
   async updatePublication(id, data) {
     try {
-      console.log('📤 Updating publication ID:', id, 'with data:', data);
 
       // Prepare data for submission
       let submitData;
@@ -255,7 +231,6 @@ class EnhancedResearchService {
 
       // Use PATCH for partial updates to avoid 400 errors
       const response = await apiClient.patch(`${this.baseEndpoints.PUBLICATIONS}${id}/`, submitData, config);
-      console.log('📥 Publication updated successfully:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'updatePublication');
@@ -264,9 +239,7 @@ class EnhancedResearchService {
 
   async deletePublication(id) {
     try {
-      console.log('📤 Deleting publication ID:', id);
       const response = await apiClient.delete(`${this.baseEndpoints.PUBLICATIONS}${id}/`);
-      console.log('📥 Publication deleted successfully, status:', response.status);
       return { success: true, message: 'Publication deleted successfully' };
     } catch (error) {
       handleApiError(error, 'deletePublication');
@@ -275,7 +248,6 @@ class EnhancedResearchService {
 
   async getMyPublications(params = {}) {
     try {
-      console.log('📤 Fetching my publications with params:', params);
 
       const queryParams = new URLSearchParams();
       Object.entries(params).forEach(([key, value]) => {
@@ -285,7 +257,6 @@ class EnhancedResearchService {
       });
 
       const response = await apiClient.get(`${this.baseEndpoints.PUBLICATIONS}my_publications/?${queryParams}`);
-      console.log('📥 My publications response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'getMyPublications');
@@ -294,9 +265,7 @@ class EnhancedResearchService {
 
   async approvePublication(id, reviewData = {}) {
     try {
-      console.log('📤 Approving publication ID:', id, 'with review data:', reviewData);
       const response = await apiClient.post(`${this.baseEndpoints.PUBLICATIONS}${id}/approve/`, reviewData);
-      console.log('📥 Publication approved:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'approvePublication');
@@ -305,9 +274,7 @@ class EnhancedResearchService {
 
   async featurePublication(id) {
     try {
-      console.log('📤 Toggling feature status for publication ID:', id);
       const response = await apiClient.post(`${this.baseEndpoints.PUBLICATIONS}${id}/feature/`);
-      console.log('📥 Publication feature toggled:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'featurePublication');
@@ -316,9 +283,7 @@ class EnhancedResearchService {
 
   async getPublicationStatistics() {
     try {
-      console.log('📤 Fetching publication statistics');
       const response = await apiClient.get(`${this.baseEndpoints.PUBLICATIONS}statistics/`);
-      console.log('📥 Statistics response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'getPublicationStatistics');
@@ -327,9 +292,7 @@ class EnhancedResearchService {
 
   async bulkApprove(data) {
     try {
-      console.log('📤 Bulk approve publications:', data);
       const response = await apiClient.post(`${this.baseEndpoints.PUBLICATIONS}bulk_approve/`, data);
-      console.log('📥 Bulk approve response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'bulkApprove');
@@ -338,11 +301,9 @@ class EnhancedResearchService {
 
   async advancedSearch(searchParams) {
     try {
-      console.log('📤 Advanced search with params:', searchParams);
       const response = await apiClient.get(`${this.baseEndpoints.PUBLICATIONS}advanced_search/`, {
         params: searchParams
       });
-      console.log('📥 Advanced search response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'advancedSearch');
@@ -352,12 +313,6 @@ class EnhancedResearchService {
   // File upload operations with enhanced error handling
   async uploadPublicationFile(publicationId, file, metadata = {}) {
     try {
-      console.log('📤 Uploading file for publication ID:', publicationId);
-      console.log('📤 File details:', {
-        name: file.name,
-        size: file.size,
-        type: file.type
-      });
 
       // Validate file
       const allowedTypes = [
@@ -419,7 +374,6 @@ class EnhancedResearchService {
         `${this.baseEndpoints.PUBLICATIONS}${publicationId}/`,
         formData
       );
-      console.log('📥 File uploaded successfully:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'uploadPublicationFile');
@@ -428,12 +382,10 @@ class EnhancedResearchService {
 
   async deletePublicationFile(publicationId) {
     try {
-      console.log('📤 Deleting file for publication ID:', publicationId);
       const response = await apiClient.patch(
         `${this.baseEndpoints.PUBLICATIONS}${publicationId}/`,
         { document_file: null }
       );
-      console.log('📥 File deleted successfully:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'deletePublicationFile');
@@ -443,10 +395,8 @@ class EnhancedResearchService {
   // Authors management
   async getPublicationAuthors(publicationId, params = {}) {
     try {
-      console.log('📤 Fetching authors for publication ID:', publicationId);
       const queryParams = { publication: publicationId, ...params };
       const response = await apiClient.get(this.baseEndpoints.AUTHORS, { params: queryParams });
-      console.log('📥 Publication authors response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'getPublicationAuthors');
@@ -455,9 +405,7 @@ class EnhancedResearchService {
 
   async addAuthorToPublication(authorData) {
     try {
-      console.log('📤 Adding author to publication:', authorData);
       const response = await apiClient.post(this.baseEndpoints.AUTHORS, authorData);
-      console.log('📥 Author added successfully:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'addAuthorToPublication');
@@ -466,9 +414,7 @@ class EnhancedResearchService {
 
   async updatePublicationAuthor(authorId, authorData) {
     try {
-      console.log('📤 Updating publication author ID:', authorId);
       const response = await apiClient.patch(`${this.baseEndpoints.AUTHORS}${authorId}/`, authorData);
-      console.log('📥 Author updated successfully:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'updatePublicationAuthor');
@@ -477,9 +423,7 @@ class EnhancedResearchService {
 
   async removeAuthorFromPublication(authorId) {
     try {
-      console.log('📤 Removing publication author ID:', authorId);
       const response = await apiClient.delete(`${this.baseEndpoints.AUTHORS}${authorId}/`);
-      console.log('📥 Author removed successfully, status:', response.status);
       return { success: true, message: 'Author removed successfully' };
     } catch (error) {
       handleApiError(error, 'removeAuthorFromPublication');
@@ -489,10 +433,8 @@ class EnhancedResearchService {
   // Metrics operations
   async getPublicationMetrics(publicationId) {
     try {
-      console.log('📤 Fetching metrics for publication ID:', publicationId);
       const params = { publication: publicationId };
       const response = await apiClient.get(this.baseEndpoints.METRICS, { params });
-      console.log('📥 Publication metrics response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'getPublicationMetrics');
@@ -501,9 +443,7 @@ class EnhancedResearchService {
 
   async getAllMetrics(params = {}) {
     try {
-      console.log('📤 Fetching all publication metrics');
       const response = await apiClient.get(this.baseEndpoints.METRICS, { params });
-      console.log('📥 All metrics response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'getAllMetrics');
@@ -513,14 +453,11 @@ class EnhancedResearchService {
   // Utility methods for view/download tracking
   async incrementView(publicationId) {
     try {
-      console.log('📤 Incrementing view count for publication ID:', publicationId);
       const response = await apiClient.post(
         `${this.baseEndpoints.PUBLICATIONS}${publicationId}/increment_view/`
       );
-      console.log('📥 View incremented successfully:', response.data);
       return response.data;
     } catch (error) {
-      console.warn('⚠️ Failed to increment view count:', error.message);
       // Don't throw error for view increment failures
       return null;
     }
@@ -528,14 +465,11 @@ class EnhancedResearchService {
 
   async incrementDownload(publicationId) {
     try {
-      console.log('📤 Incrementing download count for publication ID:', publicationId);
       const response = await apiClient.post(
         `${this.baseEndpoints.PUBLICATIONS}${publicationId}/increment_download/`
       );
-      console.log('📥 Download incremented successfully:', response.data);
       return response.data;
     } catch (error) {
-      console.warn('⚠️ Failed to increment download count:', error.message);
       return null;
     }
   }
@@ -543,9 +477,7 @@ class EnhancedResearchService {
   // Public endpoints (no authentication required)
   async getPublicPublications(params = {}) {
     try {
-      console.log('📤 Fetching public publications');
       const response = await publicApiClient.get(this.baseEndpoints.PUBLICATIONS, { params });
-      console.log('📥 Public publications response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'getPublicPublications');
@@ -554,9 +486,7 @@ class EnhancedResearchService {
 
   async getPublicPublicationById(id) {
     try {
-      console.log('📤 Fetching public publication ID:', id);
       const response = await publicApiClient.get(`${this.baseEndpoints.PUBLICATIONS}${id}/`);
-      console.log('📥 Public publication detail response:', response.data);
       return response.data;
     } catch (error) {
       handleApiError(error, 'getPublicPublicationById');
@@ -671,7 +601,6 @@ class EnhancedResearchService {
   // Check if DOI already exists
   async checkDoiExists(doi, excludeId = null) {
     try {
-      console.log('🔍 Checking DOI existence:', doi, 'excluding ID:', excludeId);
 
       // Use search endpoint to check if DOI exists
       const response = await publicApiClient.get(`${this.baseEndpoints.PUBLICATIONS}`, {
@@ -681,8 +610,6 @@ class EnhancedResearchService {
           limit: 10 // Get a few results to check
         }
       });
-
-      console.log('📋 DOI check response:', response.data);
 
       // Check if any publication has this exact DOI
       let exists = false;
@@ -707,7 +634,6 @@ class EnhancedResearchService {
         conflictingPublication
       };
     } catch (error) {
-      console.error('⌐ Error checking DOI:', error);
       // Return false on error to avoid blocking user
       return { exists: false, count: 0, conflictingPublication: null };
     }

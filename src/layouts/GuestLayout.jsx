@@ -12,10 +12,10 @@ const menuItems = [
     key: '/research',
     label: <Link to="/research">البحوث العلمية</Link>,
   },
-  {
-    key: '/researchers',
-    label: <Link to="/researchers">الباحثون</Link>,
-  },
+  // {
+  //   key: '/researchers',
+  //   label: <Link to="/researchers">الباحثون</Link>,
+  // },
   {
     key: '/courses',
     label: <Link to="/courses">الدورات التدريبية</Link>,

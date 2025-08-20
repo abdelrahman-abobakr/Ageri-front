@@ -76,10 +76,7 @@ const EnrollmentManagement = () => {
     try {
       const response = await trainingService.getCourses({ status: 'published' });
       setCourses(response.results || []);
-      console.log('✅ Courses loaded for filter:', response.results?.length || 0);
-      console.log('✅ Course details:', response.results?.map(c => ({ id: c.id, name: c.course_name || c.title })));
     } catch (error) {
-      console.error('Failed to load courses:', error);
       message.error('فشل في تحميل الدورات');
     } finally {
       setCoursesLoading(false);
@@ -89,30 +86,11 @@ const EnrollmentManagement = () => {
   const loadEnrollments = async () => {
     setLoading(true);
     try {
-      console.log('🔄 ===== LOADING ENROLLMENTS =====');
-      console.log('🔄 Current filters:', filters);
-      console.log('🔄 Course filter specifically:', filters.course);
-
       const response = await EnrollmentService.getEnrollments(filters);
-      console.log('✅ Enrollments response:', response);
-      console.log('✅ Total results:', response.count);
-      console.log('✅ Results length:', response.results?.length);
-
-      // Debug course information in results
-      if (response.results?.length > 0) {
-        console.log('✅ Sample enrollment courses:', response.results.slice(0, 3).map(e => ({
-          id: e.id,
-          course_id: e.course_id || e.course,
-          course_title: e.course_title,
-          course_name: e.course_name
-        })));
-      }
 
       setEnrollments(response.results || []);
       setTotal(response.count || 0);
-      console.log('✅ ===== ENROLLMENTS LOADED =====');
     } catch (error) {
-      console.error('❌ Failed to load enrollments:', error);
 
       // Show more specific error message
       if (error.response?.status === 401) {
@@ -134,15 +112,12 @@ const EnrollmentManagement = () => {
   };
 
   const handleFilterChange = (key, value) => {
-    console.log('🔄 Filter change:', key, '=', value);
     const newFilters = { ...filters, [key]: value, page: 1 };
 
     // Remove empty/null values to clean up the filter object
     if (value === null || value === undefined || value === '') {
       delete newFilters[key];
     }
-
-    console.log('🔄 New filters:', newFilters);
     setFilters(newFilters);
   };
 
@@ -166,34 +141,12 @@ const EnrollmentManagement = () => {
 
   const handlePaymentSubmit = async (values) => {
     try {
-      console.log('🔄 ===== FORM SUBMISSION =====');
-      console.log('🔄 Form values (raw):', values);
-      console.log('🔄 Form values (stringified):', JSON.stringify(values, null, 2));
-      console.log('🔄 Selected enrollment:', selectedEnrollment);
-      console.log('🔄 Enrollment ID:', selectedEnrollment.id);
-      console.log('🔄 Current enrollment data:', JSON.stringify(selectedEnrollment, null, 2));
-
-      // Validate the form data matches the simplified payment system
-      console.log('🔄 Validating against simplified payment system:');
-      console.log('🔄 - payment_status:', values.payment_status, '(should be: pending, paid, failed, refunded)');
-      console.log('🔄 - payment_method:', values.payment_method, '(should be: cash, bank_transfer, credit_card, mobile_payment, check, other)');
-      console.log('🔄 - payment_amount:', values.payment_amount, '(should be decimal string)');
-
-      console.log('🔄 Sending payment update request...');
-
       const result = await EnrollmentService.updatePayment(selectedEnrollment.id, values);
-
-      console.log('✅ ===== FORM SUBMISSION SUCCESS =====');
-      console.log('✅ Payment update result:', JSON.stringify(result, null, 2));
 
       message.success('تم تحديث معلومات الدفع بنجاح');
       setPaymentModalVisible(false);
       loadEnrollments();
     } catch (error) {
-      console.error('❌ ===== FORM SUBMISSION ERROR =====');
-      console.error('❌ Payment update failed:', error);
-      console.error('❌ Error message:', error.message);
-      console.error('❌ ===== END FORM ERROR =====');
       message.error(error.message || 'فشل في تحديث معلومات الدفع');
     }
   };
@@ -204,7 +157,6 @@ const EnrollmentManagement = () => {
       message.success('تم تحديد التسجيل كمكتمل');
       loadEnrollments();
     } catch (error) {
-      console.error('Failed to mark completed:', error);
       message.error('فشل في تحديث حالة التسجيل: ' + (error.message || 'خطأ غير معروف'));
     }
   };
@@ -220,13 +172,10 @@ const EnrollmentManagement = () => {
       okType: 'danger',
       onOk: async () => {
         try {
-          console.log('🔄 Attempting to delete enrollment:', enrollmentId);
           await EnrollmentService.deleteEnrollment(enrollmentId);
           message.success('تم حذف التسجيل بنجاح');
-          console.log('✅ Enrollment deleted, refreshing data...');
           loadEnrollments();
         } catch (error) {
-          console.error('❌ Failed to delete enrollment:', error);
           message.error(error.message || 'فشل في حذف التسجيل');
         }
       }
@@ -242,7 +191,6 @@ const EnrollmentManagement = () => {
       const details = await EnrollmentService.getEnrollmentDetails(enrollment.id);
       setEnrollmentDetails(details);
     } catch (error) {
-      console.error('Failed to load enrollment details:', error);
       message.error('فشل في تحميل تفاصيل التسجيل: ' + (error.message || 'خطأ غير معروف'));
       setEnrollmentDetails(null);
     } finally {
@@ -271,7 +219,6 @@ const EnrollmentManagement = () => {
           setSelectedRowKeys([]);
           loadEnrollments();
         } catch (error) {
-          console.error('Bulk update failed:', error);
           message.error('فشل في التحديث المجمع: ' + (error.message || 'خطأ غير معروف'));
         }
       }
@@ -300,7 +247,6 @@ const EnrollmentManagement = () => {
           setSelectedRowKeys([]);
           loadEnrollments();
         } catch (error) {
-          console.error('Bulk delete failed:', error);
           message.error('فشل في الحذف المجمع: ' + (error.message || 'خطأ غير معروف'));
         }
       }
@@ -318,16 +264,10 @@ const EnrollmentManagement = () => {
 
   const handleExportConfirm = async (exportOptions) => {
     try {
-      console.log('🔄 ===== EXPORT FORM SUBMISSION =====');
-      console.log('🔄 Export options from form:', exportOptions);
-      console.log('🔄 Course ID selected:', exportOptions.course);
-      console.log('🔄 Available courses:', courses.map(c => ({ id: c.id, name: c.course_name })));
-
       await EnrollmentService.exportEnrollmentsPDF(exportOptions);
       message.success('تم تصدير التقرير بنجاح');
       setExportModalVisible(false);
     } catch (error) {
-      console.error('Export failed:', error);
       message.error('فشل في تصدير التقرير: ' + (error.message || 'خطأ غير معروف'));
     }
   };

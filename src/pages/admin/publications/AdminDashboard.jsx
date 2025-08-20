@@ -343,7 +343,6 @@ const AdminDashboard = () => {
       const response = await api.get(`${API_BASE_URL}/api/admin/review/publications/`);
       setPublications(response.results);
     } catch (error) {
-      console.error('Error fetching publications:', error);
       showToast('Failed to fetch publications', 'error');
 
       // Handle unauthorized (401) errors
@@ -458,7 +457,6 @@ const AdminDashboard = () => {
       showToast(actionMessages[action], 'success');
       setModal({ isOpen: false, action: '', publication: null });
     } catch (error) {
-      console.error(`Error ${action}ing publication:`, error);
       showToast(`Failed to ${action} publication`, 'error');
     } finally {
       setActionLoading(false);

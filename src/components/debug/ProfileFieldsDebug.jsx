@@ -18,10 +18,8 @@ const ProfileFieldsDebug = () => {
 
     try {
       // First, get current profile
-      console.log('Getting current profile...');
       const profileResponse = await profileService.getMyProfile();
       setCurrentProfile(profileResponse);
-      console.log('Current profile:', profileResponse);
 
       // Test updating with different field combinations
       const testFields = {
@@ -60,7 +58,6 @@ const ProfileFieldsDebug = () => {
         city: 'Riyadh'
       };
 
-      console.log('Testing profile update with fields:', testFields);
       const updateResponse = await profileService.updateMyProfile(testFields);
       
       setTestResult({
@@ -72,9 +69,7 @@ const ProfileFieldsDebug = () => {
           testFields.hasOwnProperty(key) && updateResponse[key] !== null
         )
       });
-      
-      console.log('✅ Profile update test success:', updateResponse);
-    } catch (error) {
+          } catch (error) {
       setTestResult({
         success: false,
         message: `Profile update test failed: ${error.message}`,
@@ -86,7 +81,6 @@ const ProfileFieldsDebug = () => {
           institution: 'Test University'
         })
       });
-      console.error('❌ Profile update test failed:', error);
     } finally {
       setLoading(false);
     }
@@ -99,17 +93,14 @@ const ProfileFieldsDebug = () => {
       const fieldValue = values.fieldValue;
       const model = values.model || 'UserProfile'; // Default to UserProfile
 
-      console.log(`=== TESTING SINGLE FIELD: ${fieldName} (${model} model) ===`);
 
       // Get current data first
       const beforeProfile = await profileService.getMyProfile();
       const beforeUser = await authService.getCurrentUser();
 
       const beforeValue = model === 'User' ? beforeUser[fieldName] : beforeProfile[fieldName];
-      console.log(`Before update - ${fieldName}:`, beforeValue);
 
       const testData = { [fieldName]: fieldValue };
-      console.log(`Sending update to ${model} model:`, testData);
 
       let response;
       if (model === 'User') {
@@ -117,14 +108,12 @@ const ProfileFieldsDebug = () => {
       } else {
         response = await profileService.updateMyProfile(testData);
       }
-      console.log('Update response:', response);
 
       // Get data again to verify
       const afterProfile = await profileService.getMyProfile();
       const afterUser = await authService.getCurrentUser();
 
       const afterValue = model === 'User' ? afterUser[fieldName] : afterProfile[fieldName];
-      console.log(`After update - ${fieldName}:`, afterValue);
 
       const wasUpdated = afterValue === fieldValue;
 
@@ -134,15 +123,11 @@ const ProfileFieldsDebug = () => {
         message.warning(`⚠️ Field '${fieldName}' was sent to ${model} model but not saved. Check if backend supports this field.`);
       }
 
-      console.log(`Field update result: ${wasUpdated ? 'SUCCESS' : 'FAILED'}`);
-      console.log(`=== END SINGLE FIELD TEST ===`);
-
       // Update current profile display
       setCurrentProfile(afterProfile);
 
     } catch (error) {
       message.error(`❌ Failed to update field '${values.fieldName}': ${error.message}`);
-      console.error('Single field test failed:', error);
     } finally {
       setLoading(false);
     }

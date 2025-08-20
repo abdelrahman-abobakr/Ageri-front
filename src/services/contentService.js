@@ -35,15 +35,8 @@ export const contentService = {
       const response = await apiClient.post(API_ENDPOINTS.CONTENT.ANNOUNCEMENTS, announcementData);
       return response.data;
     } catch (error) {
-      console.error('Failed to create announcement:', error);
-      // Simulate success for demo
-      return {
-        id: Date.now(),
-        ...announcementData,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        views_count: 0
-      };
+      throw error;
+
     }
   },
 
@@ -52,7 +45,6 @@ export const contentService = {
       const response = await apiClient.get(API_ENDPOINTS.CONTENT.ANNOUNCEMENT_DETAIL(id));
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch announcement:', error);
       throw error;
     }
   },
@@ -85,16 +77,12 @@ export const contentService = {
   // Public Posts (for guests - no auth required)
   getPublicPosts: async (params = {}) => {
     try {
-      console.log('🔍 Fetching public posts with params:', params);
       const response = await publicApiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
-      console.log('🔍 Public posts response:', response.data);
       return response.data;
     } catch (error) {
-      console.log('🔍 Public posts failed, trying with auth:', error.message);
       // If public access fails, try with auth (for logged-in users)
       if (error.response?.status === 401) {
         const response = await apiClient.get(API_ENDPOINTS.CONTENT.POSTS, { params });
-        console.log('🔍 Auth posts response:', response.data);
         return response.data;
       }
       throw error;
@@ -114,50 +102,34 @@ export const contentService = {
   },
   createPost: async (formData) => {
     try {
-      console.log('🔍 Create post - FormData entries:');
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
-
       // Don't set any headers for FormData - let axios handle it automatically
       const response = await apiClient.post(API_ENDPOINTS.CONTENT.POSTS, formData);
       return response.data;
     } catch (error) {
-      console.error('createPost error:', error);
-      console.error('Error response data:', error?.response?.data);
       throw error;
     }
   },
   createPostJSON: async (data) => {
     try {
-      console.log('🔍 Create post JSON - data:', data);
       const response = await apiClient.post(API_ENDPOINTS.CONTENT.POSTS, data, {
         headers: {
           'Content-Type': 'application/json',
         },
       });
-      console.log('🔍 Create post JSON - full response:', response);
-      console.log('🔍 Create post JSON - response.data:', response.data);
-      console.log('🔍 Create post JSON - response.data.id:', response.data.id);
-      
+
       // If no ID in response, try to get it from Location header or fetch the latest post
-      if (!response.data.id) {
-        console.log('⚠️ No ID in response, trying to find the created post...');
-        
+      if (!response.data.id) { 
         // Try to extract ID from Location header
         const locationHeader = response.headers.location;
         if (locationHeader) {
           const idMatch = locationHeader.match(/\/(\d+)\/$/);
           if (idMatch) {
             const extractedId = parseInt(idMatch[1]);
-            console.log('✅ Extracted ID from Location header:', extractedId);
             return { ...response.data, id: extractedId };
           }
         }
-        
         // Fallback: search for the post by title
         try {
-          console.log('🔍 Searching for post by title:', data.title);
           const searchResponse = await apiClient.get(API_ENDPOINTS.CONTENT.POSTS, {
             params: {
               search: data.title,
@@ -174,24 +146,20 @@ export const contentService = {
             );
             
             if (exactMatch) {
-              console.log('✅ Found created post by search:', exactMatch.id);
               return { ...response.data, id: exactMatch.id };
             }
             
             // If no exact match, take the first result (most recent)
             const latestPost = searchResponse.data.results[0];
-            console.log('✅ Using latest post as fallback:', latestPost.id);
             return { ...response.data, id: latestPost.id };
           }
         } catch (searchError) {
-          console.error('❌ Failed to search for created post:', searchError);
+          throw searchError;
         }
       }
       
       return response.data;
     } catch (error) {
-      console.error('createPostJSON error:', error);
-      console.error('Error response data:', error?.response?.data);
       throw error;
     }
   },
@@ -209,19 +177,11 @@ export const contentService = {
           },
         };
 
-        console.log('🔍 Update with putForm method');
-        console.log('🔍 FormData entries:');
-        for (let [key, value] of data.entries()) {
-          console.log(key, value);
-        }
-
         // Convert FormData to plain object for putForm
         const formObject = {};
         for (let [key, value] of data.entries()) {
           formObject[key] = value;
         }
-
-        console.log('🔍 Form object:', formObject);
 
         const response = await apiClient.putForm(API_ENDPOINTS.CONTENT.POST_DETAIL(id), formObject, config);
         return response.data;
@@ -233,14 +193,10 @@ export const contentService = {
             'Content-Type': 'application/json',
           },
         };
-
-        console.log('🔍 JSON update data:', data);
         const response = await apiClient.patch(API_ENDPOINTS.CONTENT.POST_DETAIL(id), data, config);
         return response.data;
       }
     } catch (error) {
-      console.error('updatePost error:', error);
-      console.error('Error response data:', error?.response?.data);
       throw error;
     }
   },
@@ -255,12 +211,9 @@ export const contentService = {
         },
       };
 
-      console.log('🔍 PATCH update data:', data);
       const response = await apiClient.patch(API_ENDPOINTS.CONTENT.POST_DETAIL(id), data, config);
       return response.data;
     } catch (error) {
-      console.error('patchPost error:', error);
-      console.error('Error response data:', error?.response?.data);
       throw error;
     }
   },
@@ -332,7 +285,6 @@ export const contentService = {
         count: combinedContent.length
       };
     } catch (error) {
-      console.error('Failed to fetch public content feed:', error);
       return { results: [], count: 0 };
     }
   },
@@ -350,8 +302,7 @@ export const contentService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Failed to publish content:', error);
-      return { success: true, message: 'Content published successfully' };
+      throw error;
     }
   },
 
@@ -367,8 +318,7 @@ export const contentService = {
       });
       return response.data;
     } catch (error) {
-      console.error('Failed to unpublish content:', error);
-      return { success: true, message: 'Content unpublished successfully' };
+      throw error;
     }
   },
 
@@ -379,11 +329,9 @@ export const contentService = {
         : API_ENDPOINTS.CONTENT.POST_DETAIL(id);
 
       const response = await apiClient.delete(endpoint);
-      console.log(response);
       return response.data;
     } catch (error) {
-      console.error('Failed to delete content:', error);
-      return { success: true, message: 'Content deleted successfully' };
+      throw error;
     }
   },
 
@@ -414,7 +362,6 @@ export const contentService = {
         previous: null
       };
     } catch (error) {
-      console.error('Failed to fetch all content:', error);
       return {
         results: [],
         count: 0,
@@ -429,7 +376,6 @@ export const contentService = {
       const response = await apiClient.get(API_ENDPOINTS.ANALYTICS.PUBLICATIONS);
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch content stats:', error);
       throw error;
     }
   },
@@ -438,8 +384,6 @@ export const contentService = {
       const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
       return response.data;
     } catch (error) {
-      console.error('getPostById error:', error);
-      console.error('Error response:', error?.response?.data);
       throw error;
     }
   },
@@ -451,17 +395,10 @@ export const contentService = {
       const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
       return response.data;
     } catch (error) {
-      console.error('Admin getPostById error:', error);
-      console.error('Error details:', {
-        status: error.response?.status,
-        statusText: error.response?.statusText,
-        data: error.response?.data
-      });
-
+      
       // If 403 or 404, try alternative approaches
       if (error.response?.status === 403 || error.response?.status === 404) {
         try {
-          console.log('🔄 Trying to fetch post via posts list endpoint...');
           const listResponse = await apiClient.get(API_ENDPOINTS.CONTENT.POSTS, {
             params: {
               search: id,  // Try searching by ID
@@ -473,13 +410,11 @@ export const contentService = {
             // Find the exact post by ID
             const post = listResponse.data.results.find(p => p.id === parseInt(id));
             if (post) {
-              console.log('✅ Found post via list endpoint:', post);
               return post;
             }
           }
 
           // If not found by search, try getting all posts and filter
-          console.log('🔄 Trying to fetch all posts and filter...');
           const allPostsResponse = await apiClient.get(API_ENDPOINTS.CONTENT.POSTS, {
             params: { page_size: 1000 }  // Get a large number of posts
           });
@@ -487,13 +422,12 @@ export const contentService = {
           if (allPostsResponse.data.results) {
             const post = allPostsResponse.data.results.find(p => p.id === parseInt(id));
             if (post) {
-              console.log('✅ Found post via all posts filter:', post);
               return post;
             }
           }
 
         } catch (listError) {
-          console.error('Posts list fallback also failed:', listError);
+          throw listError;
         }
       }
 
@@ -504,7 +438,6 @@ export const contentService = {
   // Public post details (for guests - no auth required)
   getPublicPost: async (id) => {
     try {
-      console.log('🔍 Fetching public post with ID:', id);
 
       // Check if user is logged in first
       const token = localStorage.getItem('access_token');
@@ -512,33 +445,25 @@ export const contentService = {
       if (token) {
         // If user is logged in, try authenticated endpoint first
         try {
-          console.log('🔍 User is logged in, trying authenticated endpoint...');
           const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
-          console.log('🔍 Auth post response:', response.data);
           return response.data;
         } catch (authError) {
-          console.log('🔍 Auth endpoint failed, falling back to public...');
           // Continue to public endpoint if auth fails
         }
       }
 
       // Try public endpoint
       const response = await publicApiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
-      console.log('🔍 Public post response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('🚨 Public post fetch failed:', error.response?.status, error.response?.data);
 
       // If public access fails and we haven't tried auth yet, try with auth
       const token = localStorage.getItem('access_token');
       if (error.response?.status === 500 && token) {
         try {
-          console.log('🔍 Public failed with 500, trying with auth...');
           const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
-          console.log('🔍 Auth post response:', response.data);
           return response.data;
         } catch (authError) {
-          console.error('🚨 Auth post fetch also failed:', authError.response?.status, authError.response?.data);
           throw authError;
         }
       }
@@ -561,7 +486,6 @@ export const contentService = {
       const response = await apiClient.get('/statistics/', config);
       return response.data;
     } catch (error) {
-      console.error('Failed to get statistics:', error);
       throw error;
     }
   },
@@ -572,15 +496,7 @@ export const contentService = {
       const response = await apiClient.get('/public/statistics/');
       return response.data;
     } catch (error) {
-      console.error('Failed to get public statistics:', error);
-      // Return fallback data
-      return {
-        total_users: 150,
-        total_publications: 342,
-        total_courses: 56,
-        total_services: 24,
-        total_researchers: 89
-      };
+      throw error;
     }
   },
 
@@ -591,22 +507,14 @@ export const contentService = {
    */
   uploadPostImage: async (postId, formData) => {
     try {
-      console.log('🔍 Uploading image for post:', postId);
-      console.log('🔍 FormData entries:');
-      for (let [key, value] of formData.entries()) {
-        console.log(key, value);
-      }
 
       const response = await apiClient.post(`/api/content/posts/${postId}/images/`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      console.log('✅ Image upload response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Failed to upload post image:', error);
-      console.error('❌ Error response:', error.response?.data);
       throw error;
     }
   },
@@ -618,12 +526,9 @@ export const contentService = {
    */
   deletePostImage: async (postId, imageId) => {
     try {
-      console.log('🔍 Deleting image', imageId, 'from post', postId);
       const response = await apiClient.delete(`/api/content/posts/${postId}/images/${imageId}/`);
-      console.log('✅ Image delete response:', response.data);
       return response.data;
     } catch (error) {
-      console.error('❌ Failed to delete post image:', error);
       throw error;
     }
   },

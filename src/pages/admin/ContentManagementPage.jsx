@@ -61,6 +61,7 @@ const ContentManagementPage = () => {
   const { user } = useSelector((state) => state.auth);
   const [content, setContent] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false); // Added missing state
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -154,8 +155,6 @@ const ContentManagementPage = () => {
   }, [userRole, userId]);
 
   const handlePageChange = (page, size) => {
-    console.log('Page change:', { page, size, total, currentPage });
-    
     // Update page size if changed
     if (size && size !== pageSize) {
       setPageSize(size);
@@ -173,9 +172,8 @@ const ContentManagementPage = () => {
   }, [fetchStats]);
 
   useEffect(() => {
-    console.log('Filters changed, loading page 1');
     setCurrentPage(1);
-    loadContent(1); 
+    loadContent(1);
   }, [searchTerm, typeFilter, statusFilter, pageSize]);
 
   useEffect(() => {
@@ -188,7 +186,6 @@ const ContentManagementPage = () => {
   }, [pageSize]);
 
   useEffect(() => {
-    console.log('Initial load');
     loadContent(1);
     fetchStats();
   }, [fetchStats]);
@@ -197,7 +194,6 @@ const ContentManagementPage = () => {
     try {
       setLoading(true);
 
-      
       const params = {
         page: 1,
         page_size: 1000,
@@ -206,10 +202,8 @@ const ContentManagementPage = () => {
         status: statusFilter || undefined,
       };
 
-      console.log('📤 Loading content with params:', params);
       const response = await contentService.getPosts(params);
-      console.log('📥 getPosts response:', response);
-      
+
       const allPosts = response.results || [];
 
       // Filter based on user role
@@ -223,10 +217,10 @@ const ContentManagementPage = () => {
       // Client-side pagination
       const totalItems = filtered.length;
       const totalPages = Math.ceil(totalItems / pageSize);
-      
+
       // Ensure page is within valid range
       const validPage = Math.max(1, Math.min(page, totalPages || 1));
-      
+
       const startIndex = (validPage - 1) * pageSize;
       const endIndex = startIndex + pageSize;
       const paginatedContent = filtered.slice(startIndex, endIndex);
@@ -234,14 +228,10 @@ const ContentManagementPage = () => {
       setContent(paginatedContent);
       setTotal(totalItems);
       setCurrentPage(validPage);
-      
-      console.log(`📄 Showing page ${validPage}/${totalPages}: items ${startIndex + 1}-${Math.min(endIndex, totalItems)} of ${totalItems}`);
+
     } catch (error) {
-      console.error('Failed to load posts:', error);
-      
       // Handle 404 errors gracefully
       if (error.response?.status === 404) {
-        console.log('Page not found, resetting to page 1');
         if (currentPage > 1) {
           setCurrentPage(1);
           // Try loading page 1
@@ -249,7 +239,7 @@ const ContentManagementPage = () => {
           return;
         }
       }
-      
+
       message.error('فشل في تحميل المنشورات');
       setContent([]);
       setTotal(0);
@@ -258,13 +248,22 @@ const ContentManagementPage = () => {
     }
   };
 
-  const handleCreateContent = () => {
-    setEditingContent(null);
+  // Reset form helper function
+  const resetForm = () => {
     form.resetFields();
+    setEditingContent(null);
+    setImageFile(null);
+    setImagePreview(null);
+    setImageList([]);
+  };
+
+  const handleCreateContent = () => {
+    resetForm();
+    // Set all default values consistently
     form.setFieldsValue({
       title: '',
-      type: '',
-      status: 'published',
+      category: '',
+      status: 'draft',
       excerpt: '',
       content: '',
       publishDate: null,
@@ -277,48 +276,40 @@ const ContentManagementPage = () => {
       attachment: '',
       isPublic: false,
       isFeatured: false,
-      images: []
     });
-    setImageFile(null);
-    setImagePreview(null);
-    setImageList([]);
     setModalVisible(true);
   };
 
   const handleEditContent = async (contentItem) => {
     try {
-     
       if (userRole === 'moderator' && contentItem.author?.id !== userId) {
         message.error('ليس لديك صلاحية تعديل هذا المحتوى. يمكنك تعديل المحتوى الخاص بك فقط.');
         return;
       }
 
       const detail = await contentService.getPostByIdForAdmin(contentItem.id);
-      console.log("✅ Full detail:", detail);
 
       setEditingContent(detail);
       setImageFile(null);
       setImagePreview(detail.attachment || null);
 
-    
       const fileList = Array.isArray(detail.images)
         ? detail.images.map((img, idx) => ({
-            uid: img.id ? String(img.id) : `old-${idx}`,
-            name: img.caption || `image-${idx + 1}`,
-            status: 'done',
-            url: img.image_url || img.image,
-            thumbUrl: img.image_url || img.image,
-            originFileObj: null 
-          }))
+          uid: img.id ? String(img.id) : `old-${idx}`,
+          name: img.caption || `image-${idx + 1}`,
+          status: 'done',
+          url: img.image_url || img.image,
+          thumbUrl: img.image_url || img.image,
+          originFileObj: null
+        }))
         : [];
       setImageList(fileList);
 
       form.setFieldsValue({
         title: detail.title,
-        type: detail.category || '',
+        category: detail.category || '',
         status: detail.status || 'draft',
         excerpt: detail.excerpt,
-        category: detail.category || '',
         content: detail.content || '',
         publishDate: detail.publish_at ? moment(detail.publish_at) : null,
         event_date: detail.event_date ? moment(detail.event_date) : null,
@@ -327,15 +318,14 @@ const ContentManagementPage = () => {
         registration_deadline: detail.registration_deadline ? moment(detail.registration_deadline) : null,
         max_participants: detail.max_participants || undefined,
         featured_image: detail.featured_image || '',
-        attachment: null,
+        attachment: detail.attachment || '',
         isPublic: typeof detail.is_public === 'boolean' ? detail.is_public : false,
         isFeatured: typeof detail.is_featured === 'boolean' ? detail.is_featured : false,
-        images: fileList 
       });
 
       setModalVisible(true);
     } catch (error) {
-      console.error("❌ Failed to load content details:", error);
+      message.error('فشل في تحميل تفاصيل المحتوى للتعديل');
     }
   };
 
@@ -346,8 +336,7 @@ const ContentManagementPage = () => {
       onOk: async () => {
         try {
           const res = await contentService.deleteContent(contentItem.id, 'post');
-          console.log('deleted post resuk')
-          console.log(res)
+
           if (!res || res.success === true || res.status === 204) {
             message.success(t('admin.contentManagement.contentDeleted'));
             setContent((prev) => prev.filter((post) => post.id !== contentItem.id));
@@ -357,7 +346,6 @@ const ContentManagementPage = () => {
             message.error(res?.message || 'فشل في حذف المحتوى (backend)');
           }
         } catch (error) {
-          console.error('Delete error:', error, error?.response);
           if (error?.response?.status === 403 || error?.response?.status === 401) {
             message.error('ليس لديك صلاحية حذف هذا المحتوى');
           } else if (error?.response?.data?.detail) {
@@ -377,7 +365,6 @@ const ContentManagementPage = () => {
       setPreviewContent(post);
       setPreviewVisible(true);
     } catch (err) {
-      console.error('Preview error:', err);
       message.error('فشل في تحميل المعاينة');
     } finally {
       setLoading(false);
@@ -398,7 +385,6 @@ const ContentManagementPage = () => {
           loadContent();
           fetchStats();
         } catch (error) {
-          console.error('Submit for review error:', error);
           message.error('فشل في إرسال المنشور للمراجعة');
         }
       },
@@ -420,31 +406,20 @@ const ContentManagementPage = () => {
             approved_by: userId,
             approved_at: new Date().toISOString()
           });
-          
+
           // Update local state immediately
-          setContent(prev => prev.map(item => 
-            item.id === contentItem.id 
+          setContent(prev => prev.map(item =>
+            item.id === contentItem.id
               ? { ...item, status: 'published', approved_by: userId, approved_at: new Date().toISOString() }
               : item
           ));
-          
-          
-          
-          // Refresh data
-          await // Update local state immediately
-          setContent(prev => prev.map(item => 
-            item.id === contentItem.id 
-              ? { ...item, status: 'published', approved_by: userId, approved_at: new Date().toISOString() }
-              : item
-          ));
-          
+
           message.success('تمت الموافقة على المنشور ونشره للضيوف');
-          
+
           // Refresh data
           await loadContent();
           fetchStats();
         } catch (error) {
-          console.error('Accept content error:', error);
           message.error('فشل في الموافقة على المنشور');
         }
       },
@@ -478,27 +453,26 @@ const ContentManagementPage = () => {
             rejected_by: userId,
             rejected_at: new Date().toISOString()
           });
-          
+
           // Update local state immediately
-          setContent(prev => prev.map(item => 
-            item.id === contentItem.id 
-              ? { 
-                  ...item, 
-                  status: 'rejected', 
-                  rejection_reason: rejectionReason,
-                  rejected_by: userId, 
-                  rejected_at: new Date().toISOString() 
-                }
+          setContent(prev => prev.map(item =>
+            item.id === contentItem.id
+              ? {
+                ...item,
+                status: 'rejected',
+                rejection_reason: rejectionReason,
+                rejected_by: userId,
+                rejected_at: new Date().toISOString()
+              }
               : item
           ));
-          
+
           message.success('تم رفض المنشور');
-          
+
           // Refresh data
           await loadContent();
           fetchStats();
         } catch (error) {
-          console.error('Reject content error:', error);
           message.error('فشل في رفض المنشور');
         }
       },
@@ -508,8 +482,8 @@ const ContentManagementPage = () => {
   const handleToggleFeatured = async (contentItem) => {
     const newFeaturedStatus = !contentItem.is_featured;
     const actionText = newFeaturedStatus ? 'تمييز المحتوى' : 'إلغاء تمييز المحتوى';
-    const contentText = newFeaturedStatus 
-      ? 'هل أنت متأكد من تمييز هذا المحتوى؟ سيظهر في القسم المميز.' 
+    const contentText = newFeaturedStatus
+      ? 'هل أنت متأكد من تمييز هذا المحتوى؟ سيظهر في القسم المميز.'
       : 'هل أنت متأكد من إلغاء تمييز هذا المحتوى؟';
     const successText = newFeaturedStatus ? 'تم تمييز المحتوى بنجاح' : 'تم إلغاء تمييز المحتوى بنجاح';
 
@@ -528,7 +502,6 @@ const ContentManagementPage = () => {
           loadContent();
           fetchStats();
         } catch (error) {
-          console.error('Toggle featured error:', error);
           message.error('فشل في تحديث حالة التمييز');
         }
       },
@@ -550,7 +523,6 @@ const ContentManagementPage = () => {
           loadContent();
           fetchStats();
         } catch (error) {
-          console.error('Publish error:', error);
           message.error('فشل في نشر المحتوى');
         }
       },
@@ -575,7 +547,6 @@ const ContentManagementPage = () => {
           loadContent();
           fetchStats();
         } catch (error) {
-          console.error('Unpublish error:', error);
           message.error('فشل في إلغاء نشر المحتوى');
         }
       },
@@ -583,34 +554,59 @@ const ContentManagementPage = () => {
   };
 
   const handleSaveContent = async (values) => {
-    console.log('🚀 handleSaveContent called');
-    console.log('🔍 Form values:', values);
-    console.log('🔍 Image list:', imageList);
-    console.log('🔍 Editing content:', editingContent);
-    
+
     try {
-      const validImages = imageList.filter(img => {
-        console.log('🔍 Checking image:', img);
-        console.log('🔍 Has originFileObj:', img.originFileObj instanceof File);
-        console.log('🔍 originFileObj:', img.originFileObj);
-        return img.originFileObj instanceof File;
-      });
-      console.log('🔍 Valid images to upload:', validImages);
-      console.log('🔍 Valid images count:', validImages.length);
-      
+      setSubmitting(true);
+
+      const postData = {
+        title: values.title,
+        content: values.content || '',
+        excerpt: values.excerpt || '',
+        category: values.category,
+        status: values.status || 'draft',
+        is_public: Boolean(values.isPublic),
+        is_featured: Boolean(values.isFeatured),
+      };
+
+      // Add optional fields
+      if (values.publishDate) {
+        postData.publish_at = values.publishDate.toISOString();
+      }
+      if (values.event_date) {
+        postData.event_date = values.event_date.format('YYYY-MM-DD');
+      }
+      if (values.event_location) {
+        postData.event_location = values.event_location;
+      }
+      if (typeof values.registration_required === 'boolean') {
+        postData.registration_required = values.registration_required;
+      }
+      if (values.registration_deadline) {
+        postData.registration_deadline = values.registration_deadline.format('YYYY-MM-DD');
+      }
+      if (values.max_participants) {
+        postData.max_participants = parseInt(values.max_participants);
+      }
+      if (values.featured_image) {
+        postData.featured_image = values.featured_image;
+      }
+      if (values.attachment) {
+        postData.attachment = values.attachment;
+      }
+
       let response;
 
       if (editingContent) {
-        console.log('📝 Updating existing post...');
-        // Update post fields as needed (add your update logic here)
-        // Example: await contentService.patchPost(editingContent.id, { ... });
+        // Update existing post
+        response = await contentService.patchPost(editingContent.id, postData);
 
-        // --- Image Deletion Logic ---
+        // Handle image updates
         const originalImages = editingContent.images || [];
         const currentImageIds = imageList
-          .filter(img => !img.originFileObj)
+          .filter(img => !img.originFileObj && img.uid)
           .map(img => img.uid);
 
+        // Delete removed images
         const deletedImages = originalImages.filter(img =>
           !currentImageIds.includes(String(img.id))
         );
@@ -618,111 +614,61 @@ const ContentManagementPage = () => {
         for (const img of deletedImages) {
           try {
             await contentService.deletePostImage(editingContent.id, img.id);
-            console.log('✅ Deleted image:', img.id);
           } catch (err) {
-            console.error('❌ Failed to delete image:', img.id, err);
+            // console.error('Error deleting image:', err);
           }
         }
 
-        // --- Image Upload Logic ---
+        // Upload new images
         const newImages = imageList.filter(img => img.originFileObj instanceof File);
         for (const img of newImages) {
           try {
             const imageFormData = new FormData();
             imageFormData.append('image', img.originFileObj, img.name || img.originFileObj.name);
             await contentService.uploadPostImage(editingContent.id, imageFormData);
-            console.log('✅ Uploaded new image:', img.name);
           } catch (err) {
-            console.error('❌ Failed to upload image:', img.name, err);
             message.error(`فشل في رفع الصورة: ${img.name}`);
           }
         }
+
+        // Get updated post data
+        response = await contentService.getPostByIdForAdmin(editingContent.id);
+
       } else {
-        console.log('🆕 Creating new post...');
-        
-        const postData = {
-          title: values.title,
-          content: values.content || '',
-          excerpt: values.excerpt || '',
-          category: values.type,
-          status: values.status || 'published',
-          is_public: values.isPublic || false,
-          is_featured: values.isFeatured || false,
-        };
 
-        if (values.publishDate) {
-          postData.publish_at = values.publishDate.toISOString();
-        }
-        if (values.event_date) {
-          postData.event_date = values.event_date.format('YYYY-MM-DD');
-        }
-        if (values.event_location) {
-          postData.event_location = values.event_location;
-        }
-        if (values.registration_required) {
-          postData.registration_required = values.registration_required;
-        }
-        if (values.registration_deadline) {
-          postData.registration_deadline = values.registration_deadline.format('YYYY-MM-DD');
-        }
-        if (values.max_participants) {
-          postData.max_participants = values.max_participants;
-        }
-
-        console.log('📤 Creating post with JSON data:', postData);
-        
+        // Create new post
         response = await contentService.createPostJSON(postData);
-        console.log('✅ Post created with ID:', response.id);
 
+        // Upload images for new post
+        const validImages = imageList.filter(img => img.originFileObj instanceof File);
         if (validImages.length > 0 && response.id) {
-          console.log('📤 Starting image upload process...');
-          console.log('📤 Post ID:', response.id);
-          console.log('📤 Images to upload:', validImages.length);
-          
-          for (let i = 0; i < validImages.length; i++) {
-            const img = validImages[i];
-            console.log(`📤 Uploading image ${i + 1}/${validImages.length}:`, img.name);
-            
+          for (const img of validImages) {
             try {
               const imageFormData = new FormData();
               imageFormData.append('image', img.originFileObj, img.name || img.originFileObj.name);
-              
-              console.log('📤 FormData created for:', img.name);
-              console.log('📤 File size:', img.originFileObj.size);
-              console.log('📤 File type:', img.originFileObj.type);
-              
-              const uploadResult = await contentService.uploadPostImage(response.id, imageFormData);
-              console.log(`✅ Image ${i + 1} uploaded successfully:`, uploadResult);
+              await contentService.uploadPostImage(response.id, imageFormData);
             } catch (imageError) {
-              console.error(`❌ Failed to upload image ${i + 1}:`, img.name, imageError);
-              console.error('❌ Image error details:', imageError.response?.data);
               message.error(`فشل في رفع الصورة: ${img.name}`);
             }
           }
-          
-          console.log('📤 All images processed. Fetching updated post data...');
+          // Get updated post with images
           response = await contentService.getPostByIdForAdmin(response.id);
-          console.log('✅ Updated post data:', response);
-        } else {
-          console.log('⚠️ No valid images to upload or no post ID');
-          console.log('⚠️ Valid images count:', validImages.length);
-          console.log('⚠️ Post ID:', response?.id);
         }
       }
 
       const successMessage = editingContent ? 'تم تحديث المحتوى بنجاح' : 'تم إنشاء المحتوى بنجاح';
       message.success(successMessage);
+
       setModalVisible(false);
-      setImageFile(null);
-      setImagePreview(null);
-      setImageList([]);
-      
+      resetForm();
       await loadContent(currentPage);
-      fetchStats();
+      await fetchStats();
+
     } catch (error) {
-      console.error('❌ Save content error:', error);
-      console.error('❌ Error response:', error.response?.data);
-      message.error('فشل في حفظ المحتوى: ' + (error.response?.data?.detail || error.message));
+      const errorMessage = error.response?.data?.detail || error.message || 'فشل في حفظ المحتوى';
+      message.error('فشل في حفظ المحتوى: ' + errorMessage);
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -855,6 +801,7 @@ const ContentManagementPage = () => {
 
     return items;
   };
+
   const handleMenuClick = (menuInfo, contentItem) => {
     const { key } = menuInfo;
 
@@ -888,9 +835,10 @@ const ContentManagementPage = () => {
         handleDeleteContent(contentItem);
         break;
       default:
-        console.log('Unknown action:', key);
+        // console.log('Unknown action!');
     }
   };
+
   const columns = [
     {
       title: t('admin.contentManagement.title'),
@@ -1015,6 +963,7 @@ const ContentManagementPage = () => {
       },
     }
   ];
+
   return (
     <div>
       <div style={{ marginBottom: '24px' }}>
@@ -1148,70 +1097,59 @@ const ContentManagementPage = () => {
       {/* Content Table */}
       <Card>
         <Spin spinning={loading}>
-      <Table
-          columns={columns}
-          dataSource={content}
-          rowKey="id"
-          loading={loading}
-          pagination={{
-            current: currentPage,
-            pageSize: pageSize,
-            total: total,
-            onChange: handlePageChange,
-            onShowSizeChange: handlePageChange,
-            showSizeChanger: true,
-            showQuickJumper: true,
-            showTotal: (total, range) => {
-              if (total === 0) return 'لا يوجد عناصر';
-              return `${range[0]}-${range[1]} من ${total} عنصر`;
-            },
-            pageSizeOptions: ['10', '20', '50', '100'],
-            hideOnSinglePage: false,
-            simple: false,
-          }}
-          locale={{
-            emptyText: t('admin.contentManagement.noContent') || 'لا يوجد محتوى',
-          }}
-          scroll={{ x: 800 }}
-        />
+          <Table
+            columns={columns}
+            dataSource={content}
+            rowKey="id"
+            loading={loading}
+            pagination={{
+              current: currentPage,
+              pageSize: pageSize,
+              total: total,
+              onChange: handlePageChange,
+              onShowSizeChange: handlePageChange,
+              showSizeChanger: true,
+              showQuickJumper: true,
+              showTotal: (total, range) => {
+                if (total === 0) return 'لا يوجد عناصر';
+                return `${range[0]}-${range[1]} من ${total} عنصر`;
+              },
+              pageSizeOptions: ['10', '20', '50', '100'],
+              hideOnSinglePage: false,
+              simple: false,
+            }}
+            locale={{
+              emptyText: t('admin.contentManagement.noContent') || 'لا يوجد محتوى',
+            }}
+            scroll={{ x: 800 }}
+          />
         </Spin>
       </Card>
 
-      {/* Create/Edit Content Modal */}
+      {/* Create/Edit Content Modal - UNIFIED FORM */}
       <Modal
         title={editingContent ? t('admin.contentManagement.editContent') : t('admin.contentManagement.createNew')}
         open={modalVisible}
         onCancel={() => {
           setModalVisible(false);
-          setImageFile(null);
-          setImagePreview(null);
+          resetForm();
         }}
         footer={null}
         width={800}
-        destroyOnHidden
+        destroyOnClose={true}
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleSaveContent}
-          initialValues={editingContent ? {
-            title: editingContent.title,
-            type: editingContent.category || '',
-            status: editingContent.status || 'published',
-            excerpt: editingContent.excerpt,
-            content: editingContent.content || editingContent.body || editingContent.description || '',
-            publishDate: editingContent.publish_at ? (typeof editingContent.publish_at === 'string' ? moment(editingContent.publish_at) : editingContent.publish_at) : null,
-            event_date: editingContent.event_date ? moment(editingContent.event_date) : null,
-            event_location: editingContent.event_location || '',
-            registration_required: editingContent.registration_required || false,
-            registration_deadline: editingContent.registration_deadline ? moment(editingContent.registration_deadline) : null,
-            max_participants: editingContent.max_participants || undefined,
-            featured_image: editingContent.featured_image || '',
-            attachment: editingContent.attachment || '',
-            isPublic: editingContent.is_public,
-            isFeatured: editingContent.is_featured,
-          } : { status: 'published' }}
+          initialValues={{
+            status: 'draft',
+            isPublic: false,
+            isFeatured: false,
+            registration_required: false
+          }}
         >
+          {/* Basic Information */}
           <Row gutter={16}>
             <Col xs={24} md={16}>
               <Form.Item
@@ -1224,11 +1162,11 @@ const ContentManagementPage = () => {
             </Col>
             <Col xs={24} md={8}>
               <Form.Item
-                name="type"
+                name="category"
                 label={t('admin.contentManagement.type')}
                 rules={[{ required: true, message: t('validation.required') }]}
               >
-                <Select placeholder={t('admin.contentManagement.type')} onChange={() => form.validateFields()}>
+                <Select placeholder={t('admin.contentManagement.type')}>
                   <Option value="general">{t('admin.contentManagement.general')}</Option>
                   <Option value="event">{t('admin.contentManagement.event')}</Option>
                   <Option value="activity">{t('admin.contentManagement.activity')}</Option>
@@ -1250,6 +1188,15 @@ const ContentManagementPage = () => {
             <TextArea rows={2} placeholder={t('admin.contentManagement.excerpt')} />
           </Form.Item>
 
+          <Form.Item
+            name="content"
+            label={t('admin.contentManagement.content')}
+            rules={[{ required: true, message: t('validation.required') }]}
+          >
+            <TextArea rows={8} placeholder={t('admin.contentManagement.content')} />
+          </Form.Item>
+
+          {/* Images Section */}
           <Form.Item
             name="images"
             label="الصور المرفقة (يمكن رفع أكثر من صورة)"
@@ -1278,15 +1225,7 @@ const ContentManagementPage = () => {
             </div>
           </Form.Item>
 
-
-          <Form.Item
-            name="content"
-            label={t('admin.contentManagement.content')}
-            rules={[{ required: true, message: t('validation.required') }]}
-          >
-            <TextArea rows={8} placeholder={t('admin.contentManagement.content')} />
-          </Form.Item>
-
+          {/* Status and Publishing */}
           <Row gutter={16}>
             <Col xs={24} md={12}>
               <Form.Item
@@ -1295,10 +1234,7 @@ const ContentManagementPage = () => {
                 rules={[{ required: true, message: t('validation.required') }]}
               >
                 <Select
-                  value={form.getFieldValue('status') || undefined}
-                  onChange={val => form.setFieldsValue({ status: val })}
                   disabled={
-                    // للأدمن: إذا كان المحتوى منشور، نعطل الفيلد بدل ما نخفيه
                     JSON.parse(localStorage.getItem("user") || "{}").role === 'admin' &&
                     editingContent &&
                     editingContent.status === 'published'
@@ -1310,7 +1246,6 @@ const ContentManagementPage = () => {
                 </Select>
               </Form.Item>
 
-              {/* رسالة توضيحية للأدمن */}
               {JSON.parse(localStorage.getItem("user") || "{}").role === 'admin' &&
                 editingContent &&
                 editingContent.status === 'published' && (
@@ -1339,24 +1274,63 @@ const ContentManagementPage = () => {
             </Col>
           </Row>
 
-          {/* باقي الحقول كما هي... */}
-          {form.getFieldValue('type') === 'event' && (
+          {/* Event-specific fields */}
+          <Form.Item noStyle shouldUpdate={(prevValues, currentValues) =>
+            prevValues.category !== currentValues.category
+          }>
+            {({ getFieldValue }) =>
+              getFieldValue('category') === 'event' && (
+                <>
+                  <Divider>تفاصيل الفعالية</Divider>
+                  <Row gutter={16}>
+                    <Col xs={24} md={12}>
+                      <Form.Item name="event_date" label="تاريخ الفعالية">
+                        <DatePicker style={{ width: '100%' }} showTime />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Form.Item name="event_location" label="مكان الفعالية">
+                        <Input placeholder="مكان الفعالية" />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                  <Row gutter={16}>
+                    <Col xs={24} md={8}>
+                      <Form.Item name="registration_required" label="التسجيل مطلوب؟">
+                        <Select>
+                          <Option value={true}>{t('common.yes')}</Option>
+                          <Option value={false}>{t('common.no')}</Option>
+                        </Select>
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Form.Item name="registration_deadline" label="آخر موعد للتسجيل">
+                        <DatePicker style={{ width: '100%' }} />
+                      </Form.Item>
+                    </Col>
+                    <Col xs={24} md={8}>
+                      <Form.Item name="max_participants" label="الحد الأقصى للمشاركين">
+                        <Input type="number" placeholder="عدد المشاركين" />
+                      </Form.Item>
+                    </Col>
+                  </Row>
+                </>
+              )
+            }
+          </Form.Item>
+
+          
+
+          {/* Admin-only fields */}
+          {JSON.parse(localStorage.getItem("user") || "{}").role === 'admin' && (
             <>
+              <Divider>إعدادات الإدارة</Divider>
               <Row gutter={16}>
                 <Col xs={24} md={12}>
-                  <Form.Item name="event_date" label="تاريخ الفعالية">
-                    <DatePicker style={{ width: '100%' }} showTime />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item name="event_location" label="مكان الفعالية">
-                    <Input placeholder="مكان الفعالية" />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col xs={24} md={12}>
-                  <Form.Item name="registration_required" label={t('admin.contentManagement.registrationRequired')}>
+                  <Form.Item
+                    name="isPublic"
+                    label={t('admin.contentManagement.isPublic')}
+                  >
                     <Select>
                       <Option value={true}>{t('common.yes')}</Option>
                       <Option value={false}>{t('common.no')}</Option>
@@ -1364,53 +1338,21 @@ const ContentManagementPage = () => {
                   </Form.Item>
                 </Col>
                 <Col xs={24} md={12}>
-                  <Form.Item name="registration_deadline" label="آخر موعد للتسجيل">
-                    <DatePicker style={{ width: '100%' }} showTime />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={16}>
-                <Col xs={24} md={12}>
-                  <Form.Item name="max_participants" label="الحد الأقصى للمشاركين">
-                    <Input type="number" placeholder="عدد المشاركين" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} md={12}>
-                  <Form.Item name="attachment" label="مرفق">
-                    <Input placeholder="رابط أو اسم الملف" />
+                  <Form.Item
+                    name="isFeatured"
+                    label={t('admin.contentManagement.isFeatured')}
+                  >
+                    <Select>
+                      <Option value={true}>{t('common.yes')}</Option>
+                      <Option value={false}>{t('common.no')}</Option>
+                    </Select>
                   </Form.Item>
                 </Col>
               </Row>
             </>
           )}
 
-          {JSON.parse(localStorage.getItem("user") || "{}").role === 'admin' && (
-            <Row gutter={16}>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="isPublic"
-                  label={t('admin.contentManagement.isPublic')}
-                >
-                  <Select>
-                    <Option value={true}>{t('common.yes')}</Option>
-                    <Option value={false}>{t('common.no')}</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col xs={24} md={12}>
-                <Form.Item
-                  name="isFeatured"
-                  label={t('admin.contentManagement.isFeatured')}
-                >
-                  <Select>
-                    <Option value={true}>{t('common.yes')}</Option>
-                    <Option value={false}>{t('common.no')}</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-          )}
-
+          {/* Moderator Alert */}
           {userRole === 'moderator' && (
             <Alert
               message="ملاحظة للمحررين"
@@ -1421,25 +1363,40 @@ const ContentManagementPage = () => {
             />
           )}
 
+          {/* Form Actions */}
           <Form.Item>
             <Space>
-              <Button type="primary" htmlType="submit">
-                {userRole === 'moderator' && form.getFieldValue('status') === 'published'
-                  ? 'إرسال للمراجعة'
-                  : userRole === 'moderator' && form.getFieldValue('status') === 'draft'
-                    ? 'حفظ كمسودة'
-                    : t('admin.contentManagement.publishNow')
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={submitting}
+                disabled={submitting}
+              >
+                {submitting
+                  ? 'جاري الحفظ...'
+                  : userRole === 'moderator' && form.getFieldValue('status') === 'published'
+                    ? 'إرسال للمراجعة'
+                    : userRole === 'moderator' && form.getFieldValue('status') === 'draft'
+                      ? 'حفظ كمسودة'
+                      : editingContent
+                        ? 'تحديث المحتوى'
+                        : 'إنشاء المحتوى'
                 }
               </Button>
-              <Button onClick={() => setModalVisible(false)}>
+              <Button onClick={() => {
+                setModalVisible(false);
+                resetForm();
+              }}>
                 {t('common.cancel')}
               </Button>
             </Space>
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* Preview Modal */}
       <Modal
-        open={previewVisible}
+        open={previewVisible && previewImage === ''}
         onCancel={() => setPreviewVisible(false)}
         footer={null}
         width={800}
@@ -1479,7 +1436,7 @@ const ContentManagementPage = () => {
 
       {/* Image Preview Modal */}
       <Modal
-        open={previewImage}
+        open={previewImage !== ''}
         title="معاينة الصورة"
         footer={null}
         onCancel={() => setPreviewImage('')}

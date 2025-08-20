@@ -16,12 +16,9 @@ const ProfileFieldsIssueDebug = () => {
     setTestResult(null);
 
     try {
-      console.log('=== TESTING SPECIFIC PROFILE FIELDS ISSUE ===');
       
       // Step 1: Get current profile
-      console.log('1. Getting current profile...');
       const beforeProfile = await profileService.getMyProfile();
-      console.log('Before profile:', beforeProfile);
 
       // Step 2: Test the specific problematic fields
       const testData = {
@@ -30,16 +27,10 @@ const ProfileFieldsIssueDebug = () => {
         is_public: values.is_public !== undefined ? values.is_public : true
       };
 
-      console.log('2. Sending update with problematic fields:', testData);
-      console.log('2a. Request payload:', JSON.stringify(testData, null, 2));
-      
       const updateResponse = await profileService.updateMyProfile(testData);
-      console.log('2b. Update response:', updateResponse);
 
       // Step 3: Get profile again to verify what actually saved
-      console.log('3. Getting profile again to verify save...');
       const afterProfile = await profileService.getMyProfile();
-      console.log('After profile:', afterProfile);
 
       // Step 4: Compare field by field
       const fieldComparison = {
@@ -66,7 +57,6 @@ const ProfileFieldsIssueDebug = () => {
         }
       };
 
-      console.log('4. Field comparison:', fieldComparison);
 
       setTestResult({
         success: true,
@@ -83,14 +73,7 @@ const ProfileFieldsIssueDebug = () => {
         }
       });
 
-      console.log('=== TEST RESULTS SUMMARY ===');
-      console.log('Bio saved correctly:', fieldComparison.bio.savedCorrectly);
-      console.log('Research interests saved correctly:', fieldComparison.research_interests.savedCorrectly);
-      console.log('Is public saved correctly:', fieldComparison.is_public.savedCorrectly);
-      console.log('=== END TEST ===');
-
     } catch (error) {
-      console.error('Profile fields test failed:', error);
       setTestResult({
         success: false,
         message: `Profile fields test failed: ${error.message}`,

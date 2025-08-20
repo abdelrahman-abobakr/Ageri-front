@@ -43,14 +43,11 @@ const MyRequestsPage = () => {
         status: statusFilter,
       };
 
-      console.log('📤 Loading my service requests with params:', params);
       const response = await servicesService.getMyRequests(params);
-      console.log('📥 My requests loaded:', response);
       
       setRequests(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {
-      console.error('❌ Failed to load my requests:', error);
       message.error('Failed to load your service requests');
       
       // Fallback to mock data for development

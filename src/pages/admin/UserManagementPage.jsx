@@ -88,7 +88,6 @@ const UserManagementPage = () => {
       setUsers(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {
-      console.error('Failed to load users:', error);
       message.error('فشل في تحميل المستخدمين');
     } finally {
       setLoading(false);

@@ -222,10 +222,9 @@ const HomePage = () => {
 
         try {
           const statisticsData = await statisticsService.getPublicStatistics();
-          console.log('🏠 Homepage received stats:', statisticsData);
           setStats(statisticsData);
         } catch (error) {
-          console.error('Failed to load statistics:', error);
+          // console.error('Failed to load statistics:', error);
         } finally {
           setStatsLoading(false);
         }
@@ -238,7 +237,6 @@ const HomePage = () => {
             name: "معهد بحوث الهندسة الوراثية الزراعية"
           });
         } catch (error) {
-          console.error('Failed to load organization settings:', error);
           setOrganizationData({
             name: "منظمة البحث العلمي",
             vision: "أن نصبح المعهد الرائد في منطقة الشرق الأوسط في مجال البحث العلمي والابتكار التقني، ونساهم في بناء مجتمع المعرفة وتحقيق التنمية المستدامة",
@@ -273,20 +271,8 @@ const HomePage = () => {
             })
           ]);
 
-          console.log('🔍 Featured Posts Response:', postsResponse);
-          console.log('🔍 Featured Posts Response Status:', postsResponse.status);
-          if (postsResponse.status === 'rejected') {
-            console.error('🔍 Featured Posts Error:', postsResponse.reason);
-          }
 
           if (postsResponse.status === 'fulfilled') {
-            console.log('🔍 Featured Posts:', postsResponse.value.results);
-            console.log('🔍 Featured Posts Response Data:', postsResponse.value);
-
-            // Check if we have results
-            if (!postsResponse.value.results || postsResponse.value.results.length === 0) {
-              console.warn('🔍 No featured posts found in response');
-            }
 
             // Filter for published and public featured posts
             const featuredPosts = postsResponse.value.results?.filter(item =>
@@ -319,7 +305,6 @@ const HomePage = () => {
               new Date(b.date) - new Date(a.date)
             );
 
-            console.log('🔍 Final Featured Posts:', sortedPosts);
             setPosts(sortedPosts);
           }
 
@@ -327,10 +312,10 @@ const HomePage = () => {
             setAnnouncements(announcementsResponse.value.results || []);
           }
         } catch (error) {
-          console.error('Failed to load content:', error);
+          // console.error('Failed to load content:', error);
         }
       } catch (error) {
-        console.error('Failed to load homepage data:', error);
+        // console.error('Failed to load homepage data:', error);
       } finally {
         setLoading(false);
       }
@@ -641,7 +626,7 @@ const HomePage = () => {
                   borderRadius: '28px'
                 }}
               >
-                المنشورات
+                {t('homepage.posts')}
               </Button>
             </Col>
             <Col>
@@ -656,7 +641,7 @@ const HomePage = () => {
                   borderRadius: '28px'
                 }}
               >
-                الدورات التدريبية
+                {t('homepage.courses')}
               </Button>
             </Col>
             <Col>
@@ -671,7 +656,7 @@ const HomePage = () => {
                   borderRadius: '28px'
                 }}
               >
-                الخدمات
+                {t('homepage.services')}
               </Button>
             </Col>
             {!isAuthenticated && (
@@ -690,7 +675,7 @@ const HomePage = () => {
                     borderRadius: '28px'
                   }}
                 >
-                  انضم إلينا
+                  {t('homepage.joinUs')}
                 </Button>
               </Col>
             )}
@@ -710,7 +695,7 @@ const HomePage = () => {
                 fontWeight: '800',
                 marginBottom: '16px'
               }}>
-                المقالات المميزة
+                {t('homepage.featuredPosts.title')}
               </Title>
               <Paragraph style={{
                 marginTop: '16px',
@@ -720,15 +705,15 @@ const HomePage = () => {
                 maxWidth: '600px',
                 margin: '0 auto'
               }}>
-                اطلع على أهم المقالات والأخبار المميزة في مجال البحث العلمي والتطوير التكنولوجي
+                
+              {t('homepage.featuredPosts.description')}  
               </Paragraph>
               {/* Debug info */}
               <div style={{ marginTop: '16px', fontSize: '14px', color: '#999' }}>
                 عدد المقالات المميزة: {posts.length}
               </div>
             </div>
-
-            <Row gutter={[32, 32]}>
+            <Row gutter={[24, 24]}>
               {posts.slice(0, 4).map((post, index) => {
                 let images = [];
                 if (Array.isArray(post.images) && post.images.length > 0) {
@@ -766,188 +751,202 @@ const HomePage = () => {
                 const extraCount = images.length > 1 ? images.length - 1 : 0;
 
                 return (
-                  <Col xs={24} sm={12} lg={6} key={post.id}>
-                    <Card
-                      hoverable
+                  <Col xs={24} sm={24} lg={12} xl={8} key={post.id}>
+                    <div
                       style={{
-                        height: '100%',
-                        
-                        borderRadius: '20px',
-                        border: 'none',
-                        boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                        width: '100%',
+                        aspectRatio: '1.4',
+                        borderRadius: '16px',
                         overflow: 'hidden',
+                        position: 'relative',
+                        cursor: 'pointer',
                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        background: 'linear-gradient(145deg, #ffffff 0%, #f8fafc 100%)'
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
+                        background: mainImage
+                          ? `linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.7)), url(${mainImage}) center/cover no-repeat`
+                          : `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.8)), ${getGradientBackground(index + 3)}`
                       }}
-                      bodyStyle={{ padding: '24px' }}
-                      cover={
-                        <div
-                          style={{
-                            height: '220px',
-                            background: mainImage
-                              ? `url(${mainImage}) center/cover no-repeat`
-                              : getGradientBackground(index + 3),
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            borderBottom: '1px solid #f0f0f0',
-                            cursor: 'pointer'
-                          }}
-                          onClick={() => navigate(`/posts/${post.id}`)}
-                        >
-                          {/* Debug overlay */}
-                          {!mainImage && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '8px',
-                              left: '8px',
-                              background: 'rgba(0,0,0,0.7)',
-                              color: 'white',
-                              padding: '4px 8px',
-                              borderRadius: '4px',
-                              fontSize: '10px',
-                              zIndex: 3
-                            }}>
-                              لا توجد صورة
-                            </div>
-                          )}
-                          {/* Decorative elements */}
-                          <div style={{
-                            position: 'absolute',
-                            top: '-50px',
-                            right: '-50px',
-                            width: '100px',
-                            height: '100px',
-                            borderRadius: '50%',
-                            background: 'rgba(255,255,255,0.1)',
-                          }} />
-                          <div style={{
-                            position: 'absolute',
-                            bottom: '-30px',
-                            left: '-30px',
-                            width: '60px',
-                            height: '60px',
-                            borderRadius: '50%',
-                            background: 'rgba(255,255,255,0.1)',
-                          }} />
-                          <div style={{
-                            position: 'absolute',
-                            top: '16px',
-                            right: '16px',
-                            zIndex: 2
-                          }}>
-                            <Tag style={{
-                              background: 'rgba(255,255,255,0.2)',
-                              border: 'none',
-                              color: 'white',
-                              borderRadius: '20px',
-                              padding: '4px 12px',
-                              fontSize: '12px',
-                              fontWeight: '600',
-                              backdropFilter: 'blur(10px)'
-                            }}>
-                              {post.category}
-                            </Tag>
-                          </div>
-                          {/* إذا كان هناك صور إضافية */}
-                          {extraCount > 0 && (
-                            <div style={{
-                              position: 'absolute',
-                              bottom: '16px',
-                              left: '16px',
-                              background: 'rgba(0,0,0,0.7)',
-                              color: 'white',
-                              borderRadius: '16px',
-                              padding: '4px 12px',
-                              fontSize: '16px',
-                              fontWeight: 'bold',
-                              display: 'flex',
-                              alignItems: 'center',
-                              zIndex: 4
-                            }}>
-                              <span style={{ marginRight: '4px' }}>+{extraCount}</span>
-                              <span style={{ fontSize: '18px' }}><PictureOutlined /></span>
-                            </div>
-                          )}
-                          {!mainImage && (
-                            <div style={{
-                              color: 'white',
-                              fontSize: '48px',
-                              textShadow: '0 4px 20px rgba(0,0,0,0.3)',
-                              zIndex: 1
-                            }}>
-                              <BookOutlined />
-                            </div>
-                          )}
-                        </div>
-                      }
                       onClick={() => navigate(`/posts/${post.id}`)}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-                        e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.15)';
+                        e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+                        e.currentTarget.style.boxShadow = '0 16px 48px rgba(0,0,0,0.2)';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                        e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.1)';
+                        e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.12)';
                       }}
                     >
-                      <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-                        <Title level={4} style={{
-                          fontSize: '16px',
-                          color: '#1e293b',
+                      {/* Background Overlay for better text readability */}
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: 'linear-gradient(0deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.3) 100%)',
+                        zIndex: 1
+                      }} />
+
+                      {/* Category Tag */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '16px',
+                        right: '16px',
+                        zIndex: 3
+                      }}>
+                        <Tag style={{
+                          background: 'rgba(255,255,255,0.25)',
+                          border: '1px solid rgba(255,255,255,0.3)',
+                          color: 'white',
+                          borderRadius: '20px',
+                          padding: '6px 14px',
+                          fontSize: '11px',
                           fontWeight: '700',
-                          lineHeight: '1.4',
+                          backdropFilter: 'blur(12px)',
+                          textShadow: '0 1px 3px rgba(0,0,0,0.3)'
+                        }}>
+                          {post.category}
+                        </Tag>
+                      </div>
+
+                      {/* Extra Images Indicator */}
+                      {extraCount > 0 && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '16px',
+                          left: '16px',
+                          background: 'rgba(0,0,0,0.7)',
+                          color: 'white',
+                          borderRadius: '20px',
+                          padding: '6px 12px',
+                          fontSize: '12px',
+                          fontWeight: 'bold',
+                          display: 'flex',
+                          alignItems: 'center',
+                          zIndex: 3,
+                          backdropFilter: 'blur(8px)'
+                        }}>
+                          <span style={{ marginRight: '4px' }}>+{extraCount}</span>
+                          <PictureOutlined />
+                        </div>
+                      )}
+
+                      {/* No Image Indicator */}
+                      {!mainImage && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          color: 'rgba(255,255,255,0.8)',
+                          fontSize: '48px',
+                          zIndex: 2,
+                          textShadow: '0 4px 20px rgba(0,0,0,0.5)'
+                        }}>
+                          <BookOutlined />
+                        </div>
+                      )}
+
+                      {/* Content Overlay */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: 0,
+                        right: 0,
+                        padding: '24px',
+                        zIndex: 2,
+                        color: 'white'
+                      }}>
+                        {/* Title */}
+                        <Title level={4} style={{
+                          fontSize: '18px',
+                          color: 'white',
+                          fontWeight: '800',
+                          lineHeight: '1.3',
                           marginBottom: '12px',
-                          minHeight: '44px'
+                          textShadow: '0 2px 8px rgba(0,0,0,0.7)',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
                         }}>
                           {post.title}
                         </Title>
+
+                        {/* Excerpt */}
                         <Paragraph
-                          ellipsis={{ rows: 3 }}
                           style={{
-                            marginBottom: '20px',
-                            color: '#64748b',
-                            fontSize: '14px',
-                            lineHeight: '1.6',
-                            flex: 1
+                            marginBottom: '16px',
+                            color: 'rgba(255,255,255,0.9)',
+                            fontSize: '13px',
+                            lineHeight: '1.5',
+                            textShadow: '0 1px 4px rgba(0,0,0,0.6)',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
                           }}
                         >
                           {post.excerpt || post.content}
                         </Paragraph>
+
+                        {/* Footer */}
                         <div style={{
                           display: 'flex',
                           justifyContent: 'space-between',
                           alignItems: 'center',
-                          paddingTop: '16px',
-                          borderTop: '1px solid #e2e8f0'
+                          paddingTop: '12px',
+                          borderTop: '1px solid rgba(255,255,255,0.2)'
                         }}>
                           <div style={{
-                            padding: '6px 12px',
+                            padding: '4px 12px',
                             background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                            borderRadius: '20px',
+                            borderRadius: '16px',
                             color: 'white',
-                            fontSize: '11px',
-                            fontWeight: '600'
+                            fontSize: '10px',
+                            fontWeight: '700',
+                            textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
                           }}>
                             جديد
                           </div>
                           <Text style={{
-                            fontSize: '12px',
-                            color: '#94a3b8',
-                            fontWeight: '500'
+                            fontSize: '11px',
+                            color: 'rgba(255,255,255,0.8)',
+                            fontWeight: '600',
+                            textShadow: '0 1px 3px rgba(0,0,0,0.5)'
                           }}>
                             {formatDate(post.date)}
                           </Text>
                         </div>
                       </div>
-                    </Card>
+
+                      {/* Decorative Elements */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '-20px',
+                        right: '-20px',
+                        width: '60px',
+                        height: '60px',
+                        borderRadius: '50%',
+                        background: 'rgba(255,255,255,0.05)',
+                        zIndex: 1
+                      }} />
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '40%',
+                        left: '-15px',
+                        width: '40px',
+                        height: '40px',
+                        borderRadius: '50%',
+                        background: 'rgba(255,255,255,0.05)',
+                        zIndex: 1
+                      }} />
+                    </div>
                   </Col>
                 );
               })}
             </Row>
-
             {posts.length > 4 && (
               <div style={{ textAlign: 'center', marginTop: '48px' }}>
                 <Button

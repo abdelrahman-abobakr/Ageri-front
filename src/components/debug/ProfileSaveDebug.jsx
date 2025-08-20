@@ -15,12 +15,9 @@ const ProfileSaveDebug = () => {
     setTestResult(null);
 
     try {
-      console.log('=== PROFILE SAVE DEBUG TEST ===');
       
       // Step 1: Get current profile
-      console.log('1. Getting current profile...');
       const currentProfile = await profileService.getMyProfile();
-      console.log('Current profile:', currentProfile);
 
       // Step 2: Test updating with split data (User vs UserProfile models)
       const userTestData = {
@@ -37,19 +34,12 @@ const ProfileSaveDebug = () => {
         specialization: 'Test Specialization Updated'
       };
 
-      console.log('2a. Sending User model update:', userTestData);
       const userUpdateResponse = await authService.updateUserFields(userTestData);
-      console.log('User update response:', userUpdateResponse);
 
-      console.log('2b. Sending UserProfile model update:', profileTestData);
       const profileUpdateResponse = await profileService.updateMyProfile(profileTestData);
-      console.log('Profile update response:', profileUpdateResponse);
-      console.log('Update response:', updateResponse);
 
       // Step 3: Get profile again to verify save
-      console.log('3. Getting profile again to verify save...');
       const verifyProfile = await profileService.getMyProfile();
-      console.log('Verified profile:', verifyProfile);
 
       // Step 4: Compare what was sent vs what was saved
       const allTestData = { ...userTestData, ...profileTestData };
@@ -108,14 +98,7 @@ const ProfileSaveDebug = () => {
         }
       });
 
-      console.log('=== TEST RESULTS ===');
-      console.log('Sent fields:', sentFields);
-      console.log('Successfully saved:', savedFields);
-      console.log('Not saved:', notSavedFields);
-      console.log('=== END TEST ===');
-
     } catch (error) {
-      console.error('Profile save test failed:', error);
       setTestResult({
         success: false,
         message: `Profile save test failed: ${error.message}`,

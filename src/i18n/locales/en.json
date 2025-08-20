@@ -115,7 +115,7 @@
     "heroSubtitle": "Leading the future of research and innovation.",
     "journeyToExcellence": "Journey to Excellence",
     "learnMore": "Learn More",
-    "research": "Research",
+    "posts": "Posts",
     "courses": "Courses",
     "services": "Services",
     "joinUs": "Join Us",
@@ -125,6 +125,10 @@
     "category": {
       "أبحاث": "Research",
       "announcement": "Announcement"
+    },
+    "featuredPosts": {
+      "title": "Featured Posts",
+      "description":"Check out our featured posts highlighting the latest research and innovations."
     },
     "new": "New",
     "showAllPosts": "Show All Posts",

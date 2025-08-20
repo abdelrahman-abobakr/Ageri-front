@@ -35,7 +35,6 @@ const PublicResearchersPage = () => {
       setResearchers(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {
-      console.error('Failed to load researchers:', error);
       setResearchers([]);
     } finally {
       setLoading(false);

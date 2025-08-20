@@ -28,13 +28,7 @@ export const COURSE_STATUS = {
   ARCHIVED: 'archived',
 };
 
-// Notification types
-export const NOTIFICATION_TYPES = {
-  SUCCESS: 'success',
-  ERROR: 'error',
-  WARNING: 'warning',
-  INFO: 'info',
-};
+
 
 // User approval status
 export const USER_STATUS = {
@@ -279,19 +273,9 @@ export const API_ENDPOINTS = {
     USERS: '/api/search/users/'
   },
 
-  // Notifications
-  NOTIFICATIONS: {
-    LIST: '/api/notifications/',
-    UNREAD: '/api/notifications/unread/',
-    MARK_READ: (id) => `/api/notifications/${id}/mark-read/`
-  },
 
-  // Admin System Management
-  ADMIN: {
-    SYSTEM_INFO: '/admin/system-info/',
-    CLEAR_CACHE: '/admin/clear-cache/',
-    HEALTH_CHECK: '/admin/health-check/'
-  }
+
+
 }; 
 
 // Theme colors (Governmental style)
@@ -337,15 +321,13 @@ export const MENU_ITEMS = {
     { key: 'training', label: 'Training', icon: 'ReadOutlined', path: '/training' },
     { key: 'services', label: 'Services', icon: 'ToolOutlined', path: '/services' },
     { key: 'content', label: 'Content', icon: 'FileTextOutlined', path: '/content' },
-    { key: 'settings', label: 'Settings', icon: 'SettingOutlined', path: '/settings' },
   ],
   [USER_ROLES.MODERATOR]: [
     { key: 'dashboard', label: 'Dashboard', icon: 'DashboardOutlined', path: '/dashboard' },
     { key: 'research', label: 'Research', icon: 'BookOutlined', path: '/research' },
     { key: 'training', label: 'Training', icon: 'ReadOutlined', path: '/training' },
     { key: 'services', label: 'Services', icon: 'ToolOutlined', path: '/services' },
-    { key: 'content', label: 'Content', icon: 'FileTextOutlined', path: '/content' },
-    { key: 'notifications', label: 'Notifications', icon: 'BellOutlined', path: '/notifications' },
+    { key: 'content', label: 'Content', icon: 'FileTextOutlined', path: '/content' }
   ],
   [USER_ROLES.RESEARCHER]: [
     { key: 'dashboard', label: 'Dashboard', icon: 'DashboardOutlined', path: '/dashboard' },

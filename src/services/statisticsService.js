@@ -11,10 +11,8 @@ export const statisticsService = {
         postsResponse,
         orgStatsResponse
       ] = await Promise.allSettled([
-        publicApiClient.get('/research/publications/'),
-        publicApiClient.get('/training/api/courses/'),
-        publicApiClient.get('/content/posts/'),
-        publicApiClient.get('/organization/stats/')
+        publicApiClient.get('api/training/courses/'),
+        publicApiClient.get('api/content/posts/'),
       ]);
 
       const stats = {
@@ -28,32 +26,26 @@ export const statisticsService = {
       if (orgStatsResponse.status === 'fulfilled') {
         const orgData = orgStatsResponse.value.data;
         stats.researchers = orgData?.total_researchers || orgData?.researchers_count || 0;
-        console.log('📊 Real researchers count from org stats:', stats.researchers);
       }
 
       // Get real data from other endpoints
       if (publicationsResponse.status === 'fulfilled') {
         const pubData = publicationsResponse.value.data;
         stats.publications = pubData?.count || pubData?.results?.length || 0;
-        console.log('📊 Real publications count:', stats.publications);
       }
       
       if (coursesResponse.status === 'fulfilled') {
         const courseData = coursesResponse.value.data;
         stats.courses = courseData?.count || courseData?.results?.length || 0;
-        console.log('📊 Real courses count:', stats.courses);
       }
       
       if (postsResponse.status === 'fulfilled') {
         const postData = postsResponse.value.data;
         stats.projects = postData?.count || postData?.results?.length || 0;
-        console.log('📊 Real posts/projects count:', stats.projects);
       }
 
-      console.log('📊 Final homepage stats:', stats);
       return stats;
     } catch (error) {
-      console.error('Failed to fetch public statistics:', error);
       return {
         researchers: 0,
         publications: 0,
@@ -88,7 +80,6 @@ export const statisticsService = {
         organization: organizationStats.status === 'fulfilled' ? organizationStats.value.data : null
       };
     } catch (error) {
-      console.error('Failed to fetch detailed statistics:', error);
       throw error;
     }
   },
@@ -114,7 +105,6 @@ export const statisticsService = {
       
       return 0; // No approach worked
     } catch (error) {
-      console.error('Failed to get researchers count:', error);
       return 0;
     }
   },
@@ -148,7 +138,6 @@ export const statisticsService = {
 
       return stats;
     } catch (error) {
-      console.error('Failed to fetch alternative statistics:', error);
       return this.getPublicStatistics();
     }
   },

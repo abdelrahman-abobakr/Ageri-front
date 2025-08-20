@@ -59,14 +59,9 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
       if (onSuccess) onSuccess(result);
 
     } catch (error) {
-      console.error('Enrollment error:', error);
-      console.error('Error response:', error.response);
-      console.error('Error response data:', error.response?.data);
-
       // Handle 400 Bad Request with field errors
       if (error.response?.status === 400) {
         const errorData = error.response.data;
-        console.log('400 Error data:', errorData);
 
         // Transform backend errors to match form expectations
         const formattedErrors = {};
@@ -76,12 +71,10 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
           // Check if errors are nested in a 'details' object
           let errorsToProcess = errorData;
           if (errorData.details && typeof errorData.details === 'object') {
-            console.log('Found nested errors in details:', errorData.details);
             errorsToProcess = errorData.details;
           }
 
           Object.keys(errorsToProcess).forEach(key => {
-            console.log(`Processing error for field ${key}:`, errorsToProcess[key]);
 
             // Skip non-field error keys like 'error' or 'message'
             if (key === 'error' || key === 'message') {
@@ -111,7 +104,6 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
           });
         }
 
-        console.log('Formatted errors:', formattedErrors);
         setErrors(formattedErrors);
 
         // Show general error message
@@ -131,7 +123,6 @@ const GuestEnrollmentForm = ({ course, onSuccess, onCancel }) => {
       }
       // Handle other error cases
       else {
-        console.error('Non-400 error:', error);
         const errorMessage = error.response?.data?.message ||
           error.response?.data?.detail ||
           error.message ||

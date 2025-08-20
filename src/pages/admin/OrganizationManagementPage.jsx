@@ -124,12 +124,10 @@ const OrganizationManagementPage = () => {
 
       const response = await organizationService.getDepartments(params);
       const departmentsData = response.results || response || [];
-      console.log('📊 Departments data received:', departmentsData);
-      console.log('📊 First department structure:', departmentsData[0]);
+
       setDepartments(departmentsData);
       setTotal(response.count || departmentsData.length || 0);
     } catch (error) {
-      console.error('Failed to load departments:', error);
       message.error(t('admin.organizationManagement.failedToLoadDepartments'));
       setDepartments([]);
       setTotal(0);
@@ -155,7 +153,6 @@ const OrganizationManagementPage = () => {
       setLabs(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {
-      console.error('Failed to load labs:', error);
       message.error('فشل في تحميل المختبرات');
       setLabs([]);
       setTotal(0);
@@ -185,7 +182,6 @@ const OrganizationManagementPage = () => {
       setStaff(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {
-      console.error('Failed to load staff:', error);
       message.error('فشل في تحميل الموظفين');
       setStaff([]);
       setTotal(0);
@@ -201,7 +197,6 @@ const OrganizationManagementPage = () => {
       setSettings(data);
       settingsForm.setFieldsValue(data);
     } catch (error) {
-      console.error('Failed to load organization settings:', error);
       message.error('فشل في تحميل إعدادات المنظمة');
     } finally {
       setSettingsLoading(false);
@@ -216,7 +211,6 @@ const OrganizationManagementPage = () => {
       const usersData = users.results || users || [];
       setAvailableUsers(usersData);
     } catch (error) {
-      console.error('Failed to load users:', error);
       setAvailableUsers([]);
     } finally {
       setUsersLoading(false);
@@ -238,7 +232,6 @@ const OrganizationManagementPage = () => {
 
       // Fetch full department details from API
       const fullDepartmentData = await organizationService.getDepartmentById(department.id);
-      console.log('Full department data:', fullDepartmentData);
 
       setEditingItem(fullDepartmentData);
 
@@ -251,7 +244,6 @@ const OrganizationManagementPage = () => {
 
       setModalVisible(true);
     } catch (error) {
-      console.error('Failed to load department details:', error);
       message.error('فشل في تحميل تفاصيل القسم');
     } finally {
       setLoading(false);
@@ -278,7 +270,6 @@ const OrganizationManagementPage = () => {
 
   const handleSaveDepartment = async (values) => {
     try {
-      console.log('Form values submitted:', values);
 
       const departmentData = {
         name: values.name,
@@ -286,7 +277,6 @@ const OrganizationManagementPage = () => {
         head_id: values.head, // This will be the user ID
       };
 
-      console.log('Transformed department data:', departmentData);
 
       if (editingItem) {
         await organizationService.updateDepartment(editingItem.id, departmentData);
@@ -299,8 +289,6 @@ const OrganizationManagementPage = () => {
       loadDepartments();
       refreshStats();
     } catch (error) {
-      console.error('Failed to save department:', error);
-      console.error('Error details:', error.response?.data);
       message.error('فشل في حفظ القسم');
     }
   };
@@ -329,7 +317,6 @@ const OrganizationManagementPage = () => {
       setSettings(updatedSettings);
       message.success('تم حفظ إعدادات المنظمة بنجاح');
     } catch (error) {
-      console.error('Failed to save organization settings:', error);
       message.error('فشل في حفظ إعدادات المنظمة');
     } finally {
       setSettingsLoading(false);
@@ -363,7 +350,6 @@ const OrganizationManagementPage = () => {
 
       setModalVisible(true);
     } catch (error) {
-      console.error('Failed to load lab details:', error);
       message.error('فشل في تحميل تفاصيل المختبر');
     } finally {
       setLoading(false);
@@ -398,10 +384,8 @@ const OrganizationManagementPage = () => {
     try {
       setLabMembersLoading(true);
       const members = await organizationService.getLabResearchers(labId);
-      console.log('📊 Lab members data:', members);
       setLabMembers(members.results || members || []);
     } catch (error) {
-      console.error('Failed to load lab members:', error);
       message.error('فشل في تحميل أعضاء المختبر');
       setLabMembers([]);
     } finally {
@@ -411,12 +395,9 @@ const OrganizationManagementPage = () => {
 
   const loadAvailableResearchers = async () => {
     try {
-      console.log('🔍 Loading available researchers...');
       const users = await authService.getAllUsers();
-      console.log('🔍 All users:', users);
 
       const usersArray = users.results || users || [];
-      console.log('🔍 Users array:', usersArray);
 
       // Filter for approved researchers only and those not already in the lab
       const researchers = usersArray.filter(user => {
@@ -428,18 +409,9 @@ const OrganizationManagementPage = () => {
           member.user_id === user.id
         );
 
-        console.log(`🔍 User ${user.id} (${user.email}):`, {
-          role: user.role,
-          isResearcher,
-          isApproved,
-          isNotInLab,
-          included: isResearcher && isApproved && isNotInLab
-        });
-
         return isResearcher && isApproved && isNotInLab;
       });
 
-      console.log('🔍 Filtered approved researchers:', researchers);
       setAvailableResearchers(researchers);
 
       if (researchers.length === 0) {
@@ -447,7 +419,6 @@ const OrganizationManagementPage = () => {
       }
 
     } catch (error) {
-      console.error('❌ Failed to load researchers:', error);
       setAvailableResearchers([]);
       message.error('فشل في تحميل قائمة الباحثين');
     }
@@ -456,9 +427,6 @@ const OrganizationManagementPage = () => {
 
   const handleAssignResearcher = async (values) => {
     try {
-      console.log('🔍 Form values received:', values);
-      console.log('🔍 Selected lab:', selectedLab);
-
       // Validate required data
       if (!selectedLab || !selectedLab.id) {
         message.error('لا يوجد مختبر محدد');
@@ -496,9 +464,7 @@ const OrganizationManagementPage = () => {
       // If we still don't have department_id, fetch the lab details
       if (!departmentId) {
         try {
-          console.log('🔍 Fetching lab details to get department_id...');
           const labDetails = await organizationService.getLabById(selectedLab.id);
-          console.log('🔍 Lab details:', labDetails);
 
           if (labDetails.department_id) {
             departmentId = parseInt(labDetails.department_id);
@@ -506,22 +472,19 @@ const OrganizationManagementPage = () => {
             departmentId = parseInt(labDetails.department.id);
           }
         } catch (error) {
-          console.error('Failed to fetch lab details:', error);
+          message.error('Failed to fetch lab details:');
         }
       }
 
       // Validate that we have department_id
       if (!departmentId) {
         message.error('لا يمكن تحديد القسم المرتبط بالمختبر. يرجى المحاولة مرة أخرى.');
-        console.error('❌ Could not determine department_id for lab:', selectedLab);
         return;
       }
 
-      console.log('🔍 Determined department_id:', departmentId);
 
       // Format the date properly
       const formattedDate = values.start_date;
-      console.log('🔍 Formatted date:', formattedDate);
 
       const assignmentData = {
         researcher_id: parseInt(values.researcher_id),
@@ -532,7 +495,6 @@ const OrganizationManagementPage = () => {
         notes: values.notes || `Assignment to ${selectedLab.name} lab`
       };
 
-      console.log('🔍 Final assignment data:', assignmentData);
 
       // Validate the researcher exists and is available
       const selectedResearcher = availableResearchers.find(r => r.id === values.researcher_id);
@@ -547,7 +509,6 @@ const OrganizationManagementPage = () => {
         return;
       }
 
-      console.log('🔍 Selected researcher:', selectedResearcher);
 
       // Check if researcher is already assigned to this lab
       const isAlreadyAssigned = labMembers.some(member =>
@@ -561,7 +522,6 @@ const OrganizationManagementPage = () => {
 
       // Make the API call
       const result = await organizationService.createAssignment(assignmentData);
-      console.log('✅ Assignment created successfully:', result);
 
       message.success('تم تعيين الباحث بنجاح');
       loadLabMembers(selectedLab.id);
@@ -569,10 +529,6 @@ const OrganizationManagementPage = () => {
       assignmentForm.resetFields();
 
     } catch (error) {
-      console.error('❌ Assignment creation failed:', error);
-      console.error('❌ Error response:', error.response?.data);
-      console.error('❌ Error status:', error.response?.status);
-
       // Handle specific error cases
       if (error.response?.status === 400) {
         const errorData = error.response.data;
@@ -607,7 +563,6 @@ const OrganizationManagementPage = () => {
         } else {
           // Generic 400 error - show full error data for debugging
           message.error('بيانات غير صحيحة. يرجى التحقق من جميع الحقول');
-          console.error('Full error data:', errorData);
         }
       } else if (error.response?.status === 403) {
         message.error('ليس لديك صلاحية لإجراء هذا التعيين');
@@ -627,7 +582,6 @@ const OrganizationManagementPage = () => {
       message.success('تم إزالة الباحث بنجاح');
       loadLabMembers(selectedLab.id);
     } catch (error) {
-      console.error('Failed to remove researcher:', error);
       message.error('فشل في إزالة الباحث');
     }
   };

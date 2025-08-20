@@ -36,7 +36,6 @@ const PublicResearchPage = () => {
       setPublications(response.results || []);
       setTotal(response.count || 0);
     } catch (error) {
-      console.error('Failed to load publications:', error);
       setPublications([]);
     } finally {
       setLoading(false);

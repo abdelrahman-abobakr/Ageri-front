@@ -83,12 +83,10 @@ const CreateProfilePage = () => {
             setExistingCvFile(profileData.cv_file);
           }
         } catch (profileError) {
-          console.log('Profile not found, creating new one');
           setProfileCompletion(0);
         }
       } catch (error) {
         message.error('فشل في جلب البيانات');
-        console.error('Error fetching user data:', error);
       } finally {
         setInitialLoading(false);
       }
@@ -106,13 +104,9 @@ const CreateProfilePage = () => {
   const handleSubmit = async (values) => {
     setLoading(true);
     try {
-      console.log('=== STARTING PROFILE SUBMIT ===');
-      console.log('Form values:', values);
 
       // Create FormData for multipart/form-data request
       const formData = new FormData();
-
-      console.log('=== PREPARING FORMDATA FOR MULTIPART REQUEST ===');
 
       // Define all fields that should be sent to the profile endpoint
       const allFields = [
@@ -125,53 +119,39 @@ const CreateProfilePage = () => {
       // Add all fields to FormData
       allFields.forEach(field => {
         const value = values[field];
-        console.log(`Processing field: ${field}, value:`, value, `(type: ${typeof value})`);
 
         if (value !== undefined && value !== null) {
           if (typeof value === 'string') {
             const trimmedValue = value.trim();
             if (trimmedValue !== '') {
               formData.append(field, trimmedValue);
-              console.log(`Added to FormData: ${field} =`, trimmedValue);
             } else {
-              console.log(`Skipping empty string for field: ${field}`);
+              // console.log(`Skipping empty string for field: ${field}`);
             }
           } else if (typeof value === 'boolean') {
             formData.append(field, value.toString());
-            console.log(`Added to FormData: ${field} =`, value.toString());
           } else {
             formData.append(field, value);
-            console.log(`Added to FormData: ${field} =`, value);
           }
         } else {
-          console.log(`Skipping undefined/null field: ${field}`);
+          // console.log(`Skipping undefined/null field: ${field}`);
         }
       });
 
       // Add CV file if present
       if (cvFile) {
         formData.append('cv_file', cvFile);
-        console.log('Added CV file to FormData:', cvFile.name);
       }
 
-      // Log FormData contents for debugging
-      console.log('=== FORMDATA CONTENTS ===');
-      for (let [key, value] of formData.entries()) {
-        console.log(`FormData: ${key} =`, value);
-      }
-
-      console.log('📤 Updating/Creating profile with FormData...');
       let savedProfile = null;
 
       // Update/Create UserProfile model using FormData
       if (profileData) {
         // Update existing profile
         savedProfile = await profileService.updateMyProfile(formData);
-        console.log('✅ Profile updated successfully:', savedProfile);
       } else {
         // Create new profile
         savedProfile = await profileService.createMyProfile(formData);
-        console.log('✅ Profile created successfully:', savedProfile);
       }
 
       // Update local state with the saved profile data
@@ -218,18 +198,11 @@ const CreateProfilePage = () => {
       const completion = calculateProfileCompletion(savedProfile);
       setProfileCompletion(completion);
 
-      // Refresh profile data to ensure we have the latest data
-      try {
-        console.log('🔄 Refreshing profile data...');
-        const refreshedProfile = await profileService.getMyProfile();
-        setProfileData(refreshedProfile);
-        console.log('✅ Profile data refreshed:', refreshedProfile);
-      } catch (refreshError) {
-        console.warn('⚠️ Failed to refresh profile after update:', refreshError);
-      }
+      const refreshedProfile = await profileService.getMyProfile();
+      setProfileData(refreshedProfile);
+      
 
       message.success(profileData ? 'تم تحديث البروفايل بنجاح!' : 'تم إنشاء البروفايل بنجاح!');
-      console.log('=== PROFILE SUBMIT COMPLETED ===');
 
       // Navigate to profile page after successful creation
       if (!profileData) {
@@ -238,7 +211,6 @@ const CreateProfilePage = () => {
         }, 1500);
       }
     } catch (error) {
-      console.error('Error saving profile:', error);
       message.error('فشل في حفظ البروفايل. حاول مرة أخرى.');
     } finally {
       setLoading(false);
@@ -326,7 +298,7 @@ const CreateProfilePage = () => {
                     const refreshedProfile = await profileService.getMyProfile();
                     setProfileData(refreshedProfile);
                   } catch (refreshError) {
-                    console.warn('Failed to refresh profile after upload:', refreshError);
+                    // console.warn('Failed to refresh profile after upload:', refreshError);
                   }
 
                   message.success('تم تحديث الصورة الشخصية بنجاح!');

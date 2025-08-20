@@ -96,7 +96,6 @@ const PublicationFormPage = () => {
 
   // Enhanced error handling that uses the service's error structure
   const handleApiError = (error) => {
-    console.error('⚠️ API Error Details:', error);
 
     // Clear existing errors
     setErrorAlert(null);
@@ -303,7 +302,6 @@ const PublicationFormPage = () => {
 
       return response;
     } catch (error) {
-      console.error('⚠️ Error checking DOI:', error);
       setDoiExists(false);
       return { exists: false };
     } finally {

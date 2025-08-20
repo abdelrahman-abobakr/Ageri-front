@@ -87,20 +87,17 @@ const PublicationFormPage = () => {
 
     try {
       setDoiCheckLoading(true);
-      console.log('🔍 Checking DOI:', doi);
 
       // Call API to check if DOI exists
       const response = await researchService.checkDoiExists(doi.trim());
       const exists = response.exists;
 
       setDoiExists(exists);
-      console.log('📋 DOI check result:', { doi, exists });
-
+    
       if (exists) {
         messageApi.warning('⚠️ هذا DOI مستخدم بالفعل');
       }
     } catch (error) {
-      console.error('❌ Error checking DOI:', error);
       // Don't show error for DOI check failure
       setDoiExists(false);
     } finally {
@@ -139,10 +136,7 @@ const PublicationFormPage = () => {
       setInitialLoading(true);
       const fetchPublication = async () => {
         try {
-          console.log('📤 Fetching publication for edit:', id);
           const data = await researchService.getPublicationById(id);
-          console.log('📥 Publication data for edit:', data);
-
           // Check if user can edit this publication
           if (!canEditPublication(data)) {
             messageApi.error(t('you_dont_have_permission_to_edit') || 'ليس لديك صلاحية لتعديل هذا المنشور');
@@ -185,12 +179,10 @@ const PublicationFormPage = () => {
             citation_count: data.citation_count || 0,
           };
 
-          console.log('📋 Setting form values:', formattedData);
           form.setFieldsValue(formattedData);
           setFormData(formattedData);
 
         } catch (error) {
-          console.error('❌ Error fetching publication for edit:', error);
           messageApi.error(t('failed_to_load_publication') || 'فشل في تحميل المنشور');
           navigate('/app/research/publications');
         } finally {
@@ -215,7 +207,6 @@ const PublicationFormPage = () => {
   };
 
   const cleanAndValidateData = (rawValues) => {
-    console.log('🧹 Cleaning and validating data:', rawValues);
 
     // Clean all string fields
     const cleaned = {
@@ -271,7 +262,6 @@ const PublicationFormPage = () => {
       }
     });
 
-    console.log('✨ Cleaned data:', cleaned);
     return cleaned;
   };
 
@@ -290,12 +280,10 @@ const PublicationFormPage = () => {
       const payload = cleanAndValidateData(mergedValues);
 
       // Send JSON payload
-      console.log('📤 Sending JSON payload', payload);
       const response = isEditMode
         ? await researchService.updatePublication(id, payload)
         : await researchService.createPublication(payload);
 
-      console.log('📥 Response:', response);
 
       messageApi.success(isEditMode ? (t('publication_updated_successfully') || 'تم تحديث المنشور بنجاح') : (t('publication_created_successfully') || 'تم إنشاء المنشور بنجاح'));
       navigate('/app/research/publications');
@@ -331,7 +319,6 @@ const PublicationFormPage = () => {
         return;
       }
       // ...existing code for other errors...
-      console.error('❌ Error saving publication:', error);
       messageApi.error('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى');
       setLoading(false);
     }
@@ -340,13 +327,10 @@ const PublicationFormPage = () => {
   // Handle step navigation
   const next = async () => {
     try {
-      console.log('🔄 Validating form fields for step:', currentStep);
       const values = await form.validateFields();
-      console.log('✅ Form validation passed:', values);
       setFormData({ ...formData, ...values });
       setCurrentStep(currentStep + 1);
     } catch (error) {
-      console.error('❌ Form validation failed:', error);
       messageApi.error(t('please_fill_required_fields') || 'يرجى ملء الحقول المطلوبة');
     }
   };
@@ -372,15 +356,7 @@ const PublicationFormPage = () => {
     }
   };
 
-  // Debug form value changes
-  const onValuesChange = (changedValues, allValues) => {
-    console.log('🔄 Form values changed:', changedValues);
-    console.log('📋 All current form values:', allValues);
 
-    if (changedValues.title !== undefined) {
-      console.log('📝 Title changed to:', changedValues.title);
-    }
-  };
 
   // Form field validation rules
   const getFieldRules = (field) => {
@@ -773,7 +749,6 @@ const PublicationFormPage = () => {
           form={form}
           layout="vertical"
           onFinish={onFinish}
-          onValuesChange={onValuesChange}
           initialValues={{
             title: '',
             abstract: '',

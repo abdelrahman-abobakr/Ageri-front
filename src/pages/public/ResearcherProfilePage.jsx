@@ -36,7 +36,6 @@ const ResearcherProfilePage = () => {
       // Load researcher's publications
       await loadResearcherPublications(id);
     } catch (error) {
-      console.error('Failed to load researcher profile:', error);
       message.error('Failed to load researcher profile');
     } finally {
       setLoading(false);
@@ -53,7 +52,6 @@ const ResearcherProfilePage = () => {
       });
       setPublications(response.results || []);
     } catch (error) {
-      console.error('Failed to load publications:', error);
       setPublications([]);
     } finally {
       setPublicationsLoading(false);

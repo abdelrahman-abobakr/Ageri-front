@@ -240,7 +240,6 @@ export const usePublicationsOperations = () => {
       dispatch({ type: 'SET_STATISTICS', payload: stats });
       return stats;
     } catch (error) {
-      console.error('Failed to load statistics:', error);
       // Don't show error message for statistics
       return null;
     }

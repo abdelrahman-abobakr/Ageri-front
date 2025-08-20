@@ -20,7 +20,7 @@ export const authService = {
         await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, { refresh_token: refreshToken });
       }
     } catch (error) {
-      console.error('Logout error:', error);
+      throw error;
     } finally {
       // Clear local storage regardless of API call success
       localStorage.removeItem('access_token');
@@ -36,17 +36,13 @@ export const authService = {
   },
 
   updateProfile: async (data) => {
-    console.log('📤 AuthService: Updating user profile with data:', data);
     const response = await apiClient.put(API_ENDPOINTS.AUTH.UPDATE_PROFILE, data);
-    console.log('📥 AuthService: User profile update response:', response.data);
     return response.data;
   },
 
   // Update user fields (phone, institution, department)
   updateUserFields: async (data) => {
-    console.log('📤 AuthService: Updating user fields with data:', data);
     const response = await apiClient.patch(API_ENDPOINTS.AUTH.UPDATE_PROFILE, data);
-    console.log('📥 AuthService: User fields update response:', response.data);
     return response.data;
   },
 
@@ -105,8 +101,6 @@ export const authService = {
 
   // Profile picture management - Using correct UserProfile endpoint
   uploadProfilePicture: async (file) => {
-    console.log('Uploading profile picture to UserProfile model...');
-
     // Validate file type
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
     if (!allowedTypes.includes(file.type)) {
@@ -125,8 +119,6 @@ export const authService = {
     // ✅ Do NOT manually set Content-Type for FormData - let Axios handle it automatically
     // ✅ Use POST to match the pattern used by updateMyProfile method
     const response = await apiClient.post(API_ENDPOINTS.AUTH.PROFILE_PICTURE, formData);
-
-    console.log('✅ Profile picture upload successful:', response.data);
     return response.data;
   },
 

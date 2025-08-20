@@ -41,7 +41,6 @@ const LabDetailPage = () => {
         setLab(labData);
         await loadLabResearchers(id);
       } catch (error) {
-        console.error('Failed to load lab details:', error);
         message.error('Failed to load lab details');
       } finally {
         setLoading(false);
@@ -56,7 +55,6 @@ const LabDetailPage = () => {
       const response = await organizationService.getLabResearchers(labId);
       setResearchers(response.results || []);
     } catch (error) {
-      console.error('Failed to load lab researchers:', error);
       setResearchers([]);
     } finally {
       setResearchersLoading(false);

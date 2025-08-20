@@ -87,7 +87,6 @@ const ServicesPage = () => {
       setServices(activeServices);
       setTotal(response.count || activeServices.length);
     } catch (error) {
-      console.error('Failed to load services:', error);
       setServices([]);
       setTotal(0);
     } finally {
@@ -101,7 +100,6 @@ const ServicesPage = () => {
       const featuredData = response.results || response || [];
       setFeaturedServices(Array.isArray(featuredData) ? featuredData : []);
     } catch (error) {
-      console.error('Failed to load featured services:', error);
       setFeaturedServices([]);
     }
   };

@@ -90,12 +90,9 @@ const ServicesManagementPage = () => {
 
   // Fetch service statistics
   const fetchStatistics = async () => {
-    try {
       const stats = await servicesService.getTestServicesStatistics();
       setStatistics(stats);
-    } catch (error) {
-      console.warn('Statistics not available:', error);
-    }
+    
   };
 
   // Fetch service images
@@ -133,8 +130,6 @@ const ServicesManagementPage = () => {
           file: values.featured_image[0].originFileObj
         };
       }
-
-      console.log('Form values before submission:', processedValues);
 
       if (editingId) {
         await servicesService.updateTestService(editingId, processedValues);

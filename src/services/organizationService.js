@@ -43,11 +43,7 @@ getDepartmentLabs: async (departmentId) => {
       data: response.data.results || [] // نركز على استخراج الـ results مباشرة
     };
   } catch (error) {
-    console.error('Error fetching department labs:', {
-      url: error.config?.url,
-      status: error.response?.status,
-      error: error.message
-    });
+    
     return {
       success: false,
       error: 'Failed to load labs data'
@@ -144,21 +140,20 @@ getDepartmentLabs: async (departmentId) => {
           const response = await apiClient.get(API_ENDPOINTS.ORGANIZATION.SETTINGS);
           return response.data;
         } catch (authError) {
-          console.error('Failed to fetch organization settings with auth:', authError);
+          throw authError;
         }
       }
 
-      console.error('Failed to fetch organization settings:', error);
       // Return default settings structure if API fails
       return {
-        name: "منظمة البحث العلمي",
+        name: "معهد بحوث الهندسة الوراثية الزراعية",
         vision: "أن نكون المنظمة الرائدة في البحث العلمي الزراعي والابتكار التكنولوجي في المنطقة",
         vision_image: null,
         mission: "نسعى لتطوير الحلول المبتكرة في مجال الزراعة والبحث العلمي لخدمة المجتمع والبيئة",
         mission_image: null,
         about: "منظمة رائدة في مجال البحث العلمي الزراعي، نعمل على تطوير التقنيات الحديثة والحلول المستدامة لتحسين الإنتاج الزراعي وحماية البيئة.",
         email: "info@agri-research.org",
-        phone: "+966 11 123 4567",
+        phone: "+20123456789",
         address: "جمهورية مصر العربية",
         website: "https://agri-research.org",
         facebook: "https://facebook.com/agri-research",
@@ -178,7 +173,6 @@ getDepartmentLabs: async (departmentId) => {
       const response = await apiClient.get(API_ENDPOINTS.ORGANIZATION.SETTINGS);
       return response.data;
     } catch (error) {
-      console.error('Failed to fetch organization settings:', error);
       // Return default settings structure if API fails
       return {
         name: "Scientific Research Organization",
@@ -207,7 +201,6 @@ getDepartmentLabs: async (departmentId) => {
       const response = await apiClient.put(API_ENDPOINTS.ORGANIZATION.SETTINGS, settingsData);
       return response.data;
     } catch (error) {
-      console.error('Failed to update organization settings:', error);
       throw error;
     }
   },
@@ -217,7 +210,6 @@ getDepartmentLabs: async (departmentId) => {
       const response = await apiClient.patch(API_ENDPOINTS.ORGANIZATION.SETTINGS, settingsData);
       return response.data;
     } catch (error) {
-      console.error('Failed to partially update organization settings:', error);
       throw error;
     }
   },

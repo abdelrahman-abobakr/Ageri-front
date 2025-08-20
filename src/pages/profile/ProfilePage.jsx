@@ -84,7 +84,6 @@ const ProfilePage = () => {
         } catch (userError) {
           // If API call fails, try to use Redux state as fallback
           if (authUser) {
-            console.warn('Using fallback user data from Redux state');
             user = authUser;
           } else {
             throw userError;
@@ -129,17 +128,14 @@ const ProfilePage = () => {
             is_public: profileData.is_public !== undefined ? profileData.is_public : true
           };
 
-          console.log('Setting form values:', formValues);
           form.setFieldsValue(formValues);
           setFormData(formValues);
         } catch (profileError) {
-          console.log('Profile not found, user needs to create one');
           setProfile(null);
           setHasProfile(false);
           setProfileCompletion(0);
         }
       } catch (error) {
-        console.error('Error fetching user data:', error);
 
         // Handle specific error types
         if (error.response?.status === 401) {
@@ -194,7 +190,6 @@ const ProfilePage = () => {
       is_public: profile?.is_public !== undefined ? profile.is_public : true
     };
 
-    console.log('Opening edit modal with data:', currentFormData);
     form.setFieldsValue(currentFormData);
     setFormData(currentFormData);
     setEditOpen(true);
@@ -206,41 +201,20 @@ const ProfilePage = () => {
     try {
       setLoading(true);
 
-      console.log('=== STARTING PROFILE SAVE ===');
-      console.log('Current formData state:', formData);
-
       // Validate form fields first
       let values = {};
       try {
         values = await form.validateFields();
-        console.log('✅ Form validation successful, values:', values);
       } catch (validationError) {
-        console.error('❌ Form validation failed:', validationError);
-        console.error('Validation error fields:', validationError.errorFields);
 
-        // If validation fails, use current formData instead
-        console.log('Using current formData instead of form values');
         values = {};
       }
 
       // Use form values instead of formData state
       const formDataToSave = { ...formData, ...values };
-      console.log('=== FORM DATA ANALYSIS ===');
-      console.log('Original formData state:', formData);
-      console.log('Form validation values:', values);
-      console.log('Combined form data to save:', formDataToSave);
-      console.log('=== CHECKING SPECIFIC FIELDS ===');
-      console.log('bio:', formDataToSave.bio);
-      console.log('research_interests:', formDataToSave.research_interests);
-      console.log('is_public:', formDataToSave.is_public);
-      console.log('phone:', formDataToSave.phone);
-      console.log('position:', formDataToSave.position);
-
       // Create FormData for multipart/form-data request
       const formDataForRequest = new FormData();
 
-      console.log('=== PREPARING FORMDATA FOR MULTIPART REQUEST ===');
-      console.log('Form data to process:', formDataToSave);
 
       // Define all fields that should be sent to the profile endpoint
       const profileFields = [
@@ -253,54 +227,33 @@ const ProfilePage = () => {
       // Add profile fields to FormData
       profileFields.forEach(field => {
         const value = formDataToSave[field];
-        console.log(`Processing field: ${field}, value:`, value, `(type: ${typeof value})`);
 
         if (value !== undefined && value !== null) {
           if (typeof value === 'string') {
             const trimmedValue = value.trim();
             if (trimmedValue !== '') {
               formDataForRequest.append(field, trimmedValue);
-              console.log(`Added to FormData: ${field} =`, trimmedValue);
             } else {
-              console.log(`Skipping empty string for field: ${field}`);
+              // console.log(`Skipping empty string for field: ${field}`);
             }
           } else if (typeof value === 'boolean') {
             formDataForRequest.append(field, value.toString());
-            console.log(`Added to FormData: ${field} =`, value.toString());
           } else {
             formDataForRequest.append(field, value);
-            console.log(`Added to FormData: ${field} =`, value);
           }
         } else {
-          console.log(`Skipping undefined/null field: ${field}`);
+          // console.log(`Skipping undefined/null field: ${field}`);
         }
       });
 
       // Handle profile picture if present
       if (formDataToSave.profile_picture instanceof File) {
         formDataForRequest.append('profile_picture', formDataToSave.profile_picture);
-        console.log('Added profile picture file to FormData:', formDataToSave.profile_picture.name);
       }
-
-      // Log FormData contents for debugging
-      console.log('=== FORMDATA CONTENTS ===');
-      for (let [key, value] of formDataForRequest.entries()) {
-        console.log(`FormData: ${key} =`, value);
-      }
-
-      console.log('📤 Starting profile update with FormData...');
 
       // Send FormData to profile endpoint (multipart/form-data)
-      console.log('📤 Updating profile with multipart/form-data...');
-      const updatedProfile = await profileService.updateMyProfile(formDataForRequest);
-      console.log('✅ Profile updated successfully:', updatedProfile);
 
-      // Check if department and institution were actually saved
-      console.log('🔍 Checking if department and institution were saved:');
-      console.log('  - Sent department:', formDataToSave.department);
-      console.log('  - Received department:', updatedProfile.department);
-      console.log('  - Sent institution:', formDataToSave.institution);
-      console.log('  - Received institution:', updatedProfile.institution);
+      const updatedProfile = await profileService.updateMyProfile(formDataForRequest);
 
       // Update local state with the new data
       setProfile(updatedProfile);
@@ -322,25 +275,21 @@ const ProfilePage = () => {
       // If department and institution are not in the profile response,
       // they might need to be updated in the User model separately
       if (updatedProfile.department === undefined && formDataToSave.department) {
-        console.log('⚠️ Department not returned in profile response - attempting User model update');
         try {
           const userUpdateData = { department: formDataToSave.department };
           const updatedUser = await authService.updateUserFields(userUpdateData);
-          console.log('✅ User department updated:', updatedUser.department);
           setUserInfo(prev => ({ ...prev, department: updatedUser.department }));
         } catch (userError) {
-          console.error('❌ Failed to update user department:', userError);
+          // console.error('❌ Failed to update user department:', userError);
         }
       }
       if (updatedProfile.institution === undefined && formDataToSave.institution) {
-        console.log('⚠️ Institution not returned in profile response - attempting User model update');
         try {
           const userUpdateData = { institution: formDataToSave.institution };
           const updatedUser = await authService.updateUserFields(userUpdateData);
-          console.log('✅ User institution updated:', updatedUser.institution);
           setUserInfo(prev => ({ ...prev, institution: updatedUser.institution }));
         } catch (userError) {
-          console.error('❌ Failed to update user institution:', userError);
+          // console.error('❌ Failed to update user institution:', userError);
         }
       }
 
@@ -362,41 +311,25 @@ const ProfilePage = () => {
         department: updatedProfile?.department || userInfo?.department || ''
       };
 
-      console.log('Updated form data:', updatedFormData);
       setFormData(updatedFormData);
       form.setFieldsValue(updatedFormData);
 
       // Refresh profile data to ensure we have the latest data
       try {
-        console.log('🔄 Refreshing profile data...');
         const refreshedProfile = await profileService.getMyProfile();
         setProfile(refreshedProfile);
-        console.log('✅ Profile data refreshed:', refreshedProfile);
       } catch (refreshError) {
-        console.warn('⚠️ Failed to refresh profile after update:', refreshError);
+        // console.warn('⚠️ Failed to refresh profile after update:', refreshError);
       }
 
       // Close modal and show success message
       setEditOpen(false);
       message.success('تم تحديث البروفايل بنجاح!');
-      console.log('=== PROFILE SAVE COMPLETED ===');
     } catch (error) {
-      console.error('=== PROFILE SAVE ERROR ===');
-      console.error('Error type:', typeof error);
-      console.error('Error message:', error.message);
-      console.error('Error stack:', error.stack);
-      console.error('Full error object:', JSON.stringify(error, null, 2));
-
-      if (error.response) {
-        console.error('Response status:', error.response.status);
-        console.error('Response data:', error.response.data);
-        console.error('Response headers:', error.response.headers);
-      }
 
       // More specific error handling
       if (error.response?.status === 400) {
         const errorData = error.response.data;
-        console.error('400 Error data:', errorData);
         if (typeof errorData === 'object') {
           const errorMessages = Object.entries(errorData)
             .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
@@ -420,19 +353,7 @@ const ProfilePage = () => {
     try {
       setAvatarUploading(true);
 
-      console.log('📤 Raw file object received:', file);
-      console.log('📤 File properties:', {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        lastModified: file.lastModified,
-        constructor: file.constructor.name,
-        instanceof_File: file instanceof File,
-        instanceof_Blob: file instanceof Blob
-      });
-
       if (!(file instanceof File)) {
-        console.error('❌ Not a File object:', typeof file, file);
         message.error('خطأ في نوع الملف المرسل');
         return false;
       }
@@ -451,15 +372,10 @@ const ProfilePage = () => {
         return false;
       }
 
-      console.log('✅ File validation passed, uploading...');
-
       const freshFile = new File([file], file.name, {
         type: file.type,
         lastModified: file.lastModified
       });
-
-      console.log('📤 Fresh file created:', freshFile);
-      console.log('📤 Fresh file instanceof File:', freshFile instanceof File);
 
       const response = await profileService.uploadProfilePicture(freshFile);
 
@@ -471,7 +387,6 @@ const ProfilePage = () => {
       message.success('تم رفع الصورة الشخصية بنجاح');
       return false;
     } catch (error) {
-      console.error('❌ Upload error:', error);
 
       if (error.response?.data?.profile_picture) {
         const errorMsg = Array.isArray(error.response.data.profile_picture)
@@ -541,7 +456,6 @@ const ProfilePage = () => {
         setProfileCompletion(0);
       }
     } catch (error) {
-      console.error('Retry failed:', error);
       if (error.response?.status === 401) {
         setError('انتهت صلاحية جلسة العمل. يرجى تسجيل الدخول مرة أخرى.');
         setTimeout(() => {
@@ -1298,7 +1212,7 @@ const ProfilePage = () => {
                         const refreshedProfile = await profileService.getMyProfile();
                         setProfile(refreshedProfile);
                       } catch (refreshError) {
-                        console.warn('Failed to refresh profile after removal:', refreshError);
+                        // console.warn('Failed to refresh profile after removal:', refreshError);
                       }
 
                       message.success('تم حذف الصورة الشخصية');
@@ -1321,7 +1235,6 @@ const ProfilePage = () => {
               layout="vertical"
               initialValues={formData}
               onValuesChange={(changedValues, allValues) => {
-                console.log('Form values changed:', changedValues, allValues);
                 setFormData(prev => ({ ...prev, ...allValues }));
                 setProfileCompletion(calculateProfileCompletion(allValues));
               }}

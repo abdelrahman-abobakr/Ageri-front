@@ -68,13 +68,11 @@ const PublicationsListPage = () => {
         ...params, // ✅ Override with passed params (including search)
       };
 
-      console.log('📤 Loading publications with params:', queryParams);
 
       const response = user?.is_admin
         ? await researchService.getAllPublications(queryParams)
         : await researchService.getMyPublications(queryParams);
 
-      console.log('📥 Publications loaded:', response);
 
       setPublications(response.results || []);
       setPagination(prev => ({
@@ -84,7 +82,6 @@ const PublicationsListPage = () => {
       }));
 
     } catch (error) {
-      console.error('❌ Error loading publications:', error);
       message.error(t('failed_to_load_publications'));
     } finally {
       setLoading(false);
@@ -99,7 +96,6 @@ const PublicationsListPage = () => {
       const stats = await researchService.getPublicationStatistics();
       setStatistics(stats);
     } catch (error) {
-      console.error('❌ Error loading statistics:', error);
       // Don't show error message for statistics
     }
   }, [user]);
@@ -120,7 +116,6 @@ const PublicationsListPage = () => {
       const fullDetails = await researchService.getPublicationById(publication.id);
       setSelectedPublication(fullDetails);
     } catch (error) {
-      console.error('❌ Error loading publication details:', error);
       message.error(t('failed_to_load_publication_details'));
       setSelectedPublication(publication); // Fallback to basic data
     } finally {
@@ -130,7 +125,6 @@ const PublicationsListPage = () => {
 
   // Handle table change (pagination, filters, sorter)
   const handleTableChange = (newPagination, tableFilters, newSorter) => {
-    console.log('📋 Table change:', { newPagination, tableFilters, newSorter });
 
     setPagination(newPagination);
 
@@ -180,7 +174,6 @@ const PublicationsListPage = () => {
     if (values.has_doi) filterParams.doi__isnull = false;
     if (values.has_file) filterParams.document_file__isnull = false;
 
-    console.log('🔍 Advanced filter params:', filterParams);
 
     setFilters(filterParams);
     setPagination(prev => ({ ...prev, current: 1 }));
@@ -196,7 +189,6 @@ const PublicationsListPage = () => {
 
   // Handle delete
   const handleDelete = async (id, title) => {
-    console.log('🗑️ Delete button clicked for publication:', id, title);
 
     modal.confirm({
       title: t('confirm_delete'),
@@ -205,9 +197,7 @@ const PublicationsListPage = () => {
       okType: 'danger',
       cancelText: t('cancel'),
       onOk: async () => {
-        console.log('✅ User confirmed deletion for ID:', id);
         try {
-          console.log('📤 Calling deletePublication API...');
           await researchService.deletePublication(id);
           message.success(t('publication_deleted_successfully'));
           loadPublications();
@@ -218,7 +208,6 @@ const PublicationsListPage = () => {
             setSelectedPublication(null);
           }
         } catch (error) {
-          console.error('❌ Error deleting publication:', error);
           message.error(t('failed_to_delete_publication'));
         }
       },
@@ -241,7 +230,6 @@ const PublicationsListPage = () => {
         }));
       }
     } catch (error) {
-      console.error('❌ Error toggling feature:', error);
       message.error(t('failed_to_toggle_feature'));
     }
   };
@@ -270,7 +258,6 @@ const PublicationsListPage = () => {
           loadPublications();
           loadStatistics();
         } catch (error) {
-          console.error('❌ Error in bulk operation:', error);
           message.error(t('bulk_operation_failed'));
         }
       },
@@ -310,7 +297,6 @@ const PublicationsListPage = () => {
       loadPublications();
       loadStatistics();
     } catch (error) {
-      console.error('❌ Error approving publication:', error);
       message.error(t('failed_to_approve_publication'));
     }
   };
@@ -902,7 +888,6 @@ const PublicationsListPage = () => {
                       icon={<DeleteOutlined />}
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log('Delete button clicked!', selectedPublication.id);
                         handleDelete(selectedPublication.id, selectedPublication.title);
                       }}
                       className="rounded-full px-6 py-2 text-base shadow"

@@ -49,27 +49,20 @@ export const useResearcherStats = () => {
           pub.author === user.id
         );
         newStats.publications = userPublications.length;
-      } else {
-        console.warn('Failed to fetch publications:', publicationsResponse.reason);
       }
 
       // Handle enrollments
       if (enrollmentsResponse.status === 'fulfilled') {
         newStats.enrolledCourses = enrollmentsResponse.value.results?.length || enrollmentsResponse.value.length || 0;
-      } else {
-        console.warn('Failed to fetch enrollments:', enrollmentsResponse.reason);
       }
 
       // Handle service requests
       if (requestsResponse.status === 'fulfilled') {
         newStats.serviceRequests = requestsResponse.value.results?.length || requestsResponse.value.length || 0;
-      } else {
-        console.warn('Failed to fetch service requests:', requestsResponse.reason);
       }
 
       setStats(newStats);
     } catch (err) {
-      console.error('Error fetching researcher stats:', err);
       setError(err.message || 'Failed to fetch stats');
     } finally {
       setLoading(false);

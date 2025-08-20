@@ -24,8 +24,7 @@ export const useRealTimeStats = (statsType = 'dashboard', refreshInterval = 3000
     research: adminService.getContentStats, // Reuse content stats for research
     services: adminService.getContentStats, // Reuse content stats for services
     training: adminService.getTrainingStats, // Use dedicated training stats
-    organization: adminService.getContentStats, // Reuse content stats for organization
-    notifications: adminService.getContentStats // Reuse content stats for notifications
+    organization: adminService.getContentStats // Reuse content stats for organization
   };
 
   const fetchStats = useCallback(async (showLoading = true) => {
@@ -46,7 +45,6 @@ export const useRealTimeStats = (statsType = 'dashboard', refreshInterval = 3000
         setLastUpdated(new Date());
       }
     } catch (err) {
-      console.error(`Failed to fetch ${statsType} stats:`, err);
       if (mountedRef.current) {
         setError(err.message || 'Failed to fetch statistics');
       }
@@ -164,7 +162,6 @@ export const useMultipleStats = (statsTypes = ['dashboard'], refreshInterval = 3
       setAllStats(statsObject);
       setLastUpdated(new Date());
     } catch (err) {
-      console.error('Failed to fetch multiple stats:', err);
       setError(err.message || 'Failed to fetch statistics');
     } finally {
       setLoading(false);

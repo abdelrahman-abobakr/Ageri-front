@@ -37,7 +37,6 @@ const CoursesPage = () => {
     setLoading(true);
     setError("");
     try {
-      console.log('🔄 Fetching courses with filters:', { page: pageNum, ...currentFilters });
 
       const params = {
         page: pageNum,
@@ -49,9 +48,7 @@ const CoursesPage = () => {
       setCourses(response.results || []);
       setCount(response.count || 0);
 
-      console.log('✅ Courses loaded:', response.results?.length || 0);
     } catch (err) {
-      console.error('❌ Failed to load courses:', err);
       setError(
         err.response?.data?.message ||
         err.response?.data?.detail ||

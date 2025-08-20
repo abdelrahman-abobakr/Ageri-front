@@ -86,7 +86,6 @@ const GuestLayout = () => {
       
       setDepartments(formattedDepartments || []);
     } catch (error) {
-      console.error('Failed to load departments:', error);
       message.error('Failed to load departments');
     } finally {
       setDepartmentsLoading(false);
@@ -112,7 +111,6 @@ const loadLabsForDepartment = async (departmentId) => {
     
     return labs;
   } catch (error) {
-    console.error('Unexpected error:', error);
     message.error('An unexpected error occurred');
     return [];
   } finally {

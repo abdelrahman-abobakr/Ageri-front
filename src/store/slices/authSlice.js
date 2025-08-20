@@ -85,14 +85,12 @@ const getUserFromStorage = () => {
 
     // If it's already an object, return it
     if (typeof userStr === 'object') {
-      console.warn('User in localStorage is already an object, this should not happen');
       return userStr;
     }
 
     // Try to parse as JSON
     return JSON.parse(userStr);
   } catch (error) {
-    console.error('Failed to parse user from localStorage:', error);
     // Clear invalid data
     localStorage.removeItem('user');
     return null;

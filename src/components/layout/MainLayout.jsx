@@ -24,7 +24,6 @@ import { toggleSidebar } from '../../store/slices/uiSlice';
 import { MENU_ITEMS, USER_ROLES } from '../../constants';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 
-import { notificationService } from '../../services';
 
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
@@ -94,8 +93,6 @@ const MainLayout = () => {
       'training': t('navigation.training'),
       'services': t('navigation.services'),
       'content': t('navigation.content'),
-      'notifications': t('navigation.notifications'),
-      'settings': t('navigation.settings'),
       'profile': t('navigation.profile'),
       'home': t('navigation.home'),
       'posts': t('navigation.posts'),
@@ -142,12 +139,7 @@ const MainLayout = () => {
       label: t('common.profile'),
       onClick: () => navigate('/app/profile'),
     },
-    {
-      key: 'settings',
-      icon: <SettingOutlined />,
-      label: t('common.settings'),
-      onClick: () => navigate('/app/settings'),
-    },
+
     {
       type: 'divider',
     },
@@ -181,69 +173,6 @@ const MainLayout = () => {
     return breadcrumbItems;
   };
 
-  // Notification dropdown content
-  // const notificationDropdown = (
-  //   <div style={{ width: 300, maxHeight: 400, overflow: 'auto' }}>
-  //     <div style={{ padding: '12px 16px', borderBottom: '1px solid #f0f0f0' }}>
-  //       <Text strong>Notifications</Text>
-  //       {notifications.filter(n => !n.read).length > 0 && (
-  //         <Badge
-  //           count={notifications.filter(n => !n.read).length}
-  //           style={{ marginLeft: 8 }}
-  //         />
-  //       )}
-  //     </div>
-
-  //     {notificationLoading ? (
-  //       <div style={{ padding: 16, textAlign: 'center' }}>
-  //         <Text type="secondary">Loading...</Text>
-  //       </div>
-  //     ) : notifications.length === 0 ? (
-  //       <div style={{ padding: 16, textAlign: 'center' }}>
-  //         <Text type="secondary">No notifications</Text>
-  //       </div>
-  //     ) : (
-  //       <List
-  //         size="small"
-  //         dataSource={notifications}
-  //         renderItem={(notification) => (
-  //           <List.Item
-  //             style={{
-  //               padding: '8px 16px',
-  //               cursor: 'pointer',
-  //               backgroundColor: notification.read ? 'transparent' : '#f6ffed',
-  //               borderBottom: '1px solid #f0f0f0',
-  //             }}
-  //             onClick={() => handleNotificationClick(notification)}
-  //           >
-  //             <List.Item.Meta
-  //               title={
-  //                 <Text strong={!notification.read} style={{ fontSize: '13px' }}>
-  //                   {notification.title || 'Notification'}
-  //                 </Text>
-  //               }
-  //               description={
-  //                 <Text type="secondary" style={{ fontSize: '12px' }}>
-  //                   {notification.message || 'No message'}
-  //                 </Text>
-  //               }
-  //             />
-  //           </List.Item>
-  //         )}
-  //       />
-  //     )}
-
-  //     <div style={{ padding: '8px 16px', borderTop: '1px solid #f0f0f0', textAlign: 'center' }}>
-  //       <Button
-  //         type="link"
-  //         size="small"
-  //         onClick={() => navigate('/app/notifications')}
-  //       >
-  //         View All Notifications
-  //       </Button>
-  //     </div>
-  //   </div>
-  // );
 
   return (
     <Layout style={{ minHeight: '100vh' }}>
@@ -339,21 +268,7 @@ const MainLayout = () => {
             {/* Language Switcher */}
             <LanguageSwitcher size="small" />
 
-            {/* Notification Bell (commented out for now) */}
-            {/* <Dropdown
-              popupRender={() => notificationDropdown}
-              placement="bottomRight"
-              arrow
-              trigger={['click']}
-            >
-              <Badge count={notifications.filter(n => !n.read).length} size="small">
-                <Button
-                  type="text"
-                  icon={<BellOutlined />}
-                  style={{ cursor: 'pointer' }}
-                />
-              </Badge>
-            </Dropdown> */}
+            
 
             {/* User Profile Dropdown */}
             <Dropdown

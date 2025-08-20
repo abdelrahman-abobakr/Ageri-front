@@ -113,7 +113,6 @@ const CourseForm = ({ courseId = null, onSuccess, onCancel }) => {
       const course = await CourseService.getCourse(courseId);
       setFormData(course);
     } catch (error) {
-      console.error('Failed to load course:', error);
       message.error('فشل في تحميل بيانات الدورة');
     } finally {
       setLoading(false);

@@ -16,21 +16,18 @@ const AuthDebug = () => {
     setTestResult(null);
 
     try {
-      console.log('Testing authentication...');
       const currentUser = await authService.getCurrentUser();
       setTestResult({
         success: true,
         message: 'Authentication test passed',
         data: currentUser
       });
-      console.log('✅ Authentication test success:', currentUser);
     } catch (error) {
       setTestResult({
         success: false,
         message: `Authentication test failed: ${error.message}`,
         error: error.response?.data || error.message
       });
-      console.error('❌ Authentication test failed:', error);
     } finally {
       setLoading(false);
     }

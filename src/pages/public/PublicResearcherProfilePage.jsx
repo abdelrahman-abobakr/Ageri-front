@@ -56,7 +56,6 @@ const PublicResearcherProfilePage = () => {
         setLoading(false);
       })
       .catch((error) => {
-        console.error('Failed to load researcher profile:', error);
         setProfile(null);
         setLoading(false);
       });
