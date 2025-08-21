@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Button, theme, Breadcrumb, Badge, List, Typography } from 'antd';
+import AppLogo from '../../assets/ageri.jpg'; // Assuming your logo is at this path
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -215,7 +216,16 @@ const MainLayout = () => {
           fontWeight: 'bold',
           color: '#1890ff',
         }}>
-          {sidebarCollapsed ? 'أ' : t('homepage.heroTitle').split(' ')[0]}
+          <img
+            src={AppLogo}
+            alt="App Logo"
+            style={{
+              height: '32px',
+              marginRight: sidebarCollapsed ? 0 : '12px',
+              transition: 'margin-right 0.2s',
+            }}
+          />
+          {!sidebarCollapsed && t('homepage.heroTitle').split(' ')[0]}
         </div>
         <Menu
           mode="inline"

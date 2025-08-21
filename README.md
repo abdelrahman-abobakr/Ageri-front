@@ -112,7 +112,6 @@ The application uses JWT-based authentication with:
 - Research management module
 - Organization management
 - Training system
-- Services management
 - Content management
 
 ## 🤝 Backend Integration

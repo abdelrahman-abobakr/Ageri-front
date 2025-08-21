@@ -38,14 +38,20 @@ const ProtectedRoute = ({
 
   // If user is authenticated, check role and permissions
   if (isAuthenticated && user) {
-    // Check if user account is approved (except for guest)
-    if (user.role !== USER_ROLES.GUEST && !user.is_approved) {
+    // Check if user account is approved.
+    // Admins are exempt from this check so they can't be locked out.
+    if (user.role !== USER_ROLES.ADMIN && user.is_approved === false) {
       return <Navigate to="/pending-approval" replace />;
     }
 
     // Check required role
-    if (requiredRole && user.role !== requiredRole) {
-      return <Navigate to="/unauthorized" replace />;
+    if (requiredRole) {
+      const hasRequiredRole = Array.isArray(requiredRole)
+        ? requiredRole.includes(user.role)
+        : user.role === requiredRole;
+      if (!hasRequiredRole) {
+        return <Navigate to="/unauthorized" replace />;
+      }
     }
 
     // Check required permission

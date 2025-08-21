@@ -111,16 +111,13 @@ const DashboardPage = () => {
       case USER_ROLES.ADMIN:
         return [
           ...baseActions,
-          { label: t('dashboard.manageUsers'), icon: <UserOutlined />, path: '/users', type: 'primary' },
-          { label: t('dashboard.reviewPublications'), icon: <BookOutlined />, path: '/research', type: 'default' },
-          { label: t('dashboard.systemSettings'), icon: <ToolOutlined />, path: '/settings', type: 'default' },
+          { label: t('dashboard.manageUsers'), icon: <UserOutlined />, path: '/app/users', type: 'primary' },
+          { label: t('dashboard.reviewPublications'), icon: <BookOutlined />, path: '/app/research', type: 'default' },
         ];
       case USER_ROLES.MODERATOR:
         return [
           ...baseActions,
-          { label: t('dashboard.reviewPublications'), icon: <BookOutlined />, path: '/research', type: 'primary' },
-          { label: t('dashboard.manageContent'), icon: <EyeOutlined />, path: '/content', type: 'default' },
-          { label: t('dashboard.serviceRequests'), icon: <ToolOutlined />, path: '/services', type: 'default' },
+          { label: t('dashboard.manageContent'), icon: <EyeOutlined />, path: '/content', type: 'default' }
         ];
       default: // RESEARCHER fallback
         return [
@@ -165,14 +162,12 @@ const DashboardPage = () => {
       case USER_ROLES.MODERATOR:
         return [
           { title: 'Publications to Review', value: dashboardStats?.content?.pendingPublications || 0, icon: <BookOutlined />, color: '#1890ff' },
-          { title: 'Service Requests', value: stats.pendingRequests, icon: <ToolOutlined />, color: '#faad14' },
           { title: 'Active Courses', value: stats.activeCourses, icon: <ReadOutlined />, color: '#722ed1' },
         ];
       default: // RESEARCHER
         return [
           { title: 'My Publications', value: researcherStats.publications, icon: <BookOutlined />, color: '#1890ff' },
-          { title: 'Enrolled Courses', value: researcherStats.enrolledCourses, icon: <ReadOutlined />, color: '#52c41a' },
-          { title: 'Service Requests', value: researcherStats.serviceRequests, icon: <ToolOutlined />, color: '#faad14' },
+          { title: 'Enrolled Courses', value: researcherStats.enrolledCourses, icon: <ReadOutlined />, color: '#52c41a' }
         ];
     }
   };

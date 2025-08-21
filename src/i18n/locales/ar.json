@@ -87,6 +87,7 @@
     "profile": "الملف الشخصي",
     "posts": "المنشورات",
     "courses": "الدورات",
+    "totalServices": "إجمالي الخدمات",
     "departments": "الأقسام"
   },
   "auth": {
@@ -119,8 +120,6 @@
     "systemSettings": "إعدادات النظام",
     "reviewPublications": "مراجعة المنشورات",
     "manageUsers": "إدارة المستخدمين",
-    "manageContent": "إدارة المحتوى",
-    "serviceRequests": "طلبات الخدمة",
     "submitPublication": "تقديم منشور",
     "myPublications": "منشوراتي",
     "browseCourses": "تصفح الدورات",
@@ -128,7 +127,8 @@
     "laboratories": "المختبرات",
     "departments": "الأقسام",
     "publications": "المنشورات",
-    "totalUsers": "إجمالي المستخدمين"
+    "totalUsers": "إجمالي المستخدمين",
+    "manageContent": "إدارة المحتوى"
   },
   "homepage": {
     "orgName": "معهد بحوث الهندسة الوراثية الزراعية",
@@ -137,9 +137,7 @@
     "latestNews": "آخر الأخبار والمقالات",
     "latestNewsDesc": "اطلع على أحدث المقالات والأخبار في مجال البحث العلمي والتطوير التكنولوجي",
     "myStatistics": "إحصائياتي",
-    "myPublications": "منشوراتي",
     "enrolledCourses": "الدورات المسجلة",
-    "serviceRequests": "طلبات الخدمة",
     "recentActivity": "النشاط الأخير",
     "totalUsers": "إجمالي المستخدمين",
     "publications": "المنشورات",
@@ -147,7 +145,6 @@
     "activeCourses": "الدورات النشطة",
     "upcomingCourses": "الدورات التدريبية القادمة",
     "upcomingCoursesDesc": "طور مهاراتك من خلال برامج التطوير المهني لدينا",
-    "registerAsResearcher": "التسجيل كباحث",
     "exploreTraining": "استكشف التدريب",
     "requestServices": "طلب الخدمات",
     "goToDashboard": "الذهاب إلى لوحة التحكم",
@@ -162,6 +159,8 @@
     "journeyToExcellence": "رحلة التميز",
     "scientificResearch": "البحوث العلمية",
     "courses": "الدورات التدريبية",
+    "registerAsResearcher": "التسجيل كباحث",
+    "myPublications": "منشوراتي",
     "services": "الخدمات",
     "posts":"المنشورات",
     "joinUs":"انضم إلينا",
@@ -169,6 +168,7 @@
     "quickLinks": "روابط سريعة",
     "followUs": "تابعنا على",
     "rightsReserved": "جميع الحقوق محفوظة.",
+    "new":"جديد",
     "stats": {
       "researchers": "الباحثون",
       "projects": "المشاريع البحثية",

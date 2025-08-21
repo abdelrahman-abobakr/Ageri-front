@@ -118,7 +118,7 @@ export const contentService = {
       });
 
       // If no ID in response, try to get it from Location header or fetch the latest post
-      if (!response.data.id) { 
+      if (!response.data.id) {
         // Try to extract ID from Location header
         const locationHeader = response.headers.location;
         if (locationHeader) {
@@ -137,18 +137,18 @@ export const contentService = {
               page_size: 5
             }
           });
-          
+
           if (searchResponse.data.results && searchResponse.data.results.length > 0) {
             // Find the exact match by title
-            const exactMatch = searchResponse.data.results.find(post => 
-              post.title === data.title && 
+            const exactMatch = searchResponse.data.results.find(post =>
+              post.title === data.title &&
               post.content === data.content
             );
-            
+
             if (exactMatch) {
               return { ...response.data, id: exactMatch.id };
             }
-            
+
             // If no exact match, take the first result (most recent)
             const latestPost = searchResponse.data.results[0];
             return { ...response.data, id: latestPost.id };
@@ -157,7 +157,7 @@ export const contentService = {
           throw searchError;
         }
       }
-      
+
       return response.data;
     } catch (error) {
       throw error;
@@ -395,7 +395,7 @@ export const contentService = {
       const response = await apiClient.get(API_ENDPOINTS.CONTENT.POST_DETAIL(id));
       return response.data;
     } catch (error) {
-      
+
       // If 403 or 404, try alternative approaches
       if (error.response?.status === 403 || error.response?.status === 404) {
         try {

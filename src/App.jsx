@@ -21,6 +21,7 @@ import LoginPage from './pages/auth/LoginPage';
 import RegisterPage from './pages/auth/RegisterPage';
 import PendingApprovalPage from './pages/auth/PendingApprovalPage';
 import UnauthorizedPage from './pages/auth/UnauthorizedPage';
+import NotFoundPage from './pages/auth/NotFoundPage';
 
 // Public Pages
 import HomePage from './pages/public/HomePage';
@@ -43,18 +44,14 @@ import CreateProfilePage from './pages/profile/CreateProfilePage';
 // Admin Pages
 import UserManagementPage from './pages/admin/UserManagementPage';
 import ContentManagementPage from './pages/admin/ContentManagementPage';
-import ResearchManagementPage from './pages/admin/ResearchManagementPage';
 import ServicesManagementPage from './pages/admin/ServicesManagementPage';
+import ResearchManagementPage from './pages/admin/ResearchManagementPage';
 import TrainingManagementPage from './pages/admin/TrainingManagementPage';
 import OrganizationManagementPage from './pages/admin/OrganizationManagementPage';
 import AdminDashboard from './pages/admin/publications/AdminDashboard.jsx';
 import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
 import PublicationsPage from './pages/research/PublicationsPage.jsx';
 import PublicationForm from './pages/research/PublicationForm.jsx';
-
-// Service Request Components
-import ServiceRequestForm from './pages/services/ServiceRequestForm.jsx';
-import MyRequestsPage from './pages/services/MyRequestsPage.jsx';
 
 // Ant Design theme configuration
 const theme = {
@@ -141,10 +138,6 @@ const AppContent = () => {
               <Route path="research/publications/:id" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationDetailPage /></ProtectedRoute>} />
               <Route path="research/publications/:id/edit" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm isEdit={true} /></ProtectedRoute>} />
 
-              {/* Service Request routes */}
-              <Route path="services/request/:serviceId" element={<ServiceRequestForm />} />
-              <Route path="services/my-requests" element={<MyRequestsPage />} />
-
               {/* Home page for authenticated users */}
               <Route path="home" element={<HomePage />} />
 
@@ -158,6 +151,7 @@ const AppContent = () => {
                 }
               />
 
+              {/* Research route - accessible by ADMIN and MODERATOR */}
               <Route
                 path="research"
                 element={
@@ -177,7 +171,7 @@ const AppContent = () => {
               <Route
                 path="training"
                 element={
-                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                  <ProtectedRoute requiredRole={[USER_ROLES.ADMIN, USER_ROLES.MODERATOR]}>
                     <TrainingManagementPage />
                   </ProtectedRoute>
                 }
@@ -185,7 +179,7 @@ const AppContent = () => {
               <Route
                 path="services"
                 element={
-                  <ProtectedRoute requiredRole={USER_ROLES.ADMIN}>
+                  <ProtectedRoute requiredRole={[USER_ROLES.ADMIN, USER_ROLES.MODERATOR]}>
                     <ServicesManagementPage />
                   </ProtectedRoute>
                 }
@@ -210,14 +204,7 @@ const AppContent = () => {
             </Route>
 
             {/* Catch all route - redirect unknown paths */}
-            <Route
-              path="*"
-              element={
-                isAuthenticated ?
-                  <Navigate to="/app/dashboard" replace /> :
-                  <Navigate to="/" replace />
-              }
-            />
+            <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Router>
       </AntdApp>

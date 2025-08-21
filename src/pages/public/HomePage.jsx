@@ -908,7 +908,7 @@ const HomePage = () => {
                             textShadow: '0 1px 2px rgba(0,0,0,0.3)',
                             boxShadow: '0 2px 8px rgba(0,0,0,0.3)'
                           }}>
-                            جديد
+                            {t('homepage.new')}
                           </div>
                           <Text style={{
                             fontSize: '11px',
@@ -973,7 +973,7 @@ const HomePage = () => {
                     e.target.style.boxShadow = '0 8px 32px rgba(102, 126, 234, 0.3)';
                   }}
                 >
-                  عرض جميع المقالات
+                  {t('common.viewAll')}
                 </Button>
               </div>
             )}

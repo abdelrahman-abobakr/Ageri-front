@@ -151,11 +151,7 @@ const LoginPage = () => {
           </Text>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 8 }}>
-          <Link to="/forgot-password" style={{ color: '#1890ff' }}>
-            {t('auth.forgotPassword')}
-          </Link>
-        </div>
+        
       </Card>
     </div>
   );

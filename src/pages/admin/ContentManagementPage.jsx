@@ -206,9 +206,9 @@ const ContentManagementPage = () => {
 
       const allPosts = response.results || [];
 
-      // Filter based on user role
+      // Filter based on user role - allow moderators to see all posts for moderation
       let filtered = [];
-      if (userRole === "admin") {
+      if (userRole === "admin" || userRole === "moderator") {
         filtered = allPosts;
       } else {
         filtered = allPosts.filter(post => post.author?.id === userId);
@@ -835,7 +835,7 @@ const ContentManagementPage = () => {
         handleDeleteContent(contentItem);
         break;
       default:
-        // console.log('Unknown action!');
+      // console.log('Unknown action!');
     }
   };
 
@@ -1319,7 +1319,7 @@ const ContentManagementPage = () => {
             }
           </Form.Item>
 
-          
+
 
           {/* Admin-only fields */}
           {JSON.parse(localStorage.getItem("user") || "{}").role === 'admin' && (

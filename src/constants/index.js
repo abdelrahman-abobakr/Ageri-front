@@ -91,7 +91,13 @@ export const PERMISSIONS = {
   },
   VIEW_SERVICE_CATALOG: {
     [USER_ROLES.ADMIN]: true,
-    [USER_ROLES.MODERATOR]: true,
+    [USER_ROLES.MODERATOR]: true, // Allow moderators
+    [USER_ROLES.RESEARCHER]: true,
+    [USER_ROLES.GUEST]: true,
+  },
+  VIEW_SERVICE_CATALOG: {
+    [USER_ROLES.ADMIN]: true,
+    [USER_ROLES.MODERATOR]: true, // Allow moderators
     [USER_ROLES.RESEARCHER]: true,
     [USER_ROLES.GUEST]: true,
   },
@@ -123,12 +129,6 @@ export const PERMISSIONS = {
     [USER_ROLES.RESEARCHER]: true,
     [USER_ROLES.GUEST]: true, // May need to register first
   },
-  REQUEST_SERVICES: {
-    [USER_ROLES.ADMIN]: true,
-    [USER_ROLES.MODERATOR]: true,
-    [USER_ROLES.RESEARCHER]: true,
-    [USER_ROLES.GUEST]: true, // May need to register first
-  },
 
   // Management
   USER_APPROVAL: {
@@ -155,6 +155,11 @@ export const PERMISSIONS = {
 
 // Helper function to check permissions
 export const hasPermission = (userRole, permission) => {
+  // If no permission is required, allow access
+  if (!permission) {
+    return true;
+  }
+
   return PERMISSIONS[permission]?.[userRole] || false;
 };
 
@@ -230,28 +235,13 @@ export const API_ENDPOINTS = {
     PUBLIC_SERVICE_DETAIL: (id) => `/api/training/public-services/${id}/`,
   },
 
-  // Services Management
+  // Services Management (for Test Services)
   SERVICES: {
     TEST_SERVICES: '/api/services/test-services/',
     TEST_SERVICE_DETAIL: (id) => `/api/services/test-services/${id}/`,
     TEST_SERVICES_STATS: '/api/services/test-services/statistics/',
     ASSIGN_TECHNICIAN_TO_SERVICE: (id) => `/api/services/test-services/${id}/assign_technician/`,
     REMOVE_TECHNICIAN_FROM_SERVICE: (id) => `/api/services/test-services/${id}/remove_technician/`,
-    CLIENTS: '/api/services/clients/',
-    CLIENT_DETAIL: (id) => `/api/services/clients/${id}/`,
-    CLIENT_STATS: '/api/services/clients/statistics/',
-    REQUESTS: '/api/services/requests/',
-    REQUEST_DETAIL: (id) => `/api/services/requests/${id}/`,
-    ASSIGN_TECHNICIAN_TO_REQUEST: (id) => `/api/services/requests/${id}/assign_technician/`,
-    START_REQUEST: (id) => `/api/services/requests/${id}/start_request/`,
-    COMPLETE_REQUEST: (id) => `/api/services/requests/${id}/complete_request/`,
-    APPROVE_REQUEST: (id) => `/api/services/requests/${id}/approve_request/`,
-    REJECT_REQUEST: (id) => `/api/services/requests/${id}/reject_request/`,
-    REQUEST_STATS: '/api/services/requests/statistics/',
-    TECHNICIAN_ASSIGNMENTS: '/api/services/technician-assignments/',
-    TECHNICIAN_ASSIGNMENT_DETAIL: (id) => `/api/services/technician-assignments/${id}/`,
-    TECHNICIAN_WORKLOAD: '/api/services/technician-assignments/workload_report/',
-    MY_REQUESTS: '/api/services/my-requests/',
   },
 
   // Content Management
@@ -324,7 +314,6 @@ export const MENU_ITEMS = {
   ],
   [USER_ROLES.MODERATOR]: [
     { key: 'dashboard', label: 'Dashboard', icon: 'DashboardOutlined', path: '/dashboard' },
-    { key: 'research', label: 'Research', icon: 'BookOutlined', path: '/research' },
     { key: 'training', label: 'Training', icon: 'ReadOutlined', path: '/training' },
     { key: 'services', label: 'Services', icon: 'ToolOutlined', path: '/services' },
     { key: 'content', label: 'Content', icon: 'FileTextOutlined', path: '/content' }

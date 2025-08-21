@@ -31,6 +31,7 @@ import {
 import { MENU_ITEMS, USER_ROLES } from '../../constants';
 import { organizationService } from '../../services/organizationService';
 import { logoutUser } from '../../store/slices/authSlice';
+import AppLogo from '../../assets/ageri.jpg';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 
 const { Header, Content } = Layout;
@@ -58,8 +59,9 @@ const GuestLayout = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [departments, setDepartments] = useState([]);
   const [departmentsLoading, setDepartmentsLoading] = useState(false);
-  const [labsLoading, setLabsLoading] = useState(false);
-  const [expandedDepartment, setExpandedDepartment] = useState(null);
+  const [openDepartmentKeys, setOpenDepartmentKeys] = useState([]);
+  const [isDepartmentsDropdownOpen, setIsDepartmentsDropdownOpen] = useState(false);
+  const [loadingDepartmentIds, setLoadingDepartmentIds] = useState([]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -92,8 +94,13 @@ const GuestLayout = () => {
     }
   };
 const loadLabsForDepartment = async (departmentId) => {
+  const department = departments.find(d => d.id === departmentId);
+  if (!department || department.loaded || loadingDepartmentIds.includes(departmentId)) {
+    return [];
+  }
+
   try {
-    setLabsLoading(true);
+    setLoadingDepartmentIds(prev => [...prev, departmentId]);
     const { success, data: labs, error } = await organizationService.getDepartmentLabs(departmentId);
     
     if (!success) {
@@ -104,7 +111,7 @@ const loadLabsForDepartment = async (departmentId) => {
     setDepartments(prev => prev.map(d => 
       d.id === departmentId ? { 
         ...d, 
-        labs: Array.isArray(labs) ? labs : [], // تأكد أن labs هي مصفوفة
+        labs: Array.isArray(labs) ? labs : [],
         loaded: true 
       } : d
     ));
@@ -114,7 +121,7 @@ const loadLabsForDepartment = async (departmentId) => {
     message.error('An unexpected error occurred');
     return [];
   } finally {
-    setLabsLoading(false);
+    setLoadingDepartmentIds(prev => prev.filter(id => id !== departmentId));
   }
 };
   const handleMenuClick = ({ key }) => {
@@ -122,8 +129,29 @@ const loadLabsForDepartment = async (departmentId) => {
   };
 
   const handleLabClick = (labId) => {
+    // Force close the dropdown immediately
+    setIsDepartmentsDropdownOpen(false);
+    setOpenDepartmentKeys([]);
+
+    // Force blur any focused elements to help close the dropdown
+    if (document.activeElement) {
+      document.activeElement.blur();
+    }
+
+    // Navigate to the lab
     navigate(`/labs/${labId}`);
   };
+
+  useEffect(() => {
+    // Close dropdown when route changes
+    const handleRouteChange = () => {
+      setIsDepartmentsDropdownOpen(false);
+      setOpenDepartmentKeys([]);
+    };
+
+    // Listen for navigation changes
+    handleRouteChange();
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -135,54 +163,63 @@ const loadLabsForDepartment = async (departmentId) => {
     }
   };
 
-  const getDepartmentsDropdown = () => {
-  if (departments.length === 0) {
-    return {
-      items: [
-        {
-          key: 'no-departments',
-          label: 'No departments available',
-          disabled: true,
-        }
-      ]
-    };
-  }
+  const handleDepartmentOpenChange = async (keys) => {
+    const latestOpenKey = keys.find(key => !openDepartmentKeys.includes(key));
+    if (latestOpenKey) {
+      const departmentId = parseInt(latestOpenKey, 10);
+      if (!isNaN(departmentId)) {
+        await loadLabsForDepartment(departmentId);
+      }
+    }
+    setOpenDepartmentKeys(keys);
+  };
 
-  const items = departments.map(department => ({
-    key: department.id,
-    label: department.name,
-    icon: <BankOutlined />,
-    children: department.loaded
-      ? department.labs.length > 0
-        ? department.labs.map(lab => ({
+  const getDepartmentsDropdown = () => {
+    if (departments.length === 0) {
+      return {
+        items: [
+          {
+            key: 'no-departments',
+            label: 'No departments available',
+            disabled: true,
+          }
+        ]
+      };
+    }
+
+    const items = departments.map(department => ({
+      key: String(department.id),
+      label: department.name,
+      icon: <BankOutlined />,
+      children: department.loaded
+        ? department.labs.length > 0
+          ? department.labs.map(lab => ({
             key: `lab-${lab.id}`,
-            label: `${lab.name} (${lab.current_researchers_count}/${lab.capacity})`,
+            label: lab.name,
             icon: <ExperimentOutlined />,
             onClick: () => handleLabClick(lab.id),
           }))
-        : [{
+          : [{
             key: `no-labs-${department.id}`,
             label: 'No labs available',
             disabled: true,
           }]
-      : [{
-          key: `load-labs-${department.id}`,
-          label: labsLoading ? (
+        : [{
+          key: `loading-labs-${department.id}`,
+          label: loadingDepartmentIds.includes(department.id) ? (
             <span><Spin size="small" /> Loading labs...</span>
-          ) : 'Click to load labs',
+          ) : 'Loading...',
           icon: <ExperimentOutlined />,
-          onClick: async (e) => {
-            e.domEvent.stopPropagation();
-            const labs = await loadLabsForDepartment(department.id);
-            if (labs.length > 0) {
-              message.success(`Loaded ${labs.length} lab(s)`);
-            }
-          }
+          disabled: true,
         }]
-  }));
+    }));
 
-  return { items };
-};
+    return {
+      items,
+      onOpenChange: handleDepartmentOpenChange,
+      openKeys: openDepartmentKeys
+    };
+  };
 
   const getMenuItems = () => {
     const items = MENU_ITEMS[USER_ROLES.GUEST] || [];
@@ -254,20 +291,11 @@ const loadLabsForDepartment = async (departmentId) => {
             }} 
             onClick={() => navigate('/')}
           >
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: 'white',
-              fontSize: '20px',
-              fontWeight: 'bold'
-            }}>
-              A
-            </div>
+            <img 
+              src={AppLogo} 
+              alt={t('homepage.heroTitle')} 
+              style={{ height: '40px', borderRadius: '8px' }} 
+            />
             {!isMobile && (
               <div>
                 <h1 style={{
@@ -308,13 +336,18 @@ const loadLabsForDepartment = async (departmentId) => {
             </div>
 
             <Dropdown
+              key={location.pathname} // This forces the dropdown to remount on route change
               menu={getDepartmentsDropdown()}
               trigger={['click']}
               placement="bottomRight"
               disabled={departmentsLoading}
-              onOpenChange={(open) => {
-                if (!open) setExpandedDepartment(null);
+              open={isDepartmentsDropdownOpen}
+              onOpenChange={(flag) => {
+                setIsDepartmentsDropdownOpen(flag);
+                // Reset sub-menu when main dropdown is closed
+                if (!flag) setOpenDepartmentKeys([]);
               }}
+              destroyPopupOnHide={true} // This ensures the popup is destroyed when hidden
             >
               <Button
                 type="text"
