@@ -169,7 +169,6 @@ const UserManagementPage = () => {
       [USER_ROLES.ADMIN]: { color: 'purple', text: t('admin.userManagement.admin') },
       [USER_ROLES.MODERATOR]: { color: 'blue', text: t('admin.userManagement.moderator') },
       [USER_ROLES.RESEARCHER]: { color: 'green', text: t('admin.userManagement.researcher') },
-      [USER_ROLES.GUEST]: { color: 'default', text: t('admin.userManagement.guest') },
     };
 
     const config = roleConfig[role] || { color: 'default', text: role };
@@ -395,33 +394,7 @@ const UserManagementPage = () => {
               }
             />
           </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title={t('admin.userManagement.approvedUsers')}
-              value={approvedUsersCount.value}
-              prefix={<CheckOutlined />}
-              valueStyle={{
-                color: '#52c41a',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Card>
-        </Col>
-        <Col xs={24} sm={12} md={8}>
-          <Card loading={statsLoading}>
-            <Statistic
-              title={t('admin.userManagement.notApprovedUsers')}
-              value={notApprovedUsersCount.value}
-              prefix={<ExclamationCircleOutlined />}
-              valueStyle={{
-                color: '#faad14',
-                transition: 'all 0.3s ease'
-              }}
-            />
-          </Card>
-        </Col>
+        </Col>          
       </Row>
 
       {/* Filters and Search */}
@@ -449,7 +422,6 @@ const UserManagementPage = () => {
               <Option value={USER_ROLES.ADMIN}>{t('admin.userManagement.admin')}</Option>
               <Option value={USER_ROLES.MODERATOR}>{t('admin.userManagement.moderator')}</Option>
               <Option value={USER_ROLES.RESEARCHER}>{t('admin.userManagement.researcher')}</Option>
-              <Option value={USER_ROLES.GUEST}>{t('admin.userManagement.guest')}</Option>
             </Select>
           </Col>
           <Col xs={24} sm={6} md={4}>

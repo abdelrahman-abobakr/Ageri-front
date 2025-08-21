@@ -114,19 +114,19 @@ const PublicationFormPage = () => {
   // Form steps - Updated to remove authors step
   const steps = [
     {
-      title: t('basic_information') || 'المعلومات الأساسية',
+      title: t('basic information') || 'المعلومات الأساسية',
       icon: <InfoCircleOutlined />,
-      description: t('title_abstract_type') || 'العنوان والملخص والنوع'
+      description: t('title abstract type') || 'العنوان والملخص والنوع'
     },
     {
-      title: t('publication_details') || 'تفاصيل النشر',
+      title: t('publication details') || 'تفاصيل النشر',
       icon: <BookOutlined />,
-      description: t('journal_conference_publisher') || 'المجلة والمؤتمر والناشر'
+      description: t('journal conference publisher') || 'المجلة والمؤتمر والناشر'
     },
     {
-      title: t('identifiers_and_settings') || 'المعرفات والإعدادات',
+      title: t('identifiers and settings') || 'المعرفات والإعدادات',
       icon: <SettingOutlined />,
-      description: t('doi_isbn_settings') || 'DOI و ISBN والإعدادات'
+      description: t('doi isbn settings') || 'DOI و ISBN والإعدادات'
     }
   ];
 
@@ -139,7 +139,7 @@ const PublicationFormPage = () => {
           const data = await researchService.getPublicationById(id);
           // Check if user can edit this publication
           if (!canEditPublication(data)) {
-            messageApi.error(t('you_dont_have_permission_to_edit') || 'ليس لديك صلاحية لتعديل هذا المنشور');
+            messageApi.error(t('you do not have permission to edit') || 'ليس لديك صلاحية لتعديل هذا المنشور');
             navigate('/app/research/publications');
             return;
           }
@@ -183,7 +183,7 @@ const PublicationFormPage = () => {
           setFormData(formattedData);
 
         } catch (error) {
-          messageApi.error(t('failed_to_load_publication') || 'فشل في تحميل المنشور');
+          messageApi.error(t('failed to load publication') || 'فشل في تحميل المنشور');
           navigate('/app/research/publications');
         } finally {
           setInitialLoading(false);
@@ -285,7 +285,7 @@ const PublicationFormPage = () => {
         : await researchService.createPublication(payload);
 
 
-      messageApi.success(isEditMode ? (t('publication_updated_successfully') || 'تم تحديث المنشور بنجاح') : (t('publication_created_successfully') || 'تم إنشاء المنشور بنجاح'));
+      messageApi.success(isEditMode ? (t('publication updated successfully') || 'تم تحديث المنشور بنجاح') : (t('publication created successfully') || 'تم إنشاء المنشور بنجاح'));
       navigate('/app/research/publications');
 
     } catch (error) {
@@ -305,7 +305,7 @@ const PublicationFormPage = () => {
         });
         // Show all errors in a single alert (as a list)
         Modal.error({
-          title: t('validation_failed') || 'فشل التحقق',
+          title: t('validation failed') || 'فشل التحقق',
           content: (
             <ul style={{ paddingRight: '20px' }}>
               {errorMessages.map((msg, idx) => (
@@ -331,7 +331,7 @@ const PublicationFormPage = () => {
       setFormData({ ...formData, ...values });
       setCurrentStep(currentStep + 1);
     } catch (error) {
-      messageApi.error(t('please_fill_required_fields') || 'يرجى ملء الحقول المطلوبة');
+      messageApi.error(t('please fill required fields') || 'يرجى ملء الحقول المطلوبة');
     }
   };
 
@@ -345,10 +345,10 @@ const PublicationFormPage = () => {
 
     if (hasChanges) {
       Modal.confirm({
-        title: t('confirm_cancel') || 'تأكيد الإلغاء',
-        content: t('unsaved_changes_will_be_lost') || 'ستفقد التغييرات غير المحفوظة. هل أنت متأكد؟',
-        okText: t('yes_cancel') || 'نعم، إلغاء',
-        cancelText: t('no_continue') || 'لا، متابعة',
+        title: t('confirm cancel') || 'تأكيد الإلغاء',
+        content: t('unsaved changes will be lost') || 'ستفقد التغييرات غير المحفوظة. هل أنت متأكد؟',
+        okText: t('yes cancel') || 'نعم، إلغاء',
+        cancelText: t('no continue') || 'لا، متابعة',
         onOk: () => navigate('/app/research/publications'),
       });
     } else {
@@ -362,24 +362,24 @@ const PublicationFormPage = () => {
   const getFieldRules = (field) => {
     const rules = {
       title: [
-        { required: true, message: t('please_enter_publication_title') || 'يرجى إدخال عنوان المنشور' },
-        { min: 10, message: t('title_must_be_at_least_10_characters') || 'العنوان يجب أن يكون على الأقل 10 أحرف' },
-        { max: 500, message: t('title_cannot_exceed_500_characters') || 'العنوان لا يمكن أن يتجاوز 500 حرف' }
+        { required: true, message: t('please enter publication title') || 'يرجى إدخال عنوان المنشور' },
+        { min: 10, message: t('title must be at least 10 characters') || 'العنوان يجب أن يكون على الأقل 10 أحرف' },
+        { max: 500, message: t('title cannot exceed 500 characters') || 'العنوان لا يمكن أن يتجاوز 500 حرف' }
       ],
       publication_type: [
-        { required: true, message: t('please_select_publication_type') || 'يرجى اختيار نوع المنشور' }
+        { required: true, message: t('please select publication type') || 'يرجى اختيار نوع المنشور' }
       ],
       doi: [
-        { pattern: /^10\./, message: t('doi_must_start_with_10') || 'DOI يجب أن يبدأ بـ 10.' }
+        { pattern: /^10\./, message: t('doi must start with 10') || 'DOI يجب أن يبدأ بـ 10.' }
       ],
       url: [
-        { type: 'url', message: t('please_enter_valid_url') || 'يرجى إدخال رابط صحيح' }
+        { type: 'url', message: t('please enter valid url') || 'يرجى إدخال رابط صحيح' }
       ],
       pdf_url: [
-        { type: 'url', message: t('please_enter_valid_url') || 'يرجى إدخال رابط صحيح' }
+        { type: 'url', message: t('please enter valid url') || 'يرجى إدخال رابط صحيح' }
       ],
       abstract: [
-        { max: 2000, message: t('abstract_cannot_exceed_2000_characters') || 'الملخص لا يمكن أن يتجاوز 2000 حرف' }
+        { max: 2000, message: t('abstract cannot exceed 2000 characters') || 'الملخص لا يمكن أن يتجاوز 2000 حرف' }
       ],
     };
     return rules[field] || [];
@@ -387,13 +387,13 @@ const PublicationFormPage = () => {
 
   // Basic Information Step
   const renderBasicInformation = () => (
-    <Card title={t('basic_information') || 'المعلومات الأساسية'} className="shadow-sm">
+    <Card title={t('basic information') || 'المعلومات الأساسية'} className="shadow-sm">
       {/* Alert for publication title removed as requested */}
       <Form.Item
         name="title"
         label={
           <span style={{ fontSize: '16px', fontWeight: 'bold' }}>
-            {t('publication_title') || 'عنوان المنشور'} <span style={{ color: 'red' }}>*</span>
+            {t('publication title') || 'عنوان المنشور'} <span style={{ color: 'red' }}>*</span>
           </span>
         }
         rules={getFieldRules('title')}
@@ -401,7 +401,7 @@ const PublicationFormPage = () => {
         required
       >
         <Input
-          placeholder={t('enter_descriptive_title') || 'أدخل عنواناً وصفياً'}
+          placeholder={t('enter descriptive title') || 'أدخل عنواناً وصفياً'}
           showCount
           maxLength={500}
           size="large"
@@ -417,7 +417,7 @@ const PublicationFormPage = () => {
       >
         <TextArea
           rows={6}
-          placeholder={t('enter_publication_abstract') || 'أدخل ملخص المنشور'}
+          placeholder={t('enter publication abstract') || 'أدخل ملخص المنشور'}
           maxLength={2000}
           showCount
         />
@@ -427,11 +427,11 @@ const PublicationFormPage = () => {
         <Col span={12}>
           <Form.Item
             name="publication_type"
-            label={t('publication_type') || 'نوع المنشور'}
+            label={t('publication type') || 'نوع المنشور'}
             rules={getFieldRules('publication_type')}
           >
             <Select
-              placeholder={t('select_publication_type') || 'اختر نوع المنشور'}
+              placeholder={t('select publication type') || 'اختر نوع المنشور'}
               size="large"
             >
               {publicationTypes.map((type) => (
@@ -448,11 +448,11 @@ const PublicationFormPage = () => {
         <Col span={12}>
           <Form.Item
             name="research_area"
-            label={t('research_area') || 'المجال البحثي'}
+            label={t('research area') || 'المجال البحثي'}
             extra={t('research_area_help') || 'المجال العلمي للبحث'}
           >
             <Input
-              placeholder={t('enter_research_field') || 'أدخل المجال البحثي'}
+              placeholder={t('enter research field') || 'أدخل المجال البحثي'}
               maxLength={200}
               size="large"
             />
@@ -463,10 +463,10 @@ const PublicationFormPage = () => {
       <Form.Item
         name="keywords"
         label={t('keywords') || 'الكلمات المفتاحية'}
-        extra={t('keywords_help') || 'الكلمات المفتاحية مفصولة بفواصل'}
+        extra={t('keywordshelp') || 'الكلمات المفتاحية مفصولة بفواصل'}
       >
         <Input
-          placeholder={t('enter_keywords_comma_separated') || 'أدخل الكلمات المفتاحية مفصولة بفواصل'}
+          placeholder={t('enter keywords comma separated') || 'أدخل الكلمات المفتاحية مفصولة بفواصل'}
           size="large"
         />
       </Form.Item>
@@ -474,15 +474,15 @@ const PublicationFormPage = () => {
   );
 
   const renderPublicationDetails = () => (
-    <Card title={t('publication_details') || 'تفاصيل النشر'} className="shadow-sm">
+    <Card title={t('publication details') || 'تفاصيل النشر'} className="shadow-sm">
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item
             name="journal_name"
-            label={t('journal_name') || 'اسم المجلة'}
+            label={t('journal name') || 'اسم المجلة'}
           >
             <Input
-              placeholder={t('enter_journal_name') || 'أدخل اسم المجلة'}
+              placeholder={t('enter journal name') || 'أدخل اسم المجلة'}
               maxLength={300}
               prefix={<BookOutlined />}
             />
@@ -491,10 +491,10 @@ const PublicationFormPage = () => {
         <Col span={12}>
           <Form.Item
             name="conference_name"
-            label={t('conference_name') || 'اسم المؤتمر'}
+            label={t('conference name') || 'اسم المؤتمر'}
           >
             <Input
-              placeholder={t('enter_conference_name') || 'أدخل اسم المؤتمر'}
+              placeholder={t('enter conference name') || 'أدخل اسم المؤتمر'}
               maxLength={300}
               prefix={<BookOutlined />}
             />
@@ -507,7 +507,7 @@ const PublicationFormPage = () => {
         label={t('publisher') || 'الناشر'}
       >
         <Input
-          placeholder={t('enter_publisher_name') || 'أدخل اسم الناشر'}
+          placeholder={t('enter publisher name') || 'أدخل اسم الناشر'}
           maxLength={200}
         />
       </Form.Item>
@@ -518,7 +518,7 @@ const PublicationFormPage = () => {
             name="volume"
             label={t('volume') || 'المجلد'}
           >
-            <Input placeholder={t('vol_number') || 'رقم المجلد'} maxLength={50} />
+            <Input placeholder={t('vol number') || 'رقم المجلد'} maxLength={50} />
           </Form.Item>
         </Col>
         <Col span={6}>
@@ -526,7 +526,7 @@ const PublicationFormPage = () => {
             name="issue"
             label={t('issue') || 'العدد'}
           >
-            <Input placeholder={t('issue_number') || 'رقم العدد'} maxLength={50} />
+            <Input placeholder={t('issue number') || 'رقم العدد'} maxLength={50} />
           </Form.Item>
         </Col>
         <Col span={6}>
@@ -540,25 +540,25 @@ const PublicationFormPage = () => {
         <Col span={6}>
           <Form.Item
             name="publication_date"
-            label={t('publication_date') || 'تاريخ النشر'}
+            label={t('publication date') || 'تاريخ النشر'}
           >
             <DatePicker
               style={{ width: '100%' }}
               format="YYYY-MM-DD"
-              placeholder={t('select_date') || 'اختر التاريخ'}
+              placeholder={t('select date') || 'اختر التاريخ'}
               disabledDate={(current) => current && current > moment().endOf('day')}
             />
           </Form.Item>
         </Col>
       </Row>
 
-      <Divider>{t('urls_and_links') || 'الروابط والمواقع'}</Divider>
+      <Divider>{t('urls and links') || 'الروابط والمواقع'}</Divider>
 
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item
             name="url"
-            label={t('publication_url') || 'رابط المنشور'}
+            label={t('publication url') || 'رابط المنشور'}
             rules={getFieldRules('url')}
           >
             <Input
@@ -570,7 +570,7 @@ const PublicationFormPage = () => {
         <Col span={12}>
           <Form.Item
             name="pdf_url"
-            label={t('pdf_url') || 'رابط PDF'}
+            label={t('pdf url') || 'رابط PDF'}
             rules={getFieldRules('pdf_url')}
           >
             <Input
@@ -611,7 +611,7 @@ const PublicationFormPage = () => {
               ]}
               extra={
                 <div>
-                  {t('doi_help') || 'المعرف الرقمي للكائن'}
+                  {t('doi help') || 'المعرف الرقمي للكائن'}
                   {doiCheckLoading && <span style={{ color: '#1890ff', marginLeft: '8px' }}>🔍 جاري التحقق...</span>}
                   {doiExists && <span style={{ color: '#ff4d4f', marginLeft: '8px' }}>⚠️ DOI مستخدم بالفعل</span>}
                 </div>
@@ -665,13 +665,13 @@ const PublicationFormPage = () => {
       </Card>
 
       {/* Publication Settings */}
-      <Card title={t('publication_settings') || 'إعدادات المنشور'} className="shadow-sm">
+      <Card title={t('publication settings') || 'إعدادات المنشور'} className="shadow-sm">
         <Row gutter={16}>
           <Col span={12}>
             <Form.Item
               name="citation_count"
-              label={t('initial_citation_count') || 'عدد الاستشهادات الأولي'}
-              extra={t('citation_count_help') || 'عدد الاستشهادات المعروف مسبقاً'}
+              label={t('initial citation count') || 'عدد الاستشهادات الأولي'}
+              extra={t('citation count help') || 'عدد الاستشهادات المعروف مسبقاً'}
             >
               <Input
                 type="number"
@@ -686,9 +686,9 @@ const PublicationFormPage = () => {
               <div className="flex items-center space-x-2">
                 <Switch />
                 <div>
-                  <div className="font-medium">{t('make_publicly_visible') || 'جعله مرئياً للجمهور'}</div>
+                  <div className="font-medium">{t('make publicly visible') || 'جعله مرئياً للجمهور'}</div>
                   <Text type="secondary" className="text-sm">
-                    {t('public_visibility_help') || 'سيكون المنشور مرئياً للجميع'}
+                    {t('public visibility help') || 'سيكون المنشور مرئياً للجميع'}
                   </Text>
                 </div>
               </div>
@@ -718,13 +718,13 @@ const PublicationFormPage = () => {
             onClick={() => navigate('/app/research/publications')}
             className="mb-4"
           >
-            {t('back_to_list') || 'العودة للقائمة'}
+            {t('back to list') || 'العودة للقائمة'}
           </Button>
           <Title level={2} className="mb-0">
-            {isEditMode ? (t('edit_publication') || 'تعديل المنشور') : (t('add_new_publication') || 'إضافة منشور جديد')}
+            {isEditMode ? (t('edit publication') || 'تعديل المنشور') : (t('add new publication') || 'إضافة منشور جديد')}
           </Title>
           <Text type="secondary">
-            {isEditMode ? (t('update_publication_information') || 'تحديث معلومات المنشور') : (t('create_new_research_publication') || 'إنشاء منشور بحثي جديد')}
+            {isEditMode ? (t('update publication information') || 'تحديث معلومات المنشور') : (t('create new research publication') || 'إنشاء منشور بحثي جديد')}
           </Text>
         </div>
       </div>
@@ -744,7 +744,7 @@ const PublicationFormPage = () => {
       </Card>
 
       {/* Form */}
-      <Spin spinning={loading} tip={t('saving_publication') || 'جاري حفظ المنشور'}>
+      <Spin spinning={loading} tip={t('saving publication') || 'جاري حفظ المنشور'}>
         <Form
           form={form}
           layout="vertical"
@@ -806,7 +806,7 @@ const PublicationFormPage = () => {
                         loading={loading}
                         size="large"
                       >
-                        {isEditMode ? (t('update_publication') || 'تحديث المنشور') : (t('create_publication') || 'إنشاء المنشور')}
+                        {isEditMode ? (t('update publication') || 'تحديث المنشور') : (t('create publication') || 'إنشاء المنشور')}
                       </Button>
                     </>
                   )}
@@ -819,7 +819,7 @@ const PublicationFormPage = () => {
                       loading={loading}
                       size="large"
                     >
-                      {isEditMode ? (t('update_publication') || 'تحديث المنشور') : (t('create_publication') || 'إنشاء المنشور')}
+                      {isEditMode ? (t('update publication') || 'تحديث المنشور') : (t('create publication') || 'إنشاء المنشور')}
                     </Button>
                   )}
                 </Space>

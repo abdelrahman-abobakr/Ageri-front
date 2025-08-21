@@ -82,7 +82,7 @@ const PublicationsListPage = () => {
       }));
 
     } catch (error) {
-      message.error(t('failed_to_load_publications'));
+      message.error(t('failed to load publications'));
     } finally {
       setLoading(false);
     }
@@ -116,7 +116,7 @@ const PublicationsListPage = () => {
       const fullDetails = await researchService.getPublicationById(publication.id);
       setSelectedPublication(fullDetails);
     } catch (error) {
-      message.error(t('failed_to_load_publication_details'));
+      message.error(t('failed to load publication details'));
       setSelectedPublication(publication); // Fallback to basic data
     } finally {
       setViewModalLoading(false);
@@ -192,14 +192,14 @@ const PublicationsListPage = () => {
 
     modal.confirm({
       title: t('confirm_delete'),
-      content: t('are_you_sure_delete_publication', { title: title?.substring(0, 50) }),
+      content: t('are you sure delete publication', { title: title?.substring(0, 50) }),
       okText: t('delete'),
       okType: 'danger',
       cancelText: t('cancel'),
       onOk: async () => {
         try {
           await researchService.deletePublication(id);
-          message.success(t('publication_deleted_successfully'));
+          message.success(t('publication deleted successfully'));
           loadPublications();
           loadStatistics();
           // Close modal if it's open
@@ -208,7 +208,7 @@ const PublicationsListPage = () => {
             setSelectedPublication(null);
           }
         } catch (error) {
-          message.error(t('failed_to_delete_publication'));
+          message.error(t('failed to delete publication'));
         }
       },
     });
@@ -230,20 +230,20 @@ const PublicationsListPage = () => {
         }));
       }
     } catch (error) {
-      message.error(t('failed_to_toggle_feature'));
+      message.error(t('failed to toggle feature'));
     }
   };
 
   // Handle bulk operations
   const handleBulkOperation = (operation) => {
     if (selectedRowKeys.length === 0) {
-      message.warning(t('please_select_publications'));
+      message.warning(t('please select publications'));
       return;
     }
 
     Modal.confirm({
-      title: t('confirm_bulk_operation'),
-      content: t('bulk_operation_confirmation', {
+      title: t('confirm bulk operation'),
+      content: t('bulk operation confirmation', {
         operation: t(operation),
         count: selectedRowKeys.length
       }),
@@ -253,12 +253,12 @@ const PublicationsListPage = () => {
             publication_ids: selectedRowKeys,
             action: operation,
           });
-          message.success(t('bulk_operation_completed'));
+          message.success(t('bulk operation completed'));
           setSelectedRowKeys([]);
           loadPublications();
           loadStatistics();
         } catch (error) {
-          message.error(t('bulk_operation_failed'));
+          message.error(t('bulk operation failed'));
         }
       },
     });
@@ -286,18 +286,18 @@ const PublicationsListPage = () => {
 
   // Format date helper
   const formatDate = (dateString) => {
-    if (!dateString) return t('not_specified') || 'غير محدد';
+    if (!dateString) return t('not specified') || 'غير محدد';
     return moment(dateString).format('MMMM DD, YYYY');
   };
 
   const handleApprovePublication = async (id) => {
     try {
       await researchService.approvePublication(id);
-      message.success(t('publication_approved_successfully'));
+      message.success(t('publication approved successfully'));
       loadPublications();
       loadStatistics();
     } catch (error) {
-      message.error(t('failed_to_approve_publication'));
+      message.error(t('failed to approve publication'));
     }
   };
 
@@ -492,7 +492,7 @@ const PublicationsListPage = () => {
           <Col span={6}>
             <Card size="small" style={{ borderRadius: 20, boxShadow: '0 2px 12px rgba(79,140,255,0.08)', border: 'none', background: 'linear-gradient(135deg, #e0e7ff 60%, #f8fafc 100%)' }}>
               <Statistic
-                title={<span style={{ color: '#4f8cff', fontWeight: 700 }}>{t('total_publications')}</span>}
+                title={<span style={{ color: '#4f8cff', fontWeight: 700 }}>{t('total publications')}</span>}
                 value={statistics.total_publications}
                 prefix={<FileTextOutlined style={{ color: '#4f8cff' }} />}
                 valueStyle={{ color: '#4f8cff', fontWeight: 700 }}
@@ -512,7 +512,7 @@ const PublicationsListPage = () => {
           <Col span={6}>
             <Card size="small" style={{ borderRadius: 20, boxShadow: '0 2px 12px rgba(250,173,20,0.08)', border: 'none', background: 'linear-gradient(135deg, #fffbe6 60%, #f8fafc 100%)' }}>
               <Statistic
-                title={<span style={{ color: '#faad14', fontWeight: 700 }}>{t('pending_review')}</span>}
+                title={<span style={{ color: '#faad14', fontWeight: 700 }}>{t('pending review')}</span>}
                 value={statistics.pending_publications}
                 prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
                 valueStyle={{ color: '#faad14', fontWeight: 700 }}
@@ -544,7 +544,7 @@ const PublicationsListPage = () => {
                 size="middle"
                 style={{ fontWeight: 600 }}
               >
-                {t('add_publication') || 'إضافة منشور'}
+                {t('add publication') || 'إضافة منشور'}
               </Button>
             )}
           </Col>
@@ -555,7 +555,7 @@ const PublicationsListPage = () => {
       {user?.is_admin && selectedRowKeys.length > 0 && (
         <Card className="mb-6 rounded-xl shadow border-gray-100 bg-white" style={{ borderRadius: 20, boxShadow: '0 2px 12px rgba(79,140,255,0.08)' }}>
           <Space>
-            <Text>{t('selected_count', { count: selectedRowKeys.length })}</Text>
+            <Text>{t('selected count', { count: selectedRowKeys.length })}</Text>
             <Divider type="vertical" />
             <Button
               type="primary"
@@ -598,7 +598,7 @@ const PublicationsListPage = () => {
             emptyText: (
               <Empty
                 image={<FileTextOutlined style={{ fontSize: 64, color: '#4f8cff' }} />}
-                description={<span style={{ fontSize: 18, color: '#4f8cff', fontWeight: 600 }}>{t('no_publications_found')}</span>}
+                description={<span style={{ fontSize: 18, color: '#4f8cff', fontWeight: 600 }}>{t('no publications found')}</span>}
                 className="py-8"
               >
                 {user && (user.is_admin || user.role === 'researcher') && (
@@ -608,7 +608,7 @@ const PublicationsListPage = () => {
                     onClick={() => navigate('/app/research/publications/new')}
                     style={{ marginTop: 16, borderRadius: 8, fontWeight: 600 }}
                   >
-                    {t('create_first_publication')}
+                    {t('create first publication')}
                   </Button>
                 )}
               </Empty>
@@ -631,7 +631,7 @@ const PublicationsListPage = () => {
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <span style={{ fontSize: 24, fontWeight: 800, color: '#1890ff', letterSpacing: 1 }}>
               <FileTextOutlined style={{ marginRight: 8, color: '#4f8cff' }} />
-              {t('publication_details') || 'تفاصيل المنشور'}
+              {t('publication details') || 'تفاصيل المنشور'}
             </span>
             {selectedPublication?.is_featured && (
               <StarFilled style={{ color: '#faad14', marginLeft: 12, fontSize: 28 }} />
@@ -685,7 +685,7 @@ const PublicationsListPage = () => {
                 {selectedPublication.abstract && (
                   <Descriptions.Item label={<span className="font-bold text-blue-700">{t('abstract') || 'الملخص'}</span>}>
                     <Paragraph
-                      ellipsis={{ rows: 3, expandable: true, symbol: t('show_more') || 'عرض المزيد' }}
+                      ellipsis={{ rows: 3, expandable: true, symbol: t('show more') || 'عرض المزيد' }}
                       className="text-gray-700"
                     >
                       {selectedPublication.abstract}
@@ -693,7 +693,7 @@ const PublicationsListPage = () => {
                   </Descriptions.Item>
                 )}
                 {selectedPublication.research_area && (
-                  <Descriptions.Item label={<span className="font-bold text-blue-700">{t('research_area') || 'المجال البحثي'}</span>}>
+                  <Descriptions.Item label={<span className="font-bold text-blue-700">{t('research area') || 'المجال البحثي'}</span>}>
                     {selectedPublication.research_area}
                   </Descriptions.Item>
                 )}
@@ -713,12 +713,12 @@ const PublicationsListPage = () => {
               {/* Publication Details */}
               <Descriptions bordered column={2} size="small" title={<span className="font-bold text-blue-700">{t('publication_details') || 'تفاصيل النشر'}</span>} className="rounded-xl shadow bg-white p-4">
                 {selectedPublication.journal_name && (
-                  <Descriptions.Item label={t('journal_name') || 'اسم المجلة'} span={2}>
+                  <Descriptions.Item label={t('journal name') || 'اسم المجلة'} span={2}>
                     <Text strong>{selectedPublication.journal_name}</Text>
                   </Descriptions.Item>
                 )}
                 {selectedPublication.conference_name && (
-                  <Descriptions.Item label={t('conference_name') || 'اسم المؤتمر'} span={2}>
+                  <Descriptions.Item label={t('conference name') || 'اسم المؤتمر'} span={2}>
                     <Text strong>{selectedPublication.conference_name}</Text>
                   </Descriptions.Item>
                 )}
@@ -742,7 +742,7 @@ const PublicationsListPage = () => {
                     {selectedPublication.pages}
                   </Descriptions.Item>
                 )}
-                <Descriptions.Item label={t('publication_date') || 'تاريخ النشر'} span={2}>
+                <Descriptions.Item label={t('publication date') || 'تاريخ النشر'} span={2}>
                   <div className="flex items-center">
                     <CalendarOutlined className="mr-2 text-blue-400" />
                     {formatDate(selectedPublication.publication_date)}
@@ -796,7 +796,7 @@ const PublicationsListPage = () => {
               {(selectedPublication.url || selectedPublication.pdf_url) && (
                 <Descriptions bordered column={1} size="small" title={<span className="font-bold text-blue-700">{t('links') || 'الروابط'}</span>} className="rounded-xl shadow bg-white p-4">
                   {selectedPublication.url && (
-                    <Descriptions.Item label={t('publication_url') || 'رابط المنشور'}>
+                    <Descriptions.Item label={t('publication url') || 'رابط المنشور'}>
                       <a
                         href={selectedPublication.url}
                         target="_blank"
@@ -809,7 +809,7 @@ const PublicationsListPage = () => {
                     </Descriptions.Item>
                   )}
                   {selectedPublication.pdf_url && (
-                    <Descriptions.Item label={t('pdf_url') || 'رابط PDF'}>
+                    <Descriptions.Item label={t('pdf url') || 'رابط PDF'}>
                       <a
                         href={selectedPublication.pdf_url}
                         target="_blank"
@@ -830,10 +830,10 @@ const PublicationsListPage = () => {
                   <div className="flex items-center space-x-4">
                     <FileTextOutlined className="text-blue-500 text-2xl" />
                     <div>
-                      <Text strong className="text-lg text-blue-900">{t('document_file') || 'ملف المستند'}</Text>
+                      <Text strong className="text-lg text-blue-900">{t('document file') || 'ملف المستند'}</Text>
                       <br />
                       <Text type="secondary" className="text-base">
-                        {t('click_to_download') || 'اضغط للتحميل'}
+                        {t('click to download') || 'اضغط للتحميل'}
                       </Text>
                     </div>
                   </div>
@@ -919,7 +919,7 @@ const PublicationsListPage = () => {
               onClick={() => filterForm.submit()}
               style={{ borderRadius: 8, fontWeight: 600 }}
             >
-              {t('apply_filter')}
+              {t('apply filter')}
             </Button>
           </Space>
         }
@@ -930,19 +930,19 @@ const PublicationsListPage = () => {
           layout="vertical"
           onFinish={handleAdvancedFilter}
         >
-          <Form.Item name="q" label={t('search_query')}>
-            <Input placeholder={t('search_in_title_abstract_keywords')} />
+          <Form.Item name="q" label={t('search query')}>
+            <Input placeholder={t('search in title abstract keywords')} />
           </Form.Item>
 
-          <Form.Item name="publication_type" label={t('publication_type')}>
+          <Form.Item name="publication_type" label={t('publication type')}>
             <Select
               mode="multiple"
-              placeholder={t('select_types')}
+              placeholder={t('select types')}
               allowClear
             >
-              <Option value="journal_article">{t('journal_article')}</Option>
-              <Option value="conference_paper">{t('conference_paper')}</Option>
-              <Option value="book_chapter">{t('book_chapter')}</Option>
+              <Option value="journal_article">{t('journal article')}</Option>
+              <Option value="conference_paper">{t('conference paper')}</Option>
+              <Option value="book_chapter">{t('book chapter')}</Option>
               <Option value="book">{t('book')}</Option>
               <Option value="thesis">{t('thesis')}</Option>
               <Option value="report">{t('report')}</Option>
@@ -954,7 +954,7 @@ const PublicationsListPage = () => {
           <Form.Item name="status" label={t('status')}>
             <Select
               mode="multiple"
-              placeholder={t('select_status')}
+              placeholder={t('select status')}
               allowClear
             >
               <Option value="draft">{t('draft')}</Option>
@@ -965,33 +965,33 @@ const PublicationsListPage = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item name="research_area" label={t('research_area')}>
-            <Input placeholder={t('enter_research_area')} />
+          <Form.Item name="research_area" label={t('research area')}>
+            <Input placeholder={t('enter research area')} />
           </Form.Item>
 
-          <Form.Item name="date_range" label={t('publication_date_range')}>
+          <Form.Item name="date_range" label={t('publication date range')}>
             <RangePicker
               style={{ width: '100%' }}
               format="YYYY-MM-DD"
             />
           </Form.Item>
 
-          <Divider>{t('additional_filters')}</Divider>
+          <Divider>{t('additional filters')}</Divider>
 
           <Form.Item name="is_featured" valuePropName="checked">
-            <Checkbox>{t('featured_only')}</Checkbox>
+            <Checkbox>{t('featured only')}</Checkbox>
           </Form.Item>
 
           <Form.Item name="is_public" valuePropName="checked">
-            <Checkbox>{t('public_only')}</Checkbox>
+            <Checkbox>{t('public only')}</Checkbox>
           </Form.Item>
 
           <Form.Item name="has_doi" valuePropName="checked">
-            <Checkbox>{t('has_doi')}</Checkbox>
+            <Checkbox>{t('has doi')}</Checkbox>
           </Form.Item>
 
           <Form.Item name="has_file" valuePropName="checked">
-            <Checkbox>{t('has_document_file')}</Checkbox>
+            <Checkbox>{t('has document file')}</Checkbox>
           </Form.Item>
         </Form>
       </Drawer>
