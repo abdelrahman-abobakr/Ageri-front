@@ -212,13 +212,15 @@ const MainLayout = () => {
           alignItems: 'center',
           justifyContent: 'center',
           borderBottom: '1px solid #f0f0f0',
+          cursor: 'pointer',
           fontSize: sidebarCollapsed ? '16px' : '18px',
           fontWeight: 'bold',
           color: '#1890ff',
-        }}>
+        }}
+        onClick={() => navigate('/')}>
           <img
             src={AppLogo}
-            alt="App Logo"
+            alt={t('homepage.heroTitle')}
             style={{
               height: '32px',
               marginRight: sidebarCollapsed ? 0 : '12px',
