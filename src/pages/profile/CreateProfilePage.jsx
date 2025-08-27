@@ -113,7 +113,7 @@ const CreateProfilePage = () => {
         'bio', 'research_interests', 'orcid_id', 'website',
         'linkedin', 'google_scholar', 'researchgate', 'is_public',
         'position', 'academic_degree', 'specialization',
-        'phone', 'institution', 'department'
+        'phone'
       ];
 
       // Add all fields to FormData
@@ -509,6 +509,10 @@ const CreateProfilePage = () => {
                         </span>
                       }
                       tooltip="معرف الباحث الدولي (مثال: 0000-0000-0000-0000)"
+                      rules={[
+                        { required: true, message: 'يرجى إدخال ORCID ID' },
+                        { pattern: /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/, message: 'يرجى إدخال ORCID ID صحيح (0000-0000-0000-0000)' }
+                      ]}
                     >
                       <Input placeholder="0000-0000-0000-0000" />
                     </Form.Item>
@@ -535,6 +539,9 @@ const CreateProfilePage = () => {
                       <UserOutlined /> نبذة تعريفية
                     </span>
                   }
+                  rules={[
+                    { required: true, message: 'يرجى إدخال نبذة تعريفية' }
+                  ]}
                 >
                   <Input.TextArea
                     rows={4}
@@ -568,33 +575,6 @@ const CreateProfilePage = () => {
                 </Divider>
 
                 {/* Professional Information */}
-                <Row gutter={16}>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="institution"
-                      label={
-                        <span>
-                          <GlobalOutlined /> المؤسسة
-                        </span>
-                      }
-                    >
-                      <Input placeholder="اسم الجامعة أو المؤسسة" />
-                    </Form.Item>
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <Form.Item
-                      name="department"
-                      label={
-                        <span>
-                          <BookOutlined /> القسم
-                        </span>
-                      }
-                    >
-                      <Input placeholder="اسم القسم أو الكلية" />
-                    </Form.Item>
-                  </Col>
-                </Row>
-
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
                     <Form.Item
@@ -632,7 +612,7 @@ const CreateProfilePage = () => {
                         </span>
                       }
                     >
-                      <Input placeholder="مجال التخصص الدقيق" />
+                      <Input placeholder="مجال التخصص " />
                     </Form.Item>
                   </Col>
                   <Col xs={24} md={12}>
@@ -643,6 +623,7 @@ const CreateProfilePage = () => {
                           <PhoneOutlined /> رقم الهاتف
                         </span>
                       }
+                      rules={[{ pattern: /^[\+]?[0-9\s\-\(\)]+$/, message: 'يرجى إدخال رقم هاتف صحيح' }]}
                     >
                       <Input placeholder="+966 50 123 4567" />
                     </Form.Item>
@@ -732,29 +713,37 @@ const CreateProfilePage = () => {
                 )}
 
                 {/* Submit Button */}
-                <Form.Item>
-                  <Space>
-                    <Button
-                      type="primary"
-                      htmlType="submit"
-                      loading={loading}
-                      icon={<SaveOutlined />}
-                      size="large"
-                      style={{ minWidth: '150px' }}
-                    >
-                      {profileData ? 'تحديث البروفايل' : 'إنشاء البروفايل'}
-                    </Button>
-
-                    {!profileData && (
+                <Form.Item shouldUpdate>
+                  {() => (
+                    <Space>
                       <Button
-                        type="default"
-                        onClick={() => navigate('/app/profile')}
+                        type="primary"
+                        htmlType="submit"
+                        loading={loading}
+                        icon={<SaveOutlined />}
                         size="large"
+                        style={{ minWidth: '150px' }}
+                        disabled={
+                          loading ||
+                          !form.getFieldValue('orcid_id') ||
+                          !form.getFieldValue('bio') ||
+                          !!form.getFieldsError().filter(({ errors }) => errors.length).length
+                        }
                       >
-                        إلغاء
+                        {profileData ? 'تحديث البروفايل' : 'إنشاء البروفايل'}
                       </Button>
-                    )}
-                  </Space>
+
+                      {!profileData && (
+                        <Button
+                          type="default"
+                          onClick={() => navigate('/app/profile')}
+                          size="large"
+                        >
+                          إلغاء
+                        </Button>
+                      )}
+                    </Space>
+                  )}
                 </Form.Item>
               </Form>
             </Card>

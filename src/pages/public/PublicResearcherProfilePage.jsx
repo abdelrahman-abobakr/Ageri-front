@@ -257,7 +257,9 @@ const PublicResearcherProfilePage = () => {
               {profile.orcid_id && (
                 <div>
                   <Text strong style={{ display: 'block', marginBottom: '4px' }}>ORCID ID:</Text>
-                  <Text>{profile.orcid_id}</Text>
+                  <a href={`https://orcid.org/${profile.orcid_id}`} target="_blank" rel="noopener noreferrer">
+                    {profile.orcid_id}
+                  </a>
                 </div>
               )}
             </Space>

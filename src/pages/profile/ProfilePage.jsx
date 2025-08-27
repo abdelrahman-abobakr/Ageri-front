@@ -35,6 +35,9 @@ const ProfilePage = () => {
   const [profileCompletion, setProfileCompletion] = useState(0);
   const [hasProfile, setHasProfile] = useState(false);
 
+  // New state for tracking form validity
+  const [isFormValid, setIsFormValid] = useState(false);
+
   // Check if current user is the profile owner
   const isOwner = true; // For now, always true since we're viewing our own profile
 
@@ -54,6 +57,15 @@ const ProfilePage = () => {
     specialization: '',
     is_public: true
   });
+
+  // Function to check form validity
+  const checkFormValidity = (values) => {
+    const orcidPattern = /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/;
+    const hasValidOrcid = values.orcid_id && orcidPattern.test(values.orcid_id);
+    const hasBio = values.bio && values.bio.trim().length > 0;
+
+    return hasValidOrcid && hasBio;
+  };
 
   // حساب نسبة اكتمال البروفايل
   const calculateProfileCompletion = (profileData) => {
@@ -130,10 +142,12 @@ const ProfilePage = () => {
 
           form.setFieldsValue(formValues);
           setFormData(formValues);
+          setIsFormValid(checkFormValidity(formValues));
         } catch (profileError) {
           setProfile(null);
           setHasProfile(false);
           setProfileCompletion(0);
+          setIsFormValid(false);
         }
       } catch (error) {
 
@@ -150,7 +164,7 @@ const ProfilePage = () => {
         } else if (error.response?.status === 404) {
           setError('لم يتم العثور على بيانات المستخدم. يرجى التواصل مع الدعم الفني.');
         } else if (error.response?.status >= 500) {
-          setError('خطأ في الخادم. يرجى المحاولة مرة أخرى لاحق.');
+          setError('خطأ في الخادم. يرجى المحاولة مرة أخرى لاحقاً.');
         } else {
           setError(error.message || 'فشل في جلب البيانات. يرجى المحاولة مرة أخرى.');
         }
@@ -181,9 +195,7 @@ const ProfilePage = () => {
       linkedin: profile?.linkedin || '',
       google_scholar: profile?.google_scholar || '',
       researchgate: profile?.researchgate || '',
-      phone: userInfo?.phone || '',
-      institution: userInfo?.institution || '',
-      department: userInfo?.department || '',
+      phone: profile?.phone || '',
       position: profile?.position || '',
       academic_degree: profile?.academic_degree || '',
       specialization: profile?.specialization || '',
@@ -192,10 +204,9 @@ const ProfilePage = () => {
 
     form.setFieldsValue(currentFormData);
     setFormData(currentFormData);
+    setIsFormValid(checkFormValidity(currentFormData));
     setEditOpen(true);
   };
-
-
 
   const handleSave = async () => {
     try {
@@ -206,7 +217,6 @@ const ProfilePage = () => {
       try {
         values = await form.validateFields();
       } catch (validationError) {
-
         values = {};
       }
 
@@ -221,7 +231,7 @@ const ProfilePage = () => {
         'bio', 'research_interests', 'orcid_id', 'website',
         'linkedin', 'google_scholar', 'researchgate', 'is_public',
         'position', 'academic_degree', 'specialization',
-        'phone', 'institution', 'department'
+        'phone'
       ];
 
       // Add profile fields to FormData
@@ -261,38 +271,6 @@ const ProfilePage = () => {
       const completion = calculateProfileCompletion(updatedProfile);
       setProfileCompletion(completion);
 
-      // Also update userInfo if it contains user fields that might have been updated
-      if (updatedProfile.phone !== undefined) {
-        setUserInfo(prev => ({ ...prev, phone: updatedProfile.phone }));
-      }
-      if (updatedProfile.institution !== undefined) {
-        setUserInfo(prev => ({ ...prev, institution: updatedProfile.institution }));
-      }
-      if (updatedProfile.department !== undefined) {
-        setUserInfo(prev => ({ ...prev, department: updatedProfile.department }));
-      }
-
-      // If department and institution are not in the profile response,
-      // they might need to be updated in the User model separately
-      if (updatedProfile.department === undefined && formDataToSave.department) {
-        try {
-          const userUpdateData = { department: formDataToSave.department };
-          const updatedUser = await authService.updateUserFields(userUpdateData);
-          setUserInfo(prev => ({ ...prev, department: updatedUser.department }));
-        } catch (userError) {
-          // console.error('❌ Failed to update user department:', userError);
-        }
-      }
-      if (updatedProfile.institution === undefined && formDataToSave.institution) {
-        try {
-          const userUpdateData = { institution: formDataToSave.institution };
-          const updatedUser = await authService.updateUserFields(userUpdateData);
-          setUserInfo(prev => ({ ...prev, institution: updatedUser.institution }));
-        } catch (userError) {
-          // console.error('❌ Failed to update user institution:', userError);
-        }
-      }
-
       // Update formData with the actual saved values
       const updatedFormData = {
         bio: updatedProfile?.bio || '',
@@ -306,13 +284,12 @@ const ProfilePage = () => {
         academic_degree: updatedProfile?.academic_degree || '',
         specialization: updatedProfile?.specialization || '',
         is_public: updatedProfile?.is_public !== undefined ? updatedProfile.is_public : true,
-        phone: updatedProfile?.phone || userInfo?.phone || '',
-        institution: updatedProfile?.institution || userInfo?.institution || '',
-        department: updatedProfile?.department || userInfo?.department || ''
+        phone: updatedProfile?.phone || '',
       };
 
       setFormData(updatedFormData);
       form.setFieldsValue(updatedFormData);
+      setIsFormValid(checkFormValidity(updatedFormData));
 
       // Refresh profile data to ensure we have the latest data
       try {
@@ -1050,11 +1027,11 @@ const ProfilePage = () => {
                     </div>
                   </Col>
                 )}
-                {userInfo?.phone && (
+                {profile?.phone && (
                   <Col xs={24} sm={12}>
                     <div className="info-field">
                       <Text strong style={{ display: 'block', marginBottom: '4px', color: '#595959' }}>الهاتف:</Text>
-                      <Text copyable style={{ color: '#262626', fontSize: '14px' }}>{userInfo.phone}</Text>
+                      <Text copyable style={{ color: '#262626', fontSize: '14px' }}>{profile.phone}</Text>
                     </div>
                   </Col>
                 )}
@@ -1237,13 +1214,17 @@ const ProfilePage = () => {
               onValuesChange={(changedValues, allValues) => {
                 setFormData(prev => ({ ...prev, ...allValues }));
                 setProfileCompletion(calculateProfileCompletion(allValues));
+                setIsFormValid(checkFormValidity(allValues));
               }}
               preserve={false}
             >
               <Form.Item
                 name="bio"
                 label="النبذة التعريفية"
-                rules={[{ max: 1000, message: 'النبذة التعريفية يجب أن تكون أقل من 1000 حرف' }]}
+                rules={[
+                  { required: true, message: 'يرجى إدخال النبذة التعريفية' },
+                  { max: 1000, message: 'النبذة التعريفية يجب أن تكون أقل من 1000 حرف' }
+                ]}
               >
                 <Input.TextArea
                   rows={4}
@@ -1268,12 +1249,24 @@ const ProfilePage = () => {
 
               <Form.Item
                 name="orcid_id"
-                label="ORCID ID"
+                label={
+                  <span style={{ color: '#ff4d4f', fontWeight: 'bold' }}>
+                    ORCID ID <span style={{ color: '#ff4d4f' }}>*</span>
+                  </span>
+                }
                 rules={[
+                  { required: true, message: 'يرجى إدخال ORCID ID - هذا الحقل مطلوب' },
                   { pattern: /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/, message: 'يرجى إدخال ORCID ID صحيح (0000-0000-0000-0000)' }
                 ]}
+                extra="هذا الحقل مطلوب ولا يمكن حفظ البروفايل بدونه"
               >
-                <Input placeholder="0000-0000-0000-0000" />
+                <Input
+                  placeholder="0000-0000-0000-0000"
+                  style={{
+                    borderColor: formData.orcid_id && /^\d{4}-\d{4}-\d{4}-\d{3}[\dX]$/.test(formData.orcid_id) ? '#52c41a' : '#ff4d4f',
+                    borderWidth: '2px'
+                  }}
+                />
               </Form.Item>
 
               <Form.Item
@@ -1311,27 +1304,9 @@ const ProfilePage = () => {
               <Form.Item
                 name="phone"
                 label="رقم الهاتف"
-                rules={[
-                  { pattern: /^[\+]?[0-9\s\-\(\)]+$/, message: 'يرجى إدخال رقم هاتف صحيح' }
-                ]}
+                rules={[{ pattern: /^[\+]?[0-9\s\-\(\)]+$/, message: 'يرجى إدخال رقم هاتف صحيح' }]}
               >
                 <Input placeholder="+966 50 123 4567" />
-              </Form.Item>
-
-              <Form.Item
-                name="institution"
-                label="المؤسسة"
-                rules={[{ max: 200, message: 'اسم المؤسسة يجب أن يكون أقل من 200 حرف' }]}
-              >
-                <Input placeholder="اسم الجامعة أو المؤسسة" />
-              </Form.Item>
-
-              <Form.Item
-                name="department"
-                label="القسم"
-                rules={[{ max: 200, message: 'اسم القسم يجب أن يكون أقل من 200 حرف' }]}
-              >
-                <Input placeholder="اسم القسم أو الكلية" />
               </Form.Item>
 
               <Form.Item
@@ -1370,6 +1345,8 @@ const ProfilePage = () => {
               </Form.Item>
             </Form>
 
+
+
             <div className="modal-actions">
               <Button onClick={() => setEditOpen(false)}>
                 إلغاء
@@ -1379,6 +1356,13 @@ const ProfilePage = () => {
                 onClick={handleSave}
                 loading={loading}
                 icon={<SaveOutlined />}
+                disabled={!isFormValid}
+                style={{
+                  backgroundColor: isFormValid ? '#1890ff' : '#d9d9d9',
+                  borderColor: isFormValid ? '#1890ff' : '#d9d9d9',
+                  cursor: isFormValid ? 'pointer' : 'not-allowed'
+                }}
+                title={!isFormValid ? 'يرجى ملء جميع الحقول المطلوبة قبل الحفظ' : ''}
               >
                 حفظ التغييرات
               </Button>

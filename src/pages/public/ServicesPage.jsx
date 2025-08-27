@@ -128,18 +128,9 @@ const ServicesPage = () => {
     setModalVisible(true);
   };
 
-  const handleRequestService = (serviceId) => {
-    // Redirect to login/register for service request
-    navigate('/login', {
-      state: {
-        from: `/services`,
-        message: 'الرجاء تسجيل الدخول لطلب الخدمات'
-      }
-    });
-  };
 
   const formatPrice = (service) => {
-    if (service.is_free) return 'مجاني';
+    if (service.base_price==0) return 'contact us for pricing details';
     if (service.display_price) return service.display_price;
     if (service.base_price) return `${service.base_price} جنيه`;
     return 'غير محدد';
@@ -367,13 +358,7 @@ const ServicesPage = () => {
           <Button key="cancel" onClick={() => setModalVisible(false)}>
             إغلاق
           </Button>,
-          <Button
-            key="request"
-            type="primary"
-            onClick={() => handleRequestService(selectedService?.id)}
-          >
-            طلب الخدمة
-          </Button>
+
         ]}
         width={700}
         style={{ top: 20 }}
@@ -495,9 +480,9 @@ const ServicesPage = () => {
                   <FileTextOutlined style={{
                     color: '#1890ff',
                     fontSize: '18px',
-                    marginRight: '12px'
+                    marginLeft: '10px'
                   }} />
-                  <Text strong style={{ fontSize: '16px' }}>وصف الخدمة</Text>
+                  <Text strong style={{ fontSize: '18px' }}>وصف الخدمة</Text>
                 </div>
                 <Card
                   size="small"
@@ -518,28 +503,29 @@ const ServicesPage = () => {
               <Title level={5} style={{
                 color: '#1890ff',
                 marginBottom: '16px',
-                fontSize: '16px'
+                fontSize: '16px',
               }}>
-                <ToolOutlined style={{ marginRight: '12px' }} />
+                <ToolOutlined style={{ marginLeft: '5px' }} />
                 تفاصيل الخدمة
               </Title>
 
               <Card size="small" style={{ background: '#fff' }}>
                 <ServiceDetailItem
-                  icon={<DollarOutlined />}
+                  icon={<DollarOutlined
+                    style={{ marginLeft:'8px'}} />}
                   label="السعر"
                   value={formatPrice(selectedService)}
                 />
 
                 <ServiceDetailItem
-                  icon={<ClockCircleOutlined />}
+                  icon={<ClockCircleOutlined style={{ marginLeft: '8px' }} />}
                   label="المدة المقدرة"
                   value={formatDuration(selectedService.estimated_duration)}
                 />
 
                 {selectedService.category && (
                   <ServiceDetailItem
-                    icon={<ToolOutlined />}
+                    icon={<ToolOutlined style={{ marginLeft: '8px' }} />}
                     label="فئة الخدمة"
                     value={getCategoryText(selectedService.category)}
                   />
@@ -547,7 +533,7 @@ const ServicesPage = () => {
 
                 {selectedService.tags && (
                   <ServiceDetailItem
-                    icon={<FileTextOutlined />}
+                    icon={<FileTextOutlined style={{ marginLeft: '8px' }} />}
                     label="العلامات"
                     value={selectedService.tags}
                   />
@@ -563,14 +549,14 @@ const ServicesPage = () => {
                   marginBottom: '16px',
                   fontSize: '16px'
                 }}>
-                  <PhoneOutlined style={{ marginRight: '12px' }} />
+                  <PhoneOutlined style={{ marginLeft: '8px' }} />
                   معلومات التواصل
                 </Title>
 
                 <Card size="small" style={{ background: '#fff' }}>
                   {selectedService.contact_email && (
                     <ServiceDetailItem
-                      icon={<MailOutlined />}
+                      icon={<MailOutlined style={{ marginLeft: '8px' }} />}
                       label="البريد الإلكتروني"
                       value={selectedService.contact_email}
                       type="email"
@@ -579,7 +565,7 @@ const ServicesPage = () => {
 
                   {selectedService.contact_phone && (
                     <ServiceDetailItem
-                      icon={<PhoneOutlined />}
+                      icon={<PhoneOutlined style={{ marginLeft: '8px' }} />}
                       label="رقم الهاتف"
                       value={selectedService.contact_phone}
                       type="phone"

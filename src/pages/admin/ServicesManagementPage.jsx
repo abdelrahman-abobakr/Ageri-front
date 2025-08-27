@@ -579,15 +579,7 @@ const ServicesManagementPage = () => {
           </Row>
 
           <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="is_free"
-                label="خدمة مجانية"
-                valuePropName="checked"
-              >
-                <Switch />
-              </Form.Item>
-            </Col>
+
             <Col span={12}>
               <Form.Item
                 name="base_price"
