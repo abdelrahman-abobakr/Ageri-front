@@ -122,6 +122,8 @@
     "latestNews": "Latest News & Articles",
     "latestNewsDesc": "Check out the latest articles and news in research and technology.",
     "featuredCount": "Featured articles: {{count}}",
+    "aboutDesc": "Genetics and Biosciences Research",
+    "aboutText":"We lead innovation in scientific research and biotechnology to build a better future for humanity.",
     "category": {
       "أبحاث": "Research",
       "announcement": "Announcement"
@@ -144,8 +146,6 @@
     "biotechDesc": "Developing gene therapies and innovative drugs for incurable diseases.",
     "spaceTitle": "Space Sciences",
     "spaceDesc": "Exploring space and developing satellite and communication technologies.",
-    "successStories": "Inspiring Success Stories",
-    "successStoriesDesc": "Real achievements that changed the course of research and positively impacted society.",
     "cancerTitle": "Revolutionary Cancer Treatment",
     "cancerDesc": "Developed a new gene therapy with 85% cure rate for early-stage leukemia.",
     "cancerAchievement": "International Patent",
@@ -158,7 +158,22 @@
     "quickLinks": "Quick Links",
     "contactUs": "Contact Us",
     "followUs": "Follow Us",
-    "rightsReserved": "All rights reserved."
+    "rightsReserved": "All rights reserved.",
+    "successStories": {
+      "title": "Success Stories",
+      "description": "Real achievements that changed the course of research and positively impacted society."
+    },
+    "footer": {
+      "quickLinks": "Quick Links",
+      "followUs": "Follow Us",
+      "copyright": "© {{year}} {{name}}. All rights reserved.",
+      "links": {
+        "research": "Scientific Research",
+        "courses": "Training Courses",
+        "services": "Services",
+        "contact": "Contact Us"
+      }
+    }
   },
   "announcements": {
     "title": "Announcements",

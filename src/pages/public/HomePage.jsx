@@ -1051,7 +1051,7 @@ const HomePage = () => {
                       fontWeight: '700',
                       textShadow: '0 4px 20px rgba(0,0,0,0.3)'
                     }}>
-                      أبحاث الجينات والعلوم الحيوية
+                      {t('homepage.aboutDesc')}
                     </Title>
                     <Paragraph style={{
                       color: 'rgba(255,255,255,0.9)',
@@ -1060,7 +1060,7 @@ const HomePage = () => {
                       maxWidth: '500px',
                       margin: '0 auto'
                     }}>
-                      نقود الابتكار في مجال الأبحاث العلمية والتكنولوجيا الحيوية لبناء مستقبل أفضل للإنسانية
+                      {t('homepage.aboutText')}
                     </Paragraph>
                   </div>
                 </Col>
@@ -1080,7 +1080,7 @@ const HomePage = () => {
               fontWeight: '800',
               marginBottom: '16px'
             }}>
-              معهد بحوث الهندسة الوراثية الزراعية            
+              {t('homepage.orgName')}            
             </Title>
             <Paragraph style={{
               marginTop: '16px',
@@ -1090,7 +1090,7 @@ const HomePage = () => {
               maxWidth: '600px',
               margin: '0 auto'
             }}>
-              نحن نقود الابتكار في مجالات البحث المتقدمة ونساهم في تطوير الحلول العلمية المستدامة
+
             </Paragraph>
           </div>
 
@@ -1237,7 +1237,7 @@ const HomePage = () => {
                 fontWeight: '800',
                 marginBottom: '16px'
               }}>
-                قصص نجاح ملهمة
+                {t('homepage.successStories.title')}
               </Title>
               <Paragraph style={{
                 marginTop: '16px',
@@ -1247,7 +1247,7 @@ const HomePage = () => {
                 maxWidth: '600px',
                 margin: '0 auto'
               }}>
-                إنجازات حقيقية غيرت مسار البحث العلمي وأثرت إيجاب على المجتمع
+                {t('homepage.successStories.description')}
               </Paragraph>
             </div>
 
