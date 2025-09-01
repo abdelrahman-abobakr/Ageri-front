@@ -52,7 +52,7 @@ const { TabPane } = Tabs;
 
 const OrganizationManagementPage = () => {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState('departments');
+  const [activeTab, setActiveTab] = useState('labs');
   const [departments, setDepartments] = useState([]);
   const [labs, setLabs] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -342,7 +342,7 @@ const OrganizationManagementPage = () => {
       form.setFieldsValue({
         name: fullLabData.name,
         description: fullLabData.description,
-        department_id: fullLabData.department?.id || fullLabData.department_id,
+        department_id: 2,
         head_id: fullLabData.head?.id,
         specialization: fullLabData.specialization,
         status: fullLabData.status
@@ -350,7 +350,7 @@ const OrganizationManagementPage = () => {
 
       setModalVisible(true);
     } catch (error) {
-      message.error('فشل في تحميل تفاصيل المختبر');
+      message.error('فشل في تحميل تفاصيل القسم');
     } finally {
       setLoading(false);
     }
@@ -358,17 +358,17 @@ const OrganizationManagementPage = () => {
   const handleDeleteLab = (lab) => {
     Modal.confirm({
       title: 'تأكيد الحذف',
-      content: `هل أنت متأكد من حذف المختبر "${lab.name}"؟`,
+      content: `هل أنت متأكد من حذف القسم "${lab.name}"؟`,
       okText: 'حذف',
       okType: 'danger',
       cancelText: 'إلغاء',
       onOk: async () => {
         try {
           await organizationService.deleteLab(lab.id);
-          message.success('تم حذف المختبر بنجاح');
+          message.success('تم حذف القسم بنجاح');
           loadLabs();
         } catch (error) {
-          message.error('فشل في حذف المختبر');
+          message.error('فشل في حذف القسم');
         }
       },
     });
@@ -386,7 +386,7 @@ const OrganizationManagementPage = () => {
       const members = await organizationService.getLabResearchers(labId);
       setLabMembers(members.results || members || []);
     } catch (error) {
-      message.error('فشل في تحميل أعضاء المختبر');
+      message.error('فشل في تحميل أعضاء القسم');
       setLabMembers([]);
     } finally {
       setLabMembersLoading(false);
@@ -429,7 +429,7 @@ const OrganizationManagementPage = () => {
     try {
       // Validate required data
       if (!selectedLab || !selectedLab.id) {
-        message.error('لا يوجد مختبر محدد');
+        message.error('لا يوجد قسم محدد');
         return;
       }
 
@@ -478,7 +478,7 @@ const OrganizationManagementPage = () => {
 
       // Validate that we have department_id
       if (!departmentId) {
-        message.error('لا يمكن تحديد القسم المرتبط بالمختبر. يرجى المحاولة مرة أخرى.');
+        message.error('لا يمكن تحديد القسم يرجى المحاولة مرة أخرى.');
         return;
       }
 
@@ -489,7 +489,7 @@ const OrganizationManagementPage = () => {
       const assignmentData = {
         researcher_id: parseInt(values.researcher_id),
         lab_id: parseInt(selectedLab.id),
-        department_id: departmentId, // Always include department_id
+        department_id: 2, // Always include department_id
         start_date: formattedDate,
         position: values.position || 'Researcher',
         notes: values.notes || `Assignment to ${selectedLab.name} lab`
@@ -516,7 +516,7 @@ const OrganizationManagementPage = () => {
       );
 
       if (isAlreadyAssigned) {
-        message.error('الباحث مُعيّن بالفعل في هذا المختبر');
+        message.error('الباحث مُعيّن بالفعل في هذا القسم');
         return;
       }
 
@@ -548,7 +548,7 @@ const OrganizationManagementPage = () => {
           }
         } else if (errorData.lab_id) {
           const labError = Array.isArray(errorData.lab_id) ? errorData.lab_id[0] : errorData.lab_id;
-          message.error(`خطأ في بيانات المختبر: ${labError}`);
+          message.error(`خطأ في بيانات القسم: ${labError}`);
         } else if (errorData.department_id) {
           const deptError = Array.isArray(errorData.department_id) ? errorData.department_id[0] : errorData.department_id;
           message.error(`خطأ في بيانات القسم: ${deptError}`);
@@ -567,9 +567,9 @@ const OrganizationManagementPage = () => {
       } else if (error.response?.status === 403) {
         message.error('ليس لديك صلاحية لإجراء هذا التعيين');
       } else if (error.response?.status === 404) {
-        message.error('المختبر أو الباحث غير موجود');
+        message.error('القسم أو الباحث غير موجود');
       } else if (error.response?.status === 409) {
-        message.error('الباحث مُعيّن بالفعل في هذا المختبر');
+        message.error('الباحث مُعيّن بالفعل في هذا القسم');
       } else {
         message.error('فشل في تعيين الباحث. يرجى المحاولة مرة أخرى');
       }
@@ -633,7 +633,7 @@ const OrganizationManagementPage = () => {
 
       {/* Statistics Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: '24px' }}>
-        <Col xs={24} sm={12} md={12}>
+        {/* <Col xs={24} sm={12} md={12}>
           <Card loading={loading}>
             <Statistic
               title={t('admin.organizationManagement.totalDepartments')}
@@ -654,11 +654,11 @@ const OrganizationManagementPage = () => {
               }
             />
           </Card>
-        </Col>
+        </Col> */}
         <Col xs={24} sm={12} md={12}>
           <Card loading={loading}>
             <Statistic
-              title={t('admin.organizationManagement.totalLabs')}
+              title={t('admin.organizationManagement.totalDepartments')}
               value={labs.length}
               prefix={<ExperimentOutlined />}
               valueStyle={{
@@ -682,9 +682,9 @@ const OrganizationManagementPage = () => {
       {/* Main Content Tabs */}
       <Card>
         <Tabs activeKey={activeTab} onChange={setActiveTab}>
-          <TabPane tab={t('admin.organizationManagement.departments')} key="departments">
+          {/* <TabPane tab={t('admin.organizationManagement.departments')} key="departments"> */}
             {/* Departments Filters and Actions */}
-            <div style={{ marginBottom: '16px' }}>
+            {/* <div style={{ marginBottom: '16px' }}>
               <Row gutter={[16, 16]} align="middle">
                 <Col xs={24} sm={12} md={8}>
                   <Search
@@ -706,10 +706,10 @@ const OrganizationManagementPage = () => {
                   </Button>
                 </Col>
               </Row>
-            </div>
+            </div> */}
 
             {/* Departments Table */}
-            <Spin spinning={loading}>
+            {/* <Spin spinning={loading}>
               <Table
                 columns={[
                   {
@@ -796,16 +796,16 @@ const OrganizationManagementPage = () => {
                 }}
                 scroll={{ x: 1000 }}
               />
-            </Spin>
-          </TabPane>
+            </Spin> */}
+          {/* </TabPane> */}
 
-          <TabPane tab={<span style={{ paddingRight: '20px' }}>{t('admin.organizationManagement.laboratories')}</span>} key="labs">
+          <TabPane tab={<span style={{ paddingRight: '20px' }}>{t('admin.organizationManagement.departments')}</span>} key="labs">
             {/* Labs Filters and Actions */}
             <div style={{ marginBottom: '16px' }}>
               <Row gutter={[16, 16]} align="middle">
                 <Col xs={24} sm={12} md={8}>
                   <Search
-                    placeholder={t('admin.organizationManagement.searchLabs')}
+                    placeholder={t('admin.organizationManagement.searchDepartments')}
                     allowClear
                     enterButton={<SearchOutlined />}
                     value={searchTerm}
@@ -819,7 +819,7 @@ const OrganizationManagementPage = () => {
                     icon={<PlusOutlined />}
                     onClick={handleCreateLab}
                   >
-                    {t('admin.organizationManagement.addLaboratory')}
+                    {t('admin.organizationManagement.addDepartment')}
                   </Button>
                 </Col>
               </Row>
@@ -830,7 +830,7 @@ const OrganizationManagementPage = () => {
               <Table
                 columns={[
                   {
-                    title: t('admin.organizationManagement.laboratoryName'),
+                    title: t('admin.organizationManagement.departmentName'),
                     dataIndex: 'name',
                     key: 'name',
                     render: (text, record) => (
@@ -842,14 +842,14 @@ const OrganizationManagementPage = () => {
                       </div>
                     ),
                   },
+                  // {
+                  //   title: t('admin.organizationManagement.department'),
+                  //   dataIndex: 'department_name',
+                  //   key: 'department_name',
+                  //   render: (department) => department || '-',
+                  // },
                   {
-                    title: t('admin.organizationManagement.department'),
-                    dataIndex: 'department_name',
-                    key: 'department_name',
-                    render: (department) => department || '-',
-                  },
-                  {
-                    title: t('admin.organizationManagement.laboratoryHead'),
+                    title: t('admin.organizationManagement.departmentHead'),
                     dataIndex: 'head_name',
                     key: 'head_name',
                     render: (head) => head || '-',
@@ -903,17 +903,17 @@ const OrganizationManagementPage = () => {
                   showSizeChanger: false,
                   showQuickJumper: true,
                   showTotal: (total, range) =>
-                    `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.laboratory')}`,
+                    `${range[0]}-${range[1]} ${t('common.of')} ${total} ${t('common.department')}`,
                 }}
                 locale={{
-                  emptyText: t('admin.organizationManagement.noLaboratories'),
+                  emptyText: t('admin.organizationManagement.noDepartments'),
                 }}
                 scroll={{ x: 1000 }}
               />
             </Spin>
           </TabPane>
 
-          <TabPane tab={t('admin.organizationManagement.orgSettings')} key="settings">
+          <TabPane tab={<span style={{ paddingRight: '20px' }}>{t('admin.organizationManagement.orgSettings')}</span>} key="settings">
             <Spin spinning={settingsLoading}>
               <Form
                 form={settingsForm}
@@ -1079,7 +1079,7 @@ const OrganizationManagementPage = () => {
         title={
           activeTab === 'departments'
             ? (editingItem ? t('admin.organizationManagement.editDepartment') : t('admin.organizationManagement.addDepartment'))
-            : (editingItem ? t('admin.organizationManagement.editLaboratory') : t('admin.organizationManagement.addLaboratory'))
+            : (editingItem ? t('admin.organizationManagement.editDepartment') : t('admin.organizationManagement.addDepartment'))
         }
         open={modalVisible}
         onCancel={() => setModalVisible(false)}
@@ -1094,18 +1094,18 @@ const OrganizationManagementPage = () => {
         >
           <Form.Item
             name="name"
-            label={activeTab === 'departments' ? t('admin.organizationManagement.departmentName') : t('admin.organizationManagement.laboratoryName')}
-            rules={[{ required: true, message: activeTab === 'departments' ? t('validation.departmentNameRequired') : t('validation.laboratoryNameRequired') }]}
+            label={activeTab === 'departments' ? t('admin.organizationManagement.departmentName') : t('admin.organizationManagement.departmentName')}
+            rules={[{ required: true, message: activeTab === 'departments' ? t('validation.departmentNameRequired') : t('validation.departmentNameRequired') }]}
           >
-            <Input placeholder={activeTab === 'departments' ? t('validation.departmentNamePlaceholder') : t('validation.laboratoryNamePlaceholder')} />
+            <Input placeholder={activeTab === 'departments' ? t('validation.departmentNamePlaceholder') : t('validation.departmentNamePlaceholder')} />
           </Form.Item>
 
           <Form.Item
             name="description"
-            label={activeTab === 'departments' ? t('admin.organizationManagement.departmentDescription') : t('admin.organizationManagement.laboratoryDescription')}
-            rules={[{ required: true, message: activeTab === 'departments' ? t('validation.departmentDescriptionRequired') : t('validation.laboratoryDescriptionRequired') }]}
+            label={activeTab === 'departments' ? t('admin.organizationManagement.departmentDescription') : t('admin.organizationManagement.departmentDescription')}
+            rules={[{ required: true, message: activeTab === 'departments' ? t('validation.departmentDescriptionRequired') : t('validation.departmentDescriptionRequired') }]}
           >
-            <TextArea rows={3} placeholder={activeTab === 'departments' ? t('validation.departmentDescriptionPlaceholder') : t('validation.laboratoryDescriptionPlaceholder')} />
+            <TextArea rows={3} placeholder={activeTab === 'departments' ? t('validation.departmentDescriptionPlaceholder') : t('validation.departmentDescriptionPlaceholder')} />
           </Form.Item>
 
           <Row gutter={16}>
@@ -1143,7 +1143,7 @@ const OrganizationManagementPage = () => {
 
           {activeTab === 'labs' && (
             <Row gutter={16}>
-              <Col xs={24} md={12}>
+              {/* <Col xs={24} md={12}>
                 <Form.Item
                   name="department_id"
                   label={t('admin.organizationManagement.belongingDepartment')}
@@ -1155,15 +1155,15 @@ const OrganizationManagementPage = () => {
                     ))}
                   </Select>
                 </Form.Item>
-              </Col>
+              </Col> */}
               <Col xs={24} md={12}>
                 <Form.Item
                   name="head_id"
-                  label={t('admin.organizationManagement.labSupervisor')}
-                  rules={[{ required: true, message: t('validation.labSupervisorRequired') }]}
+                  label={t('admin.organizationManagement.departmentHead')}
+                  rules={[{ required: true, message: t('validation.departmentHeadRequired') }]}
                 >
                   <Select
-                    placeholder={t('admin.organizationManagement.selectLabSupervisor')}
+                    placeholder={t('admin.organizationManagement.selectDepartmentHead')}
                     loading={usersLoading}
                     showSearch
                     optionFilterProp="label"

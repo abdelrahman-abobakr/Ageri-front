@@ -535,7 +535,7 @@
       "belongingDepartment": "Belonging Department",
       "labSupervisor":" Laboratory Supervisor",
       "selectLabSupervisor": "Select Laboratory Supervisor",
-      "labMembersManagement": "Lab Members Management",
+      "labMembersManagement": "Department Members Management",
       "currentMembers": "Current Members",
       "noMembers": "No Members Found",
       "assignNewResearcher": "Assign New Researcher",

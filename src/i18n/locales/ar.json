@@ -565,7 +565,7 @@
     },
     "organizationManagement": {
       "title": "إدارة المؤسسة",
-      "description": "إدارة معلومات المؤسسة والأقسام والمختبرات",
+      "description": "إدارة معلومات المؤسسة والأقسام",
       "addLaboratory": "إنشاء مختبر جديد",
       "addDepartment": "إضافة قسم جديد",
       "editDepartment": "تعديل القسم",
@@ -624,7 +624,7 @@
       "belongingDepartment": "القسم التابع له",
       "labSupervisor":"مشرف المختبر",
       "selectLabSupervisor":"اختر مشرف المختبر",
-      "labMembersManagement":"إدارة أعضاء المختبر",
+      "labMembersManagement":"إدارة أعضاء القسم",
       "currentMembers": "الأعضاء الحاليون",
       "noMembers": "لا يوجد أعضاء في هذا المختبر",
       "assignNewResearcher": "إضافة باحث جديد",
