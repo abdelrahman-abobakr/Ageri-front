@@ -156,8 +156,8 @@ const DashboardPage = () => {
         return [
           { title: 'Total Users', value: stats.totalUsers, icon: <UserOutlined />, color: '#1890ff' },
           { title: 'Publications', value: stats.totalPublications, icon: <BookOutlined />, color: '#52c41a' },
-          { title: 'Departments', value: dashboardStats?.organization?.totalDepartments || 0, icon: <UserOutlined />, color: '#13c2c2' },
-          { title: 'Laboratories', value: dashboardStats?.organization?.totalLabs || 0, icon: <ToolOutlined />, color: '#eb2f96' },
+          { title: 'Departments', value: dashboardStats?.organization?.totalLabs || 0, icon: <UserOutlined />, color: '#13c2c2' },
+          // { title: 'Laboratories', value: dashboardStats?.organization?.totalLabs || 0, icon: <ToolOutlined />, color: '#eb2f96' },
         ];
       case USER_ROLES.MODERATOR:
         return [

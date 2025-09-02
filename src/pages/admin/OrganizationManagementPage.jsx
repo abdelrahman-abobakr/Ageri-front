@@ -295,12 +295,13 @@ const OrganizationManagementPage = () => {
 
   const handleSaveLab = async (values) => {
     try {
+      const labData = { ...values, department_id: 2 }; // Always associate with the fixed parent department
       if (editingItem) {
-        await organizationService.updateLab(editingItem.id, values);
-        message.success('تم تحديث المختبر بنجاح');
+        await organizationService.updateLab(editingItem.id, labData);
+        message.success('تم تحديث القسم بنجاح');
       } else {
-        await organizationService.createLab(values);
-        message.success('تم إنشاء المختبر بنجاح');
+        await organizationService.createLab(labData);
+        message.success('تم إنشاء القسم بنجاح');
       }
       setModalVisible(false);
       loadLabs();
