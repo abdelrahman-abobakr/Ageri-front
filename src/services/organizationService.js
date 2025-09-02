@@ -34,22 +34,20 @@ export const organizationService = {
   },
 
   // Laboratories
-  // في ملف services/organizationService.js
-getDepartmentLabs: async (departmentId) => {
-  try {
-    const response = await apiClient.get(`/api/organization/departments/${departmentId}/labs/`);
-    return {
-      success: true,
-      data: response.data.results || [] // نركز على استخراج الـ results مباشرة
-    };
-  } catch (error) {
-    
-    return {
-      success: false,
-      error: 'Failed to load labs data'
-    };
-  }
-},
+  getDepartmentLabs: async (departmentId) => {
+    try {
+      const response = await apiClient.get(`/api/organization/departments/${departmentId}/labs/`);
+      return {
+        success: true,
+        data: response.data.results || []
+      };
+    } catch {
+      return {
+        success: false,
+        error: 'Failed to load labs data'
+      };
+    }
+  },
   getLabs: async (params = {}) => {
     const response = await apiClient.get(API_ENDPOINTS.ORGANIZATION.LABS, { params });
     return response.data;
@@ -139,8 +137,8 @@ getDepartmentLabs: async (departmentId) => {
         try {
           const response = await apiClient.get(API_ENDPOINTS.ORGANIZATION.SETTINGS);
           return response.data;
-        } catch (authError) {
-          throw authError;
+        } catch {
+          // Continue to default settings
         }
       }
 
@@ -152,11 +150,12 @@ getDepartmentLabs: async (departmentId) => {
         mission: "نسعى لتطوير الحلول المبتكرة في مجال الزراعة والبحث العلمي لخدمة المجتمع والبيئة",
         mission_image: null,
         about: "منظمة رائدة في مجال البحث العلمي الزراعي، نعمل على تطوير التقنيات الحديثة والحلول المستدامة لتحسين الإنتاج الزراعي وحماية البيئة.",
+        about_image: null,
         email: "info@agri-research.org",
         phone: "+20123456789",
         address: "جمهورية مصر العربية",
         website: "https://agri-research.org",
-        facebook: "https://facebook.com/agri-research",
+        facebook: "https://facebook.com/agri_research",
         twitter: "https://twitter.com/agri_research",
         linkedin: "https://linkedin.com/company/agri-research",
         instagram: "https://instagram.com/agri_research",
@@ -172,7 +171,7 @@ getDepartmentLabs: async (departmentId) => {
     try {
       const response = await apiClient.get(API_ENDPOINTS.ORGANIZATION.SETTINGS);
       return response.data;
-    } catch (error) {
+    } catch {
       // Return default settings structure if API fails
       return {
         name: "Scientific Research Organization",
@@ -181,6 +180,7 @@ getDepartmentLabs: async (departmentId) => {
         mission: "",
         mission_image: null,
         about: "",
+        about_image: null,
         email: "",
         phone: "",
         address: "",
@@ -197,20 +197,24 @@ getDepartmentLabs: async (departmentId) => {
   },
 
   updateSettings: async (settingsData) => {
-    try {
+    // Check if we're sending FormData (files) or regular data
+    if (settingsData instanceof FormData) {
+      const response = await apiClient.patch(API_ENDPOINTS.ORGANIZATION.SETTINGS, settingsData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } else {
       const response = await apiClient.put(API_ENDPOINTS.ORGANIZATION.SETTINGS, settingsData);
       return response.data;
-    } catch (error) {
-      throw error;
     }
   },
 
   partialUpdateSettings: async (settingsData) => {
-    try {
-      const response = await apiClient.patch(API_ENDPOINTS.ORGANIZATION.SETTINGS, settingsData);
-      return response.data;
-    } catch (error) {
-      throw error;
-    }
+    const response = await apiClient.patch(API_ENDPOINTS.ORGANIZATION.SETTINGS, settingsData);
+    return response.data;
   },
+
+
 };
