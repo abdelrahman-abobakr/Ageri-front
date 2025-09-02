@@ -80,7 +80,7 @@ const LabDetailPage = () => {
   }
 
   if (!lab) {
-    return <div>Laboratory not found</div>;
+  return <div>Department not found</div>;
   }
 
   const headOfLab = lab.head || null;
@@ -88,7 +88,7 @@ const LabDetailPage = () => {
 
   return (
     <div>
-      {/* Lab Header */}
+  {/* Department Header */}
       <Card style={{ marginBottom: '24px' }}>
         <Row gutter={[24, 24]} align="middle">
           <Col xs={24} sm={4} style={{ textAlign: 'center' }}>
@@ -121,15 +121,15 @@ const LabDetailPage = () => {
       </Card>
 
       <Row gutter={[24, 24]}>
-        {/* Lab Information */}
+  {/* Department Information */}
         <Col xs={24} lg={8}>
-          <Card title="Laboratory Information" style={{ marginBottom: '24px' }}>
+          <Card title="Department Information" style={{ marginBottom: '24px' }}>
             <div style={{ marginBottom: '16px' }}>
               <Text strong>Department: </Text>
               <Text>{lab.department?.name || 'Not specified'}</Text>
             </div>
 
-            {/* Head of Lab Information */}
+            {/* Head of Department Information */}
             {headOfLab && (
               <div style={{ marginBottom: '16px', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center' }}>
                 <Avatar
@@ -138,7 +138,7 @@ const LabDetailPage = () => {
                   style={{ backgroundColor: '#faad14', marginBottom: 12 }}
                 />
                 <Title level={4} style={{ marginBottom: 4 }}>
-                  {headOfLab.full_name || lab.department?.head_name || 'Head of Laboratory'}
+                  {headOfLab.full_name || lab.department?.head_name || 'Head of Department'}
                 </Title>
                 {headOfLab.email && (
                   <div style={{ fontSize: 13, marginBottom: 4 }}>
@@ -185,13 +185,13 @@ const LabDetailPage = () => {
           </Card>
         </Col>
 
-        {/* Lab Members */}
+        {/* Department Members */}
         <Col xs={24} lg={16}>
           <Card
             title={
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <TeamOutlined style={{ marginRight: '8px' }} />
-                Lab Members ({labMembers.length})
+                Department Members ({labMembers.length})
               </div>
             }
             loading={researchersLoading}
@@ -200,7 +200,7 @@ const LabDetailPage = () => {
               <div style={{ textAlign: 'center', padding: '40px' }}>
                 <UserOutlined style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }} />
                 <Title level={4} type="secondary">No Members Yet</Title>
-                <Text type="secondary">This laboratory doesn't have any assigned members yet.</Text>
+                <Text type="secondary">This department doesn't have any assigned members yet.</Text>
               </div>
             ) : (
               <Row gutter={[16, 16]}>
