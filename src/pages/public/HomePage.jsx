@@ -50,7 +50,9 @@ import {
   FireOutlined,
   ThunderboltOutlined,
   CrownOutlined,
-  FileTextOutlined,PictureOutlined } from '@ant-design/icons';
+  FileTextOutlined,
+  PictureOutlined
+} from '@ant-design/icons';
 import { contentService, organizationService, statisticsService } from '../../services';
 
 const { Title, Paragraph, Text } = Typography;
@@ -232,18 +234,21 @@ const HomePage = () => {
         try {
           setSettingsLoading(true);
           const orgData = await organizationService.getPublicSettings();
+          console.log('Loaded organization data:', orgData); // Debug log
           setOrganizationData({
             ...orgData,
-            name: "معهد بحوث الهندسة الوراثية الزراعية"
+            // لا نضع اسم المؤسسة هنا لأنه يجب أن يتغير مع اللغة
           });
         } catch (error) {
+          console.error('Failed to load organization settings:', error);
           setOrganizationData({
-            name: "منظمة البحث العلمي",
-            vision: "أن نصبح المعهد الرائد في منطقة الشرق الأوسط في مجال البحث العلمي والابتكار التقني، ونساهم في بناء مجتمع المعرفة وتحقيق التنمية المستدامة",
+            name: t('homepage.organization.defaultName'),
+            vision: t('homepage.organization.vision'),
             vision_image: "https://images.unsplash.com/photo-1559757148-5c350d0d3c56?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-            mission: "نلتزم بإجراء البحوث العلمية المتقدمة وتطوير الحلول التقنية المبتكرة، وتأهيل الكوادر العلمية المتخصصة، وتقديم الاستشارات العلمية والتقنية لخدمة المجتمع والاقتصاد الوطني",
+            mission: t('homepage.organization.mission'),
             mission_image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
-            about: "معهد البحوث العلمية والتطوير التقني مؤسسة رائدة في مجال البحث العلمي والابتكار التقني، تأسس عام 1985 ويضم نخبة من العلماء والباحثين المتخصصين في مختلف المجالات العلمية والتقنية. يساهم المعهد في تطوير الحلول العلمية والتقنية المتقدمة لمواجهة التحديات المعاصرة وتحقيق التنمية المستدامة.",
+            about: t('homepage.organization.about'),
+            about_image: "https://images.unsplash.com/photo-1523741543316-beb7fc7023d8?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80",
             email: "info@research-institute.org",
             phone: "+20",
             address: "Inside Cairo Uni, Oula, Al Giza, Giza Governorate 3725005",
@@ -285,7 +290,7 @@ const HomePage = () => {
                 title: item.title,
                 content: item.content || item.description || '',
                 date: item.created_at || item.date,
-                category: item.category || 'أبحاث',
+                category: item.category || t('homepage.categories.research'),
                 priority: item.priority || 'medium',
                 views: item.view_count || 0,
                 type: 'post',
@@ -294,7 +299,7 @@ const HomePage = () => {
                 excerpt: item.excerpt || item.content?.substring(0, 150) + '...',
                 author: typeof item.author === 'string'
                   ? item.author
-                  : item.author?.full_name || item.author?.email || 'فريق البحث العلمي',
+                  : item.author?.full_name || item.author?.email || t('homepage.defaults.researchTeam'),
                 is_featured: item.is_featured || false,
                 images: item.images || []
               };
@@ -322,18 +327,51 @@ const HomePage = () => {
     };
 
     loadHomePageData();
-  }, []);
+  }, [t]); // Re-run when translation changes
   const getCarouselSlides = () => {
     const slides = [];
     const defaultImage = '/2304.w019.n002.1028B.p15.1028.jpg';
+    
+    // Helper function to get valid image URL
+    const getValidImageUrl = (imageUrl) => {
+      if (!imageUrl) return defaultImage;
+      if (typeof imageUrl === 'string' && imageUrl.trim() !== '') {
+        // If the URL is relative (starts with /), add the base URL
+        if (imageUrl.startsWith('/')) {
+          // Remove /api from the end since media files are served from the root
+          const baseUrl = 'http://localhost:8000';
+          return baseUrl + imageUrl;
+        }
+        // If it's already a full URL, return as is
+        if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+          return imageUrl;
+        }
+        // For relative URLs without leading slash, add base URL
+        const baseUrl = 'http://localhost:8000';
+        return baseUrl + '/' + imageUrl;
+      }
+      return defaultImage;
+    };
+
+    // Debug: Log organization data
+    console.log('Organization data in getCarouselSlides:', {
+      vision: organizationData.vision,
+      vision_image: organizationData.vision_image,
+      mission: organizationData.mission,
+      mission_image: organizationData.mission_image,
+      about: organizationData.about,
+      about_image: organizationData.about_image
+    });
 
     // Vision slide
     if (organizationData.vision) {
+      const visionImageUrl = getValidImageUrl(organizationData.vision_image);
+      console.log('Vision image URL:', visionImageUrl);
       slides.push({
         id: 'vision',
         title: t('homepage.orgName'), // Force Arabic title
         content: organizationData.vision,
-        backgroundImage: defaultImage,
+        backgroundImage: visionImageUrl,
         icon: <RocketOutlined />,
         subtitle: t('homepage.ourVision')
       });
@@ -341,11 +379,13 @@ const HomePage = () => {
 
     // Mission slide
     if (organizationData.mission) {
+      const missionImageUrl = getValidImageUrl(organizationData.mission_image);
+      console.log('Mission image URL:', missionImageUrl);
       slides.push({
         id: 'mission',
         title: t('homepage.ourMission'),
         content: organizationData.mission,
-        backgroundImage: defaultImage,
+        backgroundImage: missionImageUrl,
         icon: <BulbOutlined />,
         subtitle: t('homepage.missionSubtitle')
       });
@@ -353,11 +393,13 @@ const HomePage = () => {
 
     // About slide
     if (organizationData.about) {
+      const aboutImageUrl = getValidImageUrl(organizationData.about_image);
+      console.log('About image URL:', aboutImageUrl);
       slides.push({
         id: 'about',
         title: t('homepage.aboutUs'),
         content: organizationData.about,
-        backgroundImage: defaultImage,
+        backgroundImage: aboutImageUrl,
         icon: <ExperimentOutlined />,
         subtitle: t('homepage.aboutSubtitle')
       });
@@ -365,7 +407,7 @@ const HomePage = () => {
 
     return slides.length > 0 ? slides : [{
       id: 'default',
-      title: "منظمة البحث العلمي",
+      title: t('homepage.organization.defaultName'),
       content: t('homepage.heroSubtitle'),
       backgroundImage: defaultImage,
       icon: <StarOutlined />,
@@ -383,25 +425,25 @@ const HomePage = () => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      'إعلان': 'purple',
+      [t('homepage.categories.announcement')]: 'purple',
       'announcement': 'purple',
-      'منح': 'gold',
+      [t('homepage.categories.grants')]: 'gold',
       'grants': 'gold',
-      'مؤتمرات': 'cyan',
+      [t('homepage.categories.conferences')]: 'cyan',
       'conferences': 'cyan',
-      'اكتشافات': 'red',
+      [t('homepage.categories.discoveries')]: 'red',
       'discoveries': 'red',
-      'براءات اختراع': 'green',
+      [t('homepage.categories.patents')]: 'green',
       'patents': 'green',
-      'شراكات': 'blue',
+      [t('homepage.categories.partnerships')]: 'blue',
       'partnerships': 'blue',
-      'مختبرات': 'orange',
+      [t('homepage.categories.laboratories')]: 'orange',
       'laboratories': 'orange',
-      'أبحاث': 'geekblue',
+      [t('homepage.categories.research')]: 'geekblue',
       'research': 'geekblue',
-      'ندوة': 'purple',
+      [t('homepage.categories.seminar')]: 'purple',
       'seminar': 'purple',
-      'ورشة عمل': 'cyan',
+      [t('homepage.categories.workshop')]: 'cyan',
       'workshop': 'cyan'
     };
     return colors[category] || 'default';
@@ -423,19 +465,19 @@ const HomePage = () => {
 
   const getCategoryIcon = (category) => {
     const icons = {
-      'اكتشافات': <FireOutlined />,
+      [t('homepage.categories.discoveries')]: <FireOutlined />,
       'discoveries': <FireOutlined />,
-      'براءات اختراع': <TrophyOutlined />,
+      [t('homepage.categories.patents')]: <TrophyOutlined />,
       'patents': <TrophyOutlined />,
-      'شراكات': <TeamOutlined />,
+      [t('homepage.categories.partnerships')]: <TeamOutlined />,
       'partnerships': <TeamOutlined />,
-      'مختبرات': <ExperimentOutlined />,
+      [t('homepage.categories.laboratories')]: <ExperimentOutlined />,
       'laboratories': <ExperimentOutlined />,
-      'أبحاث': <BookOutlined />,
+      [t('homepage.categories.research')]: <BookOutlined />,
       'research': <BookOutlined />,
-      'ندوة': <ReadOutlined />,
+      [t('homepage.categories.seminar')]: <ReadOutlined />,
       'seminar': <ReadOutlined />,
-      'ورشة عمل': <ToolOutlined />,
+      [t('homepage.categories.workshop')]: <ToolOutlined />,
       'workshop': <ToolOutlined />
     };
     return icons[category] || <BookOutlined />;
@@ -710,7 +752,7 @@ const HomePage = () => {
               </Paragraph>
               {/* Debug info */}
               <div style={{ marginTop: '16px', fontSize: '14px', color: '#999' }}>
-                عدد المقالات المميزة: {posts.length}
+                {t('homepage.featuredCount', { count: posts.length })}
               </div>
             </div>
             <Row gutter={[24, 24]}>
@@ -1080,7 +1122,7 @@ const HomePage = () => {
               fontWeight: '800',
               marginBottom: '16px'
             }}>
-              {t('homepage.orgName')}            
+              {t('homepage.researchAreas.title')}            
             </Title>
             <Paragraph style={{
               marginTop: '16px',
@@ -1090,35 +1132,39 @@ const HomePage = () => {
               maxWidth: '600px',
               margin: '0 auto'
             }}>
-
+              {t('homepage.researchAreas.description')}
             </Paragraph>
           </div>
 
           <Row gutter={[32, 32]}>
             {[
               {
-                title: "الذكاء الاصطناعي",
-                description: "تطوير خوارزميات متقدمة للتعلم الآلي وتطبيقاتها في الحياة العملية",
-                icon: "🤖",
-                gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-              },
-              {
-                title: "الطاقة المتجددة",
-                description: "أبحاث متطورة في مجال الطاقة الشمسية وطاقة الرياح والحلول البيئية",
+                title: t('homepage.agriculturalResearch.smartFarming.title'),
+                description: t('homepage.agriculturalResearch.smartFarming.description'),
                 icon: "🌱",
                 gradient: "linear-gradient(135deg, #52c41a 0%, #73d13d 100%)",
+                stats: t('homepage.agriculturalResearch.smartFarming.stats')
               },
               {
-                title: "التكنولوجيا الحيوية",
-                description: "تطوير العلاجات الجينية والأدوية المبتكرة لمعالجة الأمراض المستعصية",
+                title: t('homepage.agriculturalResearch.geneticEngineering.title'),
+                description: t('homepage.agriculturalResearch.geneticEngineering.description'),
                 icon: "🧬",
                 gradient: "linear-gradient(135deg, #f759ab 0%, #ff7875 100%)",
+                stats: t('homepage.agriculturalResearch.geneticEngineering.stats')
               },
               {
-                title: "علوم الفضاء",
-                description: "استكشاف الفضاء وتطوير تقنيات الأقمار الصناعية والاتصالات الفضائية",
-                icon: "🚀",
+                title: t('homepage.agriculturalResearch.sustainableAgriculture.title'),
+                description: t('homepage.agriculturalResearch.sustainableAgriculture.description'),
+                icon: "🌍",
+                gradient: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                stats: t('homepage.agriculturalResearch.sustainableAgriculture.stats')
+              },
+              {
+                title: t('homepage.agriculturalResearch.verticalFarming.title'),
+                description: t('homepage.agriculturalResearch.verticalFarming.description'),
+                icon: "🏗️",
                 gradient: "linear-gradient(135deg, #faad14 0%, #ffc53d 100%)",
+                stats: t('homepage.agriculturalResearch.verticalFarming.stats')
               }
             ].map((field, index) => (
               <Col xs={24} sm={12} lg={6} key={index}>
@@ -1209,7 +1255,7 @@ const HomePage = () => {
         {/* Success Stories Section */}
         <div style={{ 
           marginBottom: '100px',
-          background: 'linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)',
+          background: 'linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)',
           padding: '80px 0',
           borderRadius: '32px',
           position: 'relative',
@@ -1221,7 +1267,7 @@ const HomePage = () => {
             right: '20px',
             width: '200px',
             height: '200px',
-            background: 'linear-gradient(135deg, rgba(24,144,255,0.1) 0%, rgba(64,169,255,0.1) 100%)',
+            background: 'linear-gradient(135deg, rgba(82,196,26,0.1) 0%, rgba(115,209,61,0.1) 100%)',
             borderRadius: '50%',
             zIndex: 1
           }} />
@@ -1230,7 +1276,7 @@ const HomePage = () => {
             <div style={{ marginBottom: '48px', textAlign: 'center' }}>
               <Title level={1} style={{
                 margin: 0,
-                background: 'linear-gradient(135deg, #1890ff 0%, #40a9ff 100%)',
+                background: 'linear-gradient(135deg, #52c41a 0%, #73d13d 100%)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 fontSize: '3.5rem',
@@ -1254,28 +1300,31 @@ const HomePage = () => {
             <Row gutter={[32, 32]}>
               {[
                 {
-                  title: "علاج السرطان الثوري",
-                  description: "تطوير علاج جيني جديد حقق نسبة شفاء 85% في المراحل المبكرة من سرطان الدم",
-                  achievement: "براءة اختراع دولية",
+                  title: t('homepage.agriculturalAchievements.smartFarmingTech.title'),
+                  description: t('homepage.agriculturalAchievements.smartFarmingTech.description'),
+                  achievement: t('homepage.agriculturalAchievements.smartFarmingTech.achievement'),
                   year: "2024",
-                  icon: "🏆",
-                  color: "#52c41a"
+                  icon: "🌱",
+                  color: "#52c41a",
+                  impact: t('homepage.agriculturalAchievements.smartFarmingTech.impact')
                 },
                 {
-                  title: "تقنية تحلية المياه",
-                  description: "ابتكار نظام تحلية مياه بالطاقة الشمسية بكفاءة 95% وتكلفة أقل بـ 60%",
-                  achievement: "جائزة الابتكار العالمية",
+                  title: t('homepage.agriculturalAchievements.droughtResistantSeeds.title'),
+                  description: t('homepage.agriculturalAchievements.droughtResistantSeeds.description'),
+                  achievement: t('homepage.agriculturalAchievements.droughtResistantSeeds.achievement'),
                   year: "2023",
-                  icon: "💧",
-                  color: "#1890ff"
+                  icon: "🌾",
+                  color: "#1890ff",
+                  impact: t('homepage.agriculturalAchievements.droughtResistantSeeds.impact')
                 },
                 {
-                  title: "الذكاء الاصطناعي الطبي",
-                  description: "تطوير نظام ذكي لتشخيص الأمراض النادرة بدقة 98% في أقل من دقيقتين",
-                  achievement: "شراكة مع منظمة الصحة العالمية",
+                  title: t('homepage.agriculturalAchievements.verticalFarmingSystem.title'),
+                  description: t('homepage.agriculturalAchievements.verticalFarmingSystem.description'),
+                  achievement: t('homepage.agriculturalAchievements.verticalFarmingSystem.achievement'),
                   year: "2024",
-                  icon: "🔬",
-                  color: "#722ed1"
+                  icon: "🏗️",
+                  color: "#722ed1",
+                  impact: t('homepage.agriculturalAchievements.verticalFarmingSystem.impact')
                 }
               ].map((story, index) => (
                 <Col xs={24} md={8} key={index}>
@@ -1381,7 +1430,7 @@ const HomePage = () => {
             {/* Organization Info */}
             <Col xs={24} md={8}>
               <Title level={4} style={{ color: 'white', marginBottom: '24px' }}>
-                {organizationData.name || 'منظمة البحث العلمي'}
+                {t('homepage.organization.name')}
               </Title>
               <Space direction="vertical" size="middle">
                 {organizationData.email && (
@@ -1427,7 +1476,7 @@ const HomePage = () => {
             {/* Quick Links */}
             <Col xs={24} md={8}>
               <Title level={4} style={{ color: 'white', marginBottom: '24px' }}>
-                روابط سريعة
+                {t('homepage.footer.quickLinks')}
               </Title>
               <Space direction="vertical" size="middle">
                 <Button
@@ -1435,28 +1484,28 @@ const HomePage = () => {
                   style={{ color: 'rgba(255,255,255,0.9)', padding: 0 }}
                   onClick={() => navigate('/research')}
                 >
-                  البحوث العلمية
+                  {t('homepage.footer.links.research')}
                 </Button>
                 <Button
                   type="link"
                   style={{ color: 'rgba(255,255,255,0.9)', padding: 0 }}
                   onClick={() => navigate('/courses')}
                 >
-                  الدورات التدريبية
+                  {t('homepage.footer.links.courses')}
                 </Button>
                 <Button
                   type="link"
                   style={{ color: 'rgba(255,255,255,0.9)', padding: 0 }}
                   onClick={() => navigate('/services')}
                 >
-                  الخدمات
+                  {t('homepage.footer.links.services')}
                 </Button>
                 <Button
                   type="link"
                   style={{ color: 'rgba(255,255,255,0.9)', padding: 0 }}
                   onClick={() => navigate('/contact')}
                 >
-                  اتصل بنا
+                  {t('homepage.footer.links.contact')}
                 </Button>
               </Space>
             </Col>
@@ -1464,7 +1513,7 @@ const HomePage = () => {
             {/* Social Media */}
             <Col xs={24} md={8}>
               <Title level={4} style={{ color: 'white', marginBottom: '24px' }}>
-                تابعنا على
+                {t('homepage.footer.followUs')}
               </Title>
               <Space size="large">
                 {organizationData.facebook && (
@@ -1515,7 +1564,10 @@ const HomePage = () => {
 
           <div style={{ textAlign: 'center' }}>
             <Text style={{ color: 'rgba(255,255,255,0.7)' }}>
-              © 2024 {organizationData.name || 'منظمة البحث العلمي'}. جميع الحقوق محفوظة.
+              {t('homepage.footer.copyright', { 
+                year: '2024', 
+                name: t('homepage.organization.name')
+              })}
             </Text>
           </div>
         </div>

@@ -160,10 +160,79 @@
     "followUs": "Follow Us",
     "rightsReserved": "All rights reserved.",
     "successStories": {
-      "title": "Success Stories",
-      "description": "Real achievements that changed the course of research and positively impacted society."
+      "title": "Our Agricultural Research Achievements",
+      "description": "We are proud of our outstanding achievements in agricultural research and innovations that contribute to the development of the agricultural sector and increased productivity"
+    },
+    "researchAreas": {
+      "title": "Agricultural Research Areas",
+      "description": "We focus on developing innovative solutions in various agricultural fields to improve productivity and ensure food security"
+    },
+    "agriculturalResearch": {
+      "smartFarming": {
+        "title": "Smart Farming",
+        "description": "Developing smart irrigation systems and crop monitoring using artificial intelligence and IoT",
+        "stats": "40% Productivity Improvement"
+      },
+      "geneticEngineering": {
+        "title": "Genetic Engineering",
+        "description": "Developing improved seeds resistant to drought, salinity and diseases to increase productivity",
+        "stats": "60% Resistance Increase"
+      },
+      "sustainableAgriculture": {
+        "title": "Sustainable Agriculture",
+        "description": "Developing environmentally friendly agricultural technologies and reducing water and pesticide consumption",
+        "stats": "50% Water Saving"
+      },
+      "verticalFarming": {
+        "title": "Vertical Farming",
+        "description": "Designing advanced vertical farming systems to increase production in limited spaces",
+        "stats": "10x Production Increase"
+      }
+    },
+    "agriculturalAchievements": {
+      "smartFarmingTech": {
+        "title": "Smart Farming Technology",
+        "description": "Developing a smart irrigation system using artificial intelligence to improve crop productivity by 40% and save water by 60%",
+        "achievement": "Global Agricultural Innovation Award",
+        "impact": "40% Productivity Increase"
+      },
+      "droughtResistantSeeds": {
+        "title": "Drought-Resistant Seeds",
+        "description": "Producing wheat seeds resistant to drought and salinity that withstand harsh climatic conditions with 35% increased production",
+        "achievement": "Genetic Engineering Patent",
+        "impact": "Improving Crop Drought Resistance"
+      },
+      "verticalFarmingSystem": {
+        "title": "Vertical Farming System",
+        "description": "Designing an advanced vertical farming system that produces 10 times traditional crops in the same space with less water consumption",
+        "achievement": "Partnership with Ministry of Agriculture",
+        "impact": "10x Production Increase"
+      }
+    },
+    "organization": {
+      "name": "Agricultural Genetic Engineering Research Institute",
+      "defaultName": "Scientific Research Organization",
+      "vision": "To become the leading institute in the Middle East in scientific research and technical innovation, contributing to building a knowledge society and achieving sustainable development",
+      "mission": "We are committed to conducting advanced scientific research and developing innovative technical solutions, qualifying specialized scientific cadres, and providing scientific and technical consultations to serve society and the national economy",
+      "about": "The Scientific Research and Technical Development Institute is a leading institution in scientific research and technical innovation, established in 1985 and includes an elite group of scientists and researchers specialized in various scientific and technical fields. The institute contributes to developing advanced scientific and technical solutions to face contemporary challenges and achieve sustainable development."
+    },
+    "categories": {
+      "research": "Research",
+      "announcement": "Announcement",
+      "grants": "Grants",
+      "conferences": "Conferences",
+      "discoveries": "Discoveries",
+      "patents": "Patents",
+      "partnerships": "Partnerships",
+      "laboratories": "Laboratories",
+      "seminar": "Seminar",
+      "workshop": "Workshop"
+    },
+    "defaults": {
+      "researchTeam": "Research Team"
     },
     "footer": {
+      "Agricultural Sciences Research Institute":"Agricultural Sciences Research Institute",
       "quickLinks": "Quick Links",
       "followUs": "Follow Us",
       "copyright": "© {{year}} {{name}}. All rights reserved.",
@@ -274,6 +343,7 @@
     "category": "Category"
   },
   "admin": {
+
     "userManagement": {
       "title": "User Management",
       "description": "Manage user accounts, approvals, and roles",
@@ -474,7 +544,20 @@
       "backupCreated": "Backup created successfully",
       "createBackup": "Create Backup"
     },
-    "organizationManagement": {
+          "organizationManagement": {
+        "visionImage": "Vision Image",
+        "missionImage": "Mission Image",
+        "aboutImage": "About Image",
+        "uploadImage": "Upload Image",
+        "changeImage": "Change Image",
+        "removeImage": "Remove Image",
+        "imagePreview": "Image Preview",
+        "imageUploadSuccess": "Image uploaded successfully",
+        "imageUploadError": "Failed to upload image",
+        "imageRemoveSuccess": "Image removed successfully",
+        "imageRemoveError": "Failed to remove image",
+        "confirmImageRemoval": "Confirm Image Removal",
+        "confirmImageRemovalContent": "Are you sure you want to remove this image? This action cannot be undone.",
       "title": "Organization Management",
       "description": "Manage departments, laboratories, and organizational structure",
       "departments": "Departments",

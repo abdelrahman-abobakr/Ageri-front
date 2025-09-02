@@ -20,7 +20,9 @@ import {
   Tabs,
   Tree,
   Avatar,
-  Checkbox
+  Checkbox,
+  Upload,
+  Image
 } from 'antd';
 import {
   ApartmentOutlined,
@@ -39,6 +41,7 @@ import {
   SettingOutlined
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
+import { App } from 'antd';
 import { organizationService, authService } from '../../services';
 // import { useRealTimeStats, useAnimatedCounter } from '../../hooks/useRealTimeStats';
 // import RealTimeIndicator from '../../components/admin/RealTimeIndicator';
@@ -53,6 +56,7 @@ const { TabPane } = Tabs;
 const OrganizationManagementPage = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('labs');
+  const { message } = App.useApp();
   const [departments, setDepartments] = useState([]);
   const [labs, setLabs] = useState([]);
   const [staff, setStaff] = useState([]);
@@ -78,9 +82,18 @@ const OrganizationManagementPage = () => {
   const [assignmentFormVisible, setAssignmentFormVisible] = useState(false);
   const [assignmentForm] = Form.useForm();
 
+  // Image management for settings
+  const [visionImageFile, setVisionImageFile] = useState(null);
+  const [missionImageFile, setMissionImageFile] = useState(null);
+  const [aboutImageFile, setAboutImageFile] = useState(null);
+  const [imagePreviewVisible, setImagePreviewVisible] = useState(false);
+  const [previewImage, setPreviewImage] = useState('');
+
   // User management for department heads
   const [availableUsers, setAvailableUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+
+
 
   // Real-time organization statistics - temporarily disabled for debugging
   // const { stats: orgStats, loading: statsLoading, refresh: refreshStats } = useRealTimeStats('organization', 30000);
@@ -104,7 +117,7 @@ const OrganizationManagementPage = () => {
       loadLabs();
     } else if (activeTab === 'staff') {
       loadStaff();
-    } else if (activeTab === 'settings') {
+        } else if (activeTab === 'settings') {
       loadSettings();
     }
   }, [activeTab, currentPage, searchTerm, statusFilter]);
@@ -216,6 +229,8 @@ const OrganizationManagementPage = () => {
       setUsersLoading(false);
     }
   };
+
+
   const handleCreateDepartment = async () => {
     setEditingItem(null);
     form.resetFields();
@@ -314,15 +329,95 @@ const OrganizationManagementPage = () => {
   const handleSaveSettings = async (values) => {
     try {
       setSettingsLoading(true);
-      const updatedSettings = await organizationService.updateSettings(values);
+      
+      // Create FormData to handle file uploads
+      const formData = new FormData();
+      
+      // Add text fields
+      Object.keys(values).forEach(key => {
+        if (key !== 'vision_image' && key !== 'mission_image') {
+          formData.append(key, values[key]);
+        }
+      });
+      
+      // Add image files if selected
+      if (visionImageFile) {
+        formData.append('vision_image', visionImageFile);
+        console.log('Adding vision image:', visionImageFile);
+      }
+      if (missionImageFile) {
+        formData.append('mission_image', missionImageFile);
+        console.log('Adding mission image:', missionImageFile);
+      }
+      if (aboutImageFile) {
+        formData.append('about_image', aboutImageFile);
+        console.log('Adding about image:', aboutImageFile);
+      }
+      
+      // Log FormData contents for debugging
+      for (let [key, value] of formData.entries()) {
+        console.log('FormData entry:', key, value);
+      }
+      
+      const updatedSettings = await organizationService.updateSettings(formData);
       setSettings(updatedSettings);
+      
+      // Reset image files
+      setVisionImageFile(null);
+      setMissionImageFile(null);
+      setAboutImageFile(null);
+      
       message.success('تم حفظ إعدادات المنظمة بنجاح');
     } catch (error) {
-      message.error('فشل في حفظ إعدادات المنظمة');
+      console.error('Settings save error:', error);
+      if (error.response?.data) {
+        const errorData = error.response.data;
+        if (errorData.vision_image) {
+          message.error(`خطأ في صورة الرؤية: ${errorData.vision_image[0]}`);
+        } else if (errorData.mission_image) {
+          message.error(`خطأ في صورة الرسالة: ${errorData.mission_image[0]}`);
+        } else {
+          message.error('فشل في حفظ إعدادات المنظمة');
+        }
+      } else {
+        message.error('فشل في حفظ إعدادات المنظمة');
+      }
     } finally {
       setSettingsLoading(false);
     }
   };
+
+  // Handle vision image change
+  const handleVisionImageChange = (info) => {
+    console.log('Vision image change:', info);
+    if (info.file) {
+      setVisionImageFile(info.file);
+    }
+  };
+
+  // Handle mission image change
+  const handleMissionImageChange = (info) => {
+    console.log('Mission image change:', info);
+    if (info.file) {
+      setMissionImageFile(info.file);
+    }
+  };
+
+  // Handle about image change
+  const handleAboutImageChange = (info) => {
+    console.log('About image change:', info);
+    if (info.file) {
+      setAboutImageFile(info.file);
+    }
+  };
+
+  // Show image preview
+  const showImagePreview = (imageUrl) => {
+    setPreviewImage(imageUrl);
+    setImagePreviewVisible(true);
+  };
+
+
 
   // Lab Management Handlers
   const handleCreateLab = async () => {
@@ -335,7 +430,7 @@ const OrganizationManagementPage = () => {
   const handleEditLab = async (lab) => {
     try {
       setLoading(true);
-      await loadAvailableUsers(); // Load users for dropdown
+      await loadAvailableUsers();
 
       const fullLabData = await organizationService.getLabById(lab.id);
       setEditingItem(fullLabData);
@@ -616,6 +711,14 @@ const OrganizationManagementPage = () => {
       currency: 'EGP',
       minimumFractionDigits: 0,
     }).format(amount);
+  };
+
+  // Helper to get full image URL
+  const getImageUrl = (url) => {
+    if (!url) return '';
+    if (url.startsWith('http://') || url.startsWith('https://')) return url;
+    if (url.startsWith('/media') || url.startsWith('media')) return `http://localhost:8000${url.startsWith('/') ? url : '/' + url}`;
+    return url;
   };
 
   return (
@@ -991,6 +1094,103 @@ const OrganizationManagementPage = () => {
                     </Form.Item>
                   </Col>
 
+                  {/* Vision Image */}
+                  <Col span={24}>
+                    <Form.Item
+                      label={t('admin.organizationManagement.visionImage')}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                        {/* صورة الرؤية */}
+                        <div style={{ minWidth: 120, minHeight: 80, width: 140, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee', borderRadius: 8, background: '#fafbfc', position: 'relative', overflow: 'hidden' }}>
+                          {visionImageFile ? (
+                            <img
+                              src={URL.createObjectURL(visionImageFile)}
+                              alt="vision"
+                              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8, display: 'block', cursor: 'pointer' }}
+                              onClick={() => showImagePreview(URL.createObjectURL(visionImageFile))}
+                              onError={e => { e.target.onerror = null; e.target.src = '/no-image.png'; }}
+                            />
+                          ) : settings.vision_image ? (
+                            <img
+                              src={getImageUrl(settings.vision_image)}
+                              alt="vision"
+                              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8, display: 'block', cursor: 'pointer' }}
+                              onClick={() => showImagePreview(getImageUrl(settings.vision_image))}
+                              onError={e => { e.target.onerror = null; e.target.src = '/no-image.png'; }}
+                            />
+                          ) : (
+                            <span style={{ color: '#bbb', fontSize: 12 }}>لا توجد صورة</span>
+                          )}
+                          {/* زر القلم (Edit) */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 32,
+                              background: 'rgba(24, 144, 255, 0.9)',
+                              color: 'white',
+                              borderRadius: '50%',
+                              width: 24,
+                              height: 24,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              fontSize: 12,
+                              zIndex: 2
+                            }}
+                            title={t('admin.organizationManagement.changeImage')}
+                            onClick={() => {
+                              const fileInput = document.createElement('input');
+                              fileInput.type = 'file';
+                              fileInput.accept = 'image/*';
+                              fileInput.onchange = (e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const file = e.target.files[0];
+                                  setVisionImageFile(file);
+                                }
+                              };
+                              fileInput.click();
+                            }}
+                          >
+                            <EditOutlined />
+                          </div>
+                          {/* زر العين (Preview) */}
+                          {(visionImageFile || settings.vision_image) && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 4,
+                                right: 4,
+                                background: 'rgba(0,0,0,0.6)',
+                                color: 'white',
+                                borderRadius: '50%',
+                                width: 24,
+                                height: 24,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                fontSize: 12,
+                                zIndex: 2
+                              }}
+                              title={t('admin.organizationManagement.previewImage')}
+                              onClick={() => {
+                                if (visionImageFile) {
+                                  showImagePreview(URL.createObjectURL(visionImageFile));
+                                } else if (settings.vision_image) {
+                                  showImagePreview(getImageUrl(settings.vision_image));
+                                }
+                              }}
+                            >
+                              <EyeOutlined />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Form.Item>
+                  </Col>
+
                   <Col span={24}>
                     <Form.Item
                       name="mission"
@@ -1000,12 +1200,200 @@ const OrganizationManagementPage = () => {
                     </Form.Item>
                   </Col>
 
+                  {/* Mission Image */}
+                  <Col span={24}>
+                    <Form.Item label={t('admin.organizationManagement.missionImage')}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                        <div style={{ minWidth: 120, minHeight: 80, width: 140, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee', borderRadius: 8, background: '#fafbfc', position: 'relative', overflow: 'hidden' }}>
+                          {missionImageFile ? (
+                            <img
+                              src={URL.createObjectURL(missionImageFile)}
+                              alt="mission"
+                              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8, display: 'block', cursor: 'pointer' }}
+                              onClick={() => showImagePreview(URL.createObjectURL(missionImageFile))}
+                              onError={e => { e.target.onerror = null; e.target.src = '/no-image.png'; }}
+                            />
+                          ) : settings.mission_image ? (
+                            <img
+                              src={getImageUrl(settings.mission_image)}
+                              alt="mission"
+                              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8, display: 'block', cursor: 'pointer' }}
+                              onClick={() => showImagePreview(getImageUrl(settings.mission_image))}
+                              onError={e => { e.target.onerror = null; e.target.src = '/no-image.png'; }}
+                            />
+                          ) : (
+                            <span style={{ color: '#bbb', fontSize: 12 }}>لا توجد صورة</span>
+                          )}
+                          {/* زر القلم (Edit) */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 32,
+                              background: 'rgba(24, 144, 255, 0.9)',
+                              color: 'white',
+                              borderRadius: '50%',
+                              width: 24,
+                              height: 24,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              fontSize: 12,
+                              zIndex: 2
+                            }}
+                            title={t('admin.organizationManagement.changeImage')}
+                            onClick={() => {
+                              const fileInput = document.createElement('input');
+                              fileInput.type = 'file';
+                              fileInput.accept = 'image/*';
+                              fileInput.onchange = (e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const file = e.target.files[0];
+                                  setMissionImageFile(file);
+                                }
+                              };
+                              fileInput.click();
+                            }}
+                          >
+                            <EditOutlined />
+                          </div>
+                          {/* زر العين (Preview) */}
+                          {(missionImageFile || settings.mission_image) && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 4,
+                                right: 4,
+                                background: 'rgba(0,0,0,0.6)',
+                                color: 'white',
+                                borderRadius: '50%',
+                                width: 24,
+                                height: 24,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                fontSize: 12,
+                                zIndex: 2
+                              }}
+                              title={t('admin.organizationManagement.previewImage')}
+                              onClick={() => {
+                                if (missionImageFile) {
+                                  showImagePreview(URL.createObjectURL(missionImageFile));
+                                } else if (settings.mission_image) {
+                                  showImagePreview(getImageUrl(settings.mission_image));
+                                }
+                              }}
+                            >
+                              <EyeOutlined />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </Form.Item>
+                  </Col>
+
                   <Col span={24}>
                     <Form.Item
                       name="about"
                       label={t('admin.organizationManagement.about')}
                     >
                       <TextArea rows={4} placeholder={t('admin.organizationManagement.aboutPlaceholder')} />
+                    </Form.Item>
+                  </Col>
+
+                  {/* About Image */}
+                  <Col span={24}>
+                    <Form.Item label={t('admin.organizationManagement.aboutImage')}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                        <div style={{ minWidth: 120, minHeight: 80, width: 140, height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #eee', borderRadius: 8, background: '#fafbfc', position: 'relative', overflow: 'hidden' }}>
+                          {aboutImageFile ? (
+                            <img
+                              src={URL.createObjectURL(aboutImageFile)}
+                              alt="about"
+                              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8, display: 'block', cursor: 'pointer' }}
+                              onClick={() => showImagePreview(URL.createObjectURL(aboutImageFile))}
+                              onError={e => { e.target.onerror = null; e.target.src = '/no-image.png'; }}
+                            />
+                          ) : settings.about_image ? (
+                            <img
+                              src={getImageUrl(settings.about_image)}
+                              alt="about"
+                              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 8, display: 'block', cursor: 'pointer' }}
+                              onClick={() => showImagePreview(getImageUrl(settings.about_image))}
+                              onError={e => { e.target.onerror = null; e.target.src = '/no-image.png'; }}
+                            />
+                          ) : (
+                            <span style={{ color: '#bbb', fontSize: 12 }}>لا توجد صورة</span>
+                          )}
+                          {/* زر القلم (Edit) */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 32,
+                              background: 'rgba(24, 144, 80, 0.9)',
+                              color: 'white',
+                              borderRadius: '50%',
+                              width: 24,
+                              height: 24,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              cursor: 'pointer',
+                              fontSize: 12,
+                              zIndex: 2
+                            }}
+                            title={t('admin.organizationManagement.changeImage')}
+                            onClick={() => {
+                              const fileInput = document.createElement('input');
+                              fileInput.type = 'file';
+                              fileInput.accept = 'image/*';
+                              fileInput.onchange = (e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  const file = e.target.files[0];
+                                  setAboutImageFile(file);
+                                }
+                              };
+                              fileInput.click();
+                            }}
+                          >
+                            <EditOutlined />
+                          </div>
+                          {/* زر العين (Preview) */}
+                          {(aboutImageFile || settings.about_image) && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                top: 4,
+                                right: 4,
+                                background: 'rgba(0,0,0,0.6)',
+                                color: 'white',
+                                borderRadius: '50%',
+                                width: 24,
+                                height: 24,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                fontSize: 12,
+                                zIndex: 2
+                              }}
+                              title={t('admin.organizationManagement.previewImage')}
+                              onClick={() => {
+                                if (aboutImageFile) {
+                                  showImagePreview(URL.createObjectURL(aboutImageFile));
+                                } else if (settings.about_image) {
+                                  showImagePreview(getImageUrl(settings.about_image));
+                                }
+                              }}
+                            >
+                              <EyeOutlined />
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </Form.Item>
                   </Col>
 
@@ -1072,6 +1460,7 @@ const OrganizationManagementPage = () => {
               </Form>
             </Spin>
           </TabPane>
+
         </Tabs>
       </Card>
 
@@ -1389,6 +1778,23 @@ const OrganizationManagementPage = () => {
             </Space>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Image Preview Modal */}
+      <Modal
+        title={t('admin.organizationManagement.imagePreview')}
+        open={imagePreviewVisible}
+        onCancel={() => setImagePreviewVisible(false)}
+        footer={null}
+        width={800}
+      >
+        <div style={{ textAlign: 'center' }}>
+          <Image
+            src={previewImage}
+            style={{ maxWidth: '100%', maxHeight: '600px' }}
+            preview={false}
+          />
+        </div>
       </Modal>
     </div>
   );
