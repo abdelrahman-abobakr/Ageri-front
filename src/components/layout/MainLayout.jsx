@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Layout, Menu, Avatar, Dropdown, Button, theme, Breadcrumb, Badge, List, Typography } from 'antd';
-import AppLogo from '../../assets/ageri.jpg'; // Assuming your logo is at this path
+import AppLogo from '../../assets/Ageri.png'; // Assuming your logo is at this path
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';

@@ -3,6 +3,7 @@ import { Card, List, Input, Typography, Row, Col, Pagination, Spin, Tag, Button,
 import { SearchOutlined, CalendarOutlined, UserOutlined, EyeOutlined, BookOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { contentService } from '../../services';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -15,6 +16,7 @@ const AnnouncementsPage = () => {
   const [total, setTotal] = useState(0);
   const navigate = useNavigate();
   const pageSize = 100;
+  const { t } = useTranslation();
 
   const loadPosts = async (page = 1, search = '') => {
     try {
@@ -97,9 +99,9 @@ const AnnouncementsPage = () => {
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-        <Title level={1}>المنشورات</Title>
+        <Title level={1}>{t('common.posts')}</Title>
         <Paragraph style={{ fontSize: '16px', color: '#666' }}>
-          ابق على اطلاع بآخر الأخبار والفعاليات والإعلانات المهمة
+          {t('common.postsDescription')}
         </Paragraph>
       </div>
 
@@ -108,7 +110,7 @@ const AnnouncementsPage = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} md={16}>
             <Search
-              placeholder="البحث في المنشورات..."
+              placeholder={t('announcements.searchPlaceholder')}
               allowClear
               enterButton={<SearchOutlined />}
               size="large"
@@ -119,7 +121,7 @@ const AnnouncementsPage = () => {
           </Col>
           <Col xs={24} md={8}>
             <Text strong style={{ fontSize: '16px' }}>
-              إجمالي المنشورات: {total}
+              {t('announcements.totalPosts')} {total}
             </Text>
           </Col>
         </Row>
@@ -408,7 +410,7 @@ const AnnouncementsPage = () => {
                         }
                       }}
                     >
-                      قراءة المزيد
+                      {t('announcements.viewDetails')}
                     </Button>
                   </div>
 

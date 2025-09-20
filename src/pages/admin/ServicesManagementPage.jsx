@@ -597,7 +597,7 @@ const ServicesManagementPage = () => {
                 name="estimated_duration"
                 label="المدة المقدرة"
               >
-                <Input addonAfter="دقيقة" />
+                <Input addonAfter="يوم" />
               </Form.Item>
             </Col>
             <Col span={12}>

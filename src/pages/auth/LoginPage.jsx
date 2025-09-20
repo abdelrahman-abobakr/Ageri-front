@@ -110,6 +110,35 @@ const LoginPage = () => {
               placeholder={t('auth.email')}
             />
           </Form.Item>
+          {/* this is the new email field after adding new validation */}
+          {/* <Form.Item
+            name="email"
+            label={t('auth.email')}
+            rules={[
+              {
+                required: true,
+                message: t('auth.email') + ' مطلوب',
+              },
+              {
+                type: 'email',
+                message: 'يرجى إدخال عنوان بريد إلكتروني صحيح',
+              },
+              {
+                validator: (_, value) => {
+                  if (!value || value.endsWith('@ageri.sci.eg')) {
+                    return Promise.resolve();
+                  }
+                  return Promise.reject(new Error('البريد الإلكتروني يجب أن ينتهي بـ @ageri.sci.eg'));
+                },
+              },
+            ]}
+          >
+            <Input
+              prefix={<MailOutlined />}
+              placeholder={t('auth.email')}
+            />
+          </Form.Item> */}
+
 
           <Form.Item
             name="password"

@@ -138,6 +138,7 @@ const ServicesPage = () => {
 
   const formatDuration = (duration) => {
     if (!duration) return 'غير محدد';
+    duration = duration + " " + t('services.days'); 
     return duration;
   };
 
@@ -326,7 +327,7 @@ const ServicesPage = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Text type="secondary">
             <ClockCircleOutlined style={{ marginRight: '4px' }} />
-            {formatDuration(service.estimated_duration)}
+            {formatDuration(service.estimated_duration)} 
           </Text>
 
           <Button
@@ -337,7 +338,7 @@ const ServicesPage = () => {
               handleServiceDetails(service);
             }}
           >
-            عرض التفاصيل
+            {t('services.viewDetails') || 'عرض التفاصيل'}
           </Button>
         </div>
       </Card>
@@ -356,7 +357,7 @@ const ServicesPage = () => {
         onCancel={() => setModalVisible(false)}
         footer={[
           <Button key="cancel" onClick={() => setModalVisible(false)}>
-            إغلاق
+            {t('common.close') || 'إغلاق'}
           </Button>,
 
         ]}
@@ -395,7 +396,7 @@ const ServicesPage = () => {
               }}>
                 <StarFilled style={{ color: 'white', fontSize: '14px' }} />
                 <Text style={{ color: 'white', fontSize: '12px', fontWeight: 'bold' }}>
-                  خدمة مميزة
+                  {t('services.featured')}
                 </Text>
               </div>
             )}
@@ -455,9 +456,9 @@ const ServicesPage = () => {
           {/* Service Image Display */}
           {imageUrl && (
             <div style={{ marginBottom: '24px', textAlign: 'center' }}>
-              <Title level={5} style={{ color: '#1890ff', marginBottom: '16px' }}>
-                صورة الخدمة
-              </Title>
+              {/* <Title level={5} style={{ color: '#1890ff', marginBottom: '16px' }}>
+                {t('services.serviceImage')}
+              </Title> */}
               <Image
                 src={imageUrl}
                 alt={selectedService.name}
@@ -482,7 +483,7 @@ const ServicesPage = () => {
                     fontSize: '18px',
                     marginLeft: '10px'
                   }} />
-                  <Text strong style={{ fontSize: '18px' }}>وصف الخدمة</Text>
+                  <Text strong style={{ fontSize: '18px' }}>{t('services.serviceDescription')}</Text>
                 </div>
                 <Card
                   size="small"
@@ -506,27 +507,27 @@ const ServicesPage = () => {
                 fontSize: '16px',
               }}>
                 <ToolOutlined style={{ marginLeft: '5px' }} />
-                تفاصيل الخدمة
+                {t('services.serviceDetails')}
               </Title>
 
               <Card size="small" style={{ background: '#fff' }}>
                 <ServiceDetailItem
                   icon={<DollarOutlined
                     style={{ marginLeft:'8px'}} />}
-                  label="السعر"
+                  label={t('services.cost') || "السعر"}
                   value={formatPrice(selectedService)}
                 />
 
                 <ServiceDetailItem
                   icon={<ClockCircleOutlined style={{ marginLeft: '8px' }} />}
-                  label="المدة المقدرة"
+                  label={t('services.estimatedDuration') || "المدة المقدرة"}
                   value={formatDuration(selectedService.estimated_duration)}
                 />
 
                 {selectedService.category && (
                   <ServiceDetailItem
                     icon={<ToolOutlined style={{ marginLeft: '8px' }} />}
-                    label="فئة الخدمة"
+                    label={t('services.category')}
                     value={getCategoryText(selectedService.category)}
                   />
                 )}
@@ -550,14 +551,14 @@ const ServicesPage = () => {
                   fontSize: '16px'
                 }}>
                   <PhoneOutlined style={{ marginLeft: '8px' }} />
-                  معلومات التواصل
+                  {t('services.contactInformation') || 'معلومات الاتصال'}
                 </Title>
 
                 <Card size="small" style={{ background: '#fff' }}>
                   {selectedService.contact_email && (
                     <ServiceDetailItem
                       icon={<MailOutlined style={{ marginLeft: '8px' }} />}
-                      label="البريد الإلكتروني"
+                      label={t('common.email') || "البريد الإلكتروني"}
                       value={selectedService.contact_email}
                       type="email"
                     />
@@ -566,7 +567,7 @@ const ServicesPage = () => {
                   {selectedService.contact_phone && (
                     <ServiceDetailItem
                       icon={<PhoneOutlined style={{ marginLeft: '8px' }} />}
-                      label="رقم الهاتف"
+                      label={t('common.phone') || "الهاتف"}
                       value={selectedService.contact_phone}
                       type="phone"
                     />
@@ -585,10 +586,10 @@ const ServicesPage = () => {
       <div style={{ marginBottom: '24px' }}>
         <Title level={2}>
           <ToolOutlined style={{ marginRight: '8px' }} />
-          الخدمات المتاحة
+            {t('services.availableServices')}
         </Title>
         <Paragraph type="secondary">
-          استعرض جميع الخدمات المتاحة واطلب ما تحتاج إليه
+          {t('services.servicesDescription')}
         </Paragraph>
       </div>
 
@@ -597,7 +598,7 @@ const ServicesPage = () => {
         <div style={{ marginBottom: '32px' }}>
           <Title level={4} style={{ marginBottom: '16px' }}>
             <StarFilled style={{ color: '#faad14', marginRight: '8px' }} />
-            الخدمات المميزة
+            {t('services.featuredServices')}
           </Title>
           <Row gutter={[16, 16]}>
             {featuredServices.slice(0, 3).map(service => (
@@ -615,7 +616,7 @@ const ServicesPage = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Search
-              placeholder="ابحث في الخدمات..."
+              placeholder={t('services.searchPlaceholder') || "ابحث عن خدمة..."}
               allowClear
               enterButton={<SearchOutlined />}
               onSearch={handleSearch}
@@ -624,7 +625,7 @@ const ServicesPage = () => {
           </Col>
           <Col xs={24} sm={12} md={8}>
             <Select
-              placeholder="اختر فئة"
+              placeholder={t('services.filterByCategory')}
               style={{ width: '100%' }}
               value={selectedCategory}
               onChange={handleCategoryChange}
@@ -637,7 +638,7 @@ const ServicesPage = () => {
           </Col>
           <Col xs={24} md={8}>
             <Text type="secondary">
-              عرض {services.length} من أصل {total} خدمة
+              {t('services.view')} {services.length} {t('common.from')} {total} {t('services.service')}
             </Text>
           </Col>
         </Row>
@@ -659,7 +660,7 @@ const ServicesPage = () => {
               image={Empty.PRESENTED_IMAGE_SIMPLE}
               description={
                 <div>
-                  <Title level={4} type="secondary">لا توجد خدمات متاحة</Title>
+                  <Title level={4} type="secondary">{t('services.noServices')}</Title>
                   <Paragraph type="secondary">
                     {searchTerm || selectedCategory
                       ? 'جرب تعديل معايير البحث أو التصفية'

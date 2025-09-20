@@ -12,6 +12,7 @@ import {
   UserAddOutlined
 } from '@ant-design/icons';
 import { organizationService } from '../../services';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -22,6 +23,7 @@ const LabDetailPage = () => {
   const [researchers, setResearchers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [researchersLoading, setResearchersLoading] = useState(false);
+  const { t } = useTranslation();
 
   // Utility function to handle profile picture URLs
   const getProfilePictureUrl = (url) => {
@@ -123,11 +125,11 @@ const LabDetailPage = () => {
       <Row gutter={[24, 24]}>
   {/* Department Information */}
         <Col xs={24} lg={8}>
-          <Card title="Department Information" style={{ marginBottom: '24px' }}>
-            <div style={{ marginBottom: '16px' }}>
+          <Card title={t('common.departmentInformation')} style={{ marginBottom: '24px' }}>
+            {/* <div style={{ marginBottom: '16px' }}>
               <Text strong>Department: </Text>
               <Text>{lab.department?.name || 'Not specified'}</Text>
-            </div>
+            </div> */}
 
             {/* Head of Department Information */}
             {headOfLab && (
@@ -151,7 +153,7 @@ const LabDetailPage = () => {
 
             {lab.description && (
               <div style={{ marginBottom: '16px' }}>
-                <Text strong>Description: </Text>
+                <Text strong>{t('common.description')} </Text>
                 <Paragraph style={{ margin: 0 }}>{lab.description}</Paragraph>
               </div>
             )}
@@ -168,11 +170,11 @@ const LabDetailPage = () => {
 
             <Divider />
 
-            <div style={{ marginBottom: '16px' }}>
+            {/* <div style={{ marginBottom: '16px' }}>
               <Text strong>Status: </Text>
               <Text>{lab.status === 'active' ? 'Active' : 'Inactive'}</Text>
-            </div>
-
+            </div> */}
+{/* 
             <div style={{ marginBottom: '16px' }}>
               <Text strong>Capacity: </Text>
               <Text>{lab.current_researchers_count}/{lab.capacity} researchers</Text>
@@ -181,7 +183,7 @@ const LabDetailPage = () => {
             <div>
               <Text strong>Available Spots: </Text>
               <Text>{lab.available_spots}</Text>
-            </div>
+            </div> */}
           </Card>
         </Col>
 
@@ -191,7 +193,7 @@ const LabDetailPage = () => {
             title={
               <div style={{ display: 'flex', alignItems: 'center' }}>
                 <TeamOutlined style={{ marginRight: '8px' }} />
-                Department Members ({labMembers.length})
+                {t('common.members')}
               </div>
             }
             loading={researchersLoading}

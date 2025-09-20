@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react';
-import { 
-  Layout, 
-  Menu, 
-  Button, 
-  theme, 
-  Breadcrumb, 
-  Dropdown, 
-  message, 
-  Avatar, 
-  Spin,
-  Typography 
+import {
+  Layout,
+  Menu,
+  Button,
+  theme,
+  Dropdown,
+  message,
+  Avatar,
+  Typography,
+  Drawer,
 } from 'antd';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
@@ -27,14 +26,16 @@ import {
   ExperimentOutlined,
   UserOutlined,
   LogoutOutlined,
+  MenuOutlined,
 } from '@ant-design/icons';
 import { MENU_ITEMS, USER_ROLES } from '../../constants';
 import { organizationService } from '../../services/organizationService';
 import { logoutUser } from '../../store/slices/authSlice';
-import AppLogo from '../../assets/ageri.jpg';
+import AppLogo from '../../assets/Ageri.png';
 import LanguageSwitcher from '../common/LanguageSwitcher';
 
 const { Header, Content } = Layout;
+const { Text } = Typography;
 
 // Icon mapping
 const iconMap = {
@@ -44,7 +45,6 @@ const iconMap = {
   ToolOutlined,
   FileTextOutlined,
 };
-const { Text } = Typography;
 
 const GuestLayout = () => {
   const { t } = useTranslation();
@@ -57,11 +57,10 @@ const GuestLayout = () => {
   } = theme.useToken();
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
-  const [departments, setDepartments] = useState([]);
-  const [departmentsLoading, setDepartmentsLoading] = useState(false);
-  const [openDepartmentKeys, setOpenDepartmentKeys] = useState([]);
+  const [labs, setLabs] = useState([]);
+  const [labsLoading, setLabsLoading] = useState(false);
   const [isDepartmentsDropdownOpen, setIsDepartmentsDropdownOpen] = useState(false);
-  const [loadingDepartmentIds, setLoadingDepartmentIds] = useState([]);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
@@ -69,88 +68,61 @@ const GuestLayout = () => {
     };
 
     window.addEventListener('resize', handleResize);
-    loadDepartments();
-    
+    loadAllLabs();
+
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const loadDepartments = async () => {
+  const loadAllLabs = async () => {
     try {
-      setDepartmentsLoading(true);
-      const response = await organizationService.getDepartments();
-      
-      const formattedDepartments = response.results.map(dept => ({
-        id: dept.id,
-        name: dept.name,
-        labs: [],
-        loaded: false
-      }));
-      
-      setDepartments(formattedDepartments || []);
+      setLabsLoading(true);
+      const departmentsResponse = await organizationService.getDepartments();
+
+      if (departmentsResponse?.results) {
+        const allLabs = [];
+
+        // Load labs for each department
+        for (const dept of departmentsResponse.results) {
+          try {
+            const { success, data: departmentLabs } =
+              await organizationService.getDepartmentLabs(dept.id);
+            if (success && Array.isArray(departmentLabs)) {
+              // Add department info to each lab
+              const labsWithDept = departmentLabs.map((lab) => ({
+                ...lab,
+                departmentName: dept.name,
+                departmentId: dept.id,
+              }));
+              allLabs.push(...labsWithDept);
+            }
+          } catch (error) {
+            console.error(`Failed to load labs for department ${dept.name}:`, error);
+          }
+        }
+
+        setLabs(allLabs);
+      }
     } catch (error) {
-      message.error('Failed to load departments');
+      message.error('Failed to load labs');
+      console.error('Error loading labs:', error);
     } finally {
-      setDepartmentsLoading(false);
+      setLabsLoading(false);
     }
   };
-const loadLabsForDepartment = async (departmentId) => {
-  const department = departments.find(d => d.id === departmentId);
-  if (!department || department.loaded || loadingDepartmentIds.includes(departmentId)) {
-    return [];
-  }
 
-  try {
-    setLoadingDepartmentIds(prev => [...prev, departmentId]);
-    const { success, data: labs, error } = await organizationService.getDepartmentLabs(departmentId);
-    
-    if (!success) {
-      message.error(error || 'Failed to load labs');
-      return [];
-    }
-
-    setDepartments(prev => prev.map(d => 
-      d.id === departmentId ? { 
-        ...d, 
-        labs: Array.isArray(labs) ? labs : [],
-        loaded: true 
-      } : d
-    ));
-    
-    return labs;
-  } catch (error) {
-    message.error('An unexpected error occurred');
-    return [];
-  } finally {
-    setLoadingDepartmentIds(prev => prev.filter(id => id !== departmentId));
-  }
-};
   const handleMenuClick = ({ key }) => {
     navigate(key);
   };
 
   const handleLabClick = (labId) => {
-    // Force close the dropdown immediately
     setIsDepartmentsDropdownOpen(false);
-    setOpenDepartmentKeys([]);
-
-    // Force blur any focused elements to help close the dropdown
-    if (document.activeElement) {
-      document.activeElement.blur();
-    }
-
-    // Navigate to the lab
+    if (document.activeElement) document.activeElement.blur();
     navigate(`/labs/${labId}`);
+    setIsDrawerOpen(false);
   };
 
   useEffect(() => {
-    // Close dropdown when route changes
-    const handleRouteChange = () => {
-      setIsDepartmentsDropdownOpen(false);
-      setOpenDepartmentKeys([]);
-    };
-
-    // Listen for navigation changes
-    handleRouteChange();
+    setIsDepartmentsDropdownOpen(false);
   }, [location.pathname]);
 
   const handleLogout = async () => {
@@ -163,74 +135,31 @@ const loadLabsForDepartment = async (departmentId) => {
     }
   };
 
-  const handleDepartmentOpenChange = async (keys) => {
-    const latestOpenKey = keys.find(key => !openDepartmentKeys.includes(key));
-    if (latestOpenKey) {
-      const departmentId = parseInt(latestOpenKey, 10);
-      if (!isNaN(departmentId)) {
-        await loadLabsForDepartment(departmentId);
-      }
-    }
-    setOpenDepartmentKeys(keys);
-  };
-
   const getDepartmentsDropdown = () => {
-    if (departments.length === 0) {
+    if (labs.length === 0) {
       return {
         items: [
           {
-            key: 'no-departments',
-            label: 'No departments available',
+            key: 'no-labs',
+            label: 'No labs available',
             disabled: true,
-          }
-        ]
+          },
+        ],
       };
     }
 
-    const items = departments.map(department => ({
-      key: String(department.id),
-      label: department.name,
-      icon: <BankOutlined />,
-      children: department.loaded
-        ? department.labs.length > 0
-          ? department.labs.map(lab => ({
-            key: `lab-${lab.id}`,
-            label: lab.name,
-            icon: <ExperimentOutlined />,
-            onClick: () => handleLabClick(lab.id),
-          }))
-          : [{
-            key: `no-labs-${department.id}`,
-            label: 'No labs available',
-            disabled: true,
-          }]
-        : [{
-          key: `loading-labs-${department.id}`,
-          label: loadingDepartmentIds.includes(department.id) ? (
-            <span><Spin size="small" /> Loading labs...</span>
-          ) : 'Loading...',
-          icon: <ExperimentOutlined />,
-          disabled: true,
-        }]
+    const items = labs.map((lab) => ({
+      key: `lab-${lab.id}`,
+      label: lab.name,
+      icon: <ExperimentOutlined />,
+      onClick: () => handleLabClick(lab.id),
     }));
 
-    return {
-      items,
-      onOpenChange: handleDepartmentOpenChange,
-      openKeys: openDepartmentKeys
-    };
+    return { items };
   };
 
   const getMenuItems = () => {
     const items = MENU_ITEMS[USER_ROLES.GUEST] || [];
-    const iconMap = {
-      DashboardOutlined,
-      BookOutlined,
-      ReadOutlined,
-      ToolOutlined,
-      FileTextOutlined,
-    };
-
     return items.map((item) => {
       const IconComponent = iconMap[item.icon];
       return {
@@ -239,28 +168,6 @@ const loadLabsForDepartment = async (departmentId) => {
         label: t(`navigation.${item.key}`) || item.key,
       };
     });
-  };
-
-  const generateBreadcrumbs = () => {
-    const pathSegments = location.pathname.split('/').filter(Boolean);
-    const breadcrumbItems = [
-      {
-        title: t('common.home'),
-        href: '/',
-      },
-    ];
-
-    pathSegments.forEach((segment, index) => {
-      const path = '/' + pathSegments.slice(0, index + 1).join('/');
-      const title = segment.charAt(0).toUpperCase() + segment.slice(1);
-
-      breadcrumbItems.push({
-        title,
-        href: path,
-      });
-    });
-
-    return breadcrumbItems;
   };
 
   return (
@@ -277,194 +184,246 @@ const loadLabsForDepartment = async (departmentId) => {
           top: 0,
           zIndex: 1000,
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+          height: '80px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-          <div 
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            flex: 1,
+            gap: '16px',
+          }}
+        >
+          {/* Logo */}
+          <div
             style={{
               display: 'flex',
               alignItems: 'center',
               gap: '12px',
               cursor: 'pointer',
-              marginRight: isMobile ? '16px' : '32px',
-              flexShrink: 0
-            }} 
+              flexShrink: 0,
+            }}
             onClick={() => navigate('/')}
           >
-            <img 
-              src={AppLogo} 
-              alt={t('homepage.heroTitle')} 
-              style={{ height: '40px', borderRadius: '8px' }} 
+            <img
+              src={AppLogo}
+              alt={t('homepage.heroTitle')}
+              style={{ height: '48px', borderRadius: '8px' }}
             />
             {!isMobile && (
-              <div>
-                <h1 style={{
+              <h1
+                style={{
                   margin: 0,
                   color: '#1e3c72',
-                  fontSize: '24px',
-                  fontWeight: 'bold'
-                }}>
-                  {t('homepage.heroTitle').split(' ')[0]}
-                </h1>
-                <div style={{ fontSize: '12px', color: '#666', lineHeight: '1' }}>
-                  {t('homepage.heroTitle').split(' ').slice(1).join(' ')}
-                </div>
-              </div>
+                  fontSize: '28px',
+                  fontWeight: 'bold',
+                }}
+              >
+                {t('homepage.heroTitle')}
+              </h1>
             )}
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
-              {getMenuItems().map((item) => (
-                <Button
-                  key={item.key}
-                  type="text"
-                  icon={item.icon}
-                  onClick={() => handleMenuClick({ key: item.key })}
-                  style={{
-                    height: '46px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    color: location.pathname === item.key ? '#1890ff' : 'inherit',
-                    fontWeight: location.pathname === item.key ? 'bold' : 'normal',
-                  }}
-                >
-                  {!isMobile && item.label}
-                </Button>
-              ))}
+          {/* Desktop nav */}
+          {!isMobile ? (
+            <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
+              {/* inline buttons here */}
             </div>
+          ) : (
+            // ✅ Mobile hamburger only
+            <Button
+              type="text"
+              icon={<MenuOutlined style={{ fontSize: 22 }} />}
+              onClick={() => setIsDrawerOpen(true)}
+            />
+          )}
 
-            <Dropdown
-              key={location.pathname} // This forces the dropdown to remount on route change
-              menu={getDepartmentsDropdown()}
-              trigger={['click']}
-              placement="bottomRight"
-              disabled={departmentsLoading}
-              open={isDepartmentsDropdownOpen}
-              onOpenChange={(flag) => {
-                setIsDepartmentsDropdownOpen(flag);
-                // Reset sub-menu when main dropdown is closed
-                if (!flag) setOpenDepartmentKeys([]);
-              }}
-              destroyPopupOnHide={true} // This ensures the popup is destroyed when hidden
-            >
-              <Button
-                type="text"
-                style={{
-                  height: '46px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  marginLeft: '16px',
-                  flexShrink: 0
-                }}
-                loading={departmentsLoading}
-              >
-                <BankOutlined />
-                {!isMobile && t('navigation.departments')}
-                <DownOutlined />
-              </Button>
-            </Dropdown>
-          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+        {/* Right side (lang + auth) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <LanguageSwitcher size={isMobile ? 'small' : 'middle'} />
-          
-          {isAuthenticated ? (
+          {!isMobile && isAuthenticated && (
+            <Text style={{ marginRight: 8, color: '#666', fontSize: '16px' }}>
+              Welcome, {user?.first_name || user?.username}
+            </Text>
+          )}
+          {!isMobile && (
             <>
-              {!isMobile && (
-                <Text style={{ marginRight: 8, color: '#666' }}>
-                  Welcome, {user?.first_name || user?.username}
-                </Text>
+              {isAuthenticated ? (
+                <>
+                  <Button
+                    type="default"
+                    icon={<DashboardOutlined />}
+                    onClick={() => navigate('/app/dashboard')}
+                    size="middle"
+                  >
+                    {t('common.dashboard')}
+                  </Button>
+                  <Dropdown
+                    menu={{
+                      items: [
+                        {
+                          key: 'profile',
+                          icon: <UserOutlined />,
+                          label: t('common.profile'),
+                          onClick: () => navigate('/app/profile'),
+                        },
+                        { type: 'divider' },
+                        {
+                          key: 'logout',
+                          icon: <LogoutOutlined />,
+                          label: 'Logout',
+                          onClick: handleLogout,
+                        },
+                      ],
+                    }}
+                    placement="bottomRight"
+                    arrow
+                  >
+                    <Avatar
+                      style={{ cursor: 'pointer', backgroundColor: '#1890ff' }}
+                      icon={<UserOutlined />}
+                      src={user?.avatar}
+                      size="large"
+                    />
+                  </Dropdown>
+                </>
+              ) : (
+                <>
+                  <Button
+                    type="default"
+                    icon={<LoginOutlined />}
+                    onClick={() => navigate('/login')}
+                    size="middle"
+                  >
+                    {t('common.login')}
+                  </Button>
+                  <Button
+                    type="primary"
+                    icon={<UserAddOutlined />}
+                    onClick={() => navigate('/register')}
+                    size="middle"
+                  >
+                    {t('common.register')}
+                  </Button>
+                </>
               )}
-              <Button
-                type="default"
-                icon={<DashboardOutlined />}
-                onClick={() => navigate('/app/dashboard')}
-                size={isMobile ? 'small' : 'middle'}
-              >
-                {!isMobile && t('common.dashboard')}
-              </Button>
-              <Dropdown
-                menu={{
-                  items: [
-                    {
-                      key: 'profile',
-                      icon: <UserOutlined />,
-                      label: t('common.profile'),
-                      onClick: () => navigate('/app/profile'),
-                    },
-                    {
-                      type: 'divider',
-                    },
-                    {
-                      key: 'logout',
-                      icon: <LogoutOutlined />,
-                      label: 'Logout',
-                      onClick: handleLogout,
-                    },
-                  ]
-                }}
-                placement="bottomRight"
-                arrow
-              >
-                <Avatar
-                  style={{ cursor: 'pointer', backgroundColor: '#1890ff' }}
-                  icon={<UserOutlined />}
-                  src={user?.avatar}
-                  size={isMobile ? 'small' : 'default'}
-                />
-              </Dropdown>
-            </>
-          ) : (
-            <>
-              <Button
-                type="default"
-                icon={<LoginOutlined />}
-                onClick={() => navigate('/login')}
-                size={isMobile ? 'small' : 'middle'}
-              >
-                {!isMobile && t('common.login')}
-              </Button>
-              <Button
-                type="primary"
-                icon={<UserAddOutlined />}
-                onClick={() => navigate('/register')}
-                size={isMobile ? 'small' : 'middle'}
-              >
-                {!isMobile && t('common.register')}
-              </Button>
             </>
           )}
         </div>
       </Header>
 
-      <Content style={{
-        minHeight: 'calc(100vh - 64px)',
-        background: '#f8f9fa'
-      }}>
-        {location.pathname !== '/' && (
-          <div style={{
-            background: '#fff',
-            padding: '16px 24px',
-            borderBottom: '1px solid #f0f0f0'
-          }}>
-            <Breadcrumb
-              items={generateBreadcrumbs()}
-            />
-          </div>
-        )}
+      {/* Mobile Drawer */}
+      <Drawer
+        title={t('homepage.heroTitle')}
+        placement="left"
+        closable
+        onClose={() => setIsDrawerOpen(false)}
+        open={isDrawerOpen}
+        width={260}
+      >
+        <Menu
+          mode="inline"
+          selectedKeys={[location.pathname]}
+          onClick={({ key }) => {
+            handleMenuClick({ key });
+            setIsDrawerOpen(false);
+          }}
+          items={getMenuItems()}
+        />
 
+        <div style={{ marginTop: 16 }}>
+          <Dropdown menu={getDepartmentsDropdown()} trigger={['click']} placement="bottomLeft">
+            <Button block icon={<BankOutlined />}>
+              {t('navigation.departments', 'Departments')}
+            </Button>
+          </Dropdown>
+        </div>
+
+        <div style={{ marginTop: 24 }}>
+          {isAuthenticated ? (
+            <>
+              <Button
+                block
+                icon={<DashboardOutlined />}
+                onClick={() => {
+                  navigate('/app/dashboard');
+                  setIsDrawerOpen(false);
+                }}
+              >
+                {t('common.dashboard')}
+              </Button>
+              <Button
+                block
+                icon={<UserOutlined />}
+                onClick={() => {
+                  navigate('/app/profile');
+                  setIsDrawerOpen(false);
+                }}
+                style={{ marginTop: 8 }}
+              >
+                {t('common.profile')}
+              </Button>
+              <Button
+                block
+                danger
+                icon={<LogoutOutlined />}
+                onClick={() => {
+                  handleLogout();
+                  setIsDrawerOpen(false);
+                }}
+                style={{ marginTop: 8 }}
+              >
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                block
+                icon={<LoginOutlined />}
+                onClick={() => {
+                  navigate('/login');
+                  setIsDrawerOpen(false);
+                }}
+              >
+                {t('common.login')}
+              </Button>
+              <Button
+                block
+                type="primary"
+                icon={<UserAddOutlined />}
+                onClick={() => {
+                  navigate('/register');
+                  setIsDrawerOpen(false);
+                }}
+                style={{ marginTop: 8 }}
+              >
+                {t('common.register')}
+              </Button>
+            </>
+          )}
+        </div>
+      </Drawer>
+
+      <Content
+        style={{
+          minHeight: 'calc(100vh - 80px)',
+          background: '#f8f9fa',
+        }}
+      >
         {location.pathname === '/' ? (
           <Outlet />
         ) : (
-          <div style={{
-            padding: '24px',
-            maxWidth: '1200px',
-            margin: '0 auto'
-          }}>
+          <div
+            style={{
+              padding: '24px',
+              maxWidth: '1200px',
+              margin: '0 auto',
+            }}
+          >
             <Outlet />
           </div>
         )}

@@ -4,6 +4,7 @@ import { SearchOutlined, BookOutlined, ClockCircleOutlined, UserOutlined, Calend
 import { trainingService } from '../../services';
 import GuestEnrollmentForm from '../../components/enrollment/GuestEnrollmentForm';
 import EnrollmentSuccess from '../../components/enrollment/EnrollmentSuccess';
+import { useTranslation } from 'react-i18next';
 
 const { Title, Text, Paragraph } = Typography;
 const { Search } = Input;
@@ -22,7 +23,7 @@ const CoursesPage = () => {
     type: '',
     status: 'published'
   });
-
+  const { t } = useTranslation();
   // Enrollment modal states
   const [enrollmentModalVisible, setEnrollmentModalVisible] = useState(false);
   const [successModalVisible, setSuccessModalVisible] = useState(false);
@@ -157,10 +158,10 @@ const CoursesPage = () => {
       <div style={{ textAlign: "center", marginBottom: "2rem" }}>
         <Title level={1}>
           <BookOutlined style={{ marginRight: "8px" }} />
-          الدورات التدريبية
+          {t('courses.title')}
         </Title>
         <Paragraph type="secondary">
-          اكتشف مجموعة متنوعة من الدورات التدريبية المتخصصة في المجال الزراعي
+          {t('courses.description')}
         </Paragraph>
       </div>
 
@@ -169,7 +170,7 @@ const CoursesPage = () => {
         <Row gutter={[16, 16]} align="middle">
           <Col xs={24} sm={12} md={8}>
             <Search
-              placeholder="البحث في الدورات..."
+              placeholder={t('courses.searchPlaceholder')}
               allowClear
               enterButton={<SearchOutlined />}
               value={filters.search}
@@ -179,7 +180,7 @@ const CoursesPage = () => {
           </Col>
           <Col xs={24} sm={6} md={4}>
             <Select
-              placeholder="نوع الدورة"
+              placeholder={t('courses.typePlaceholder')}
               allowClear
               style={{ width: '100%' }}
               value={filters.type}
@@ -198,7 +199,7 @@ const CoursesPage = () => {
       {loading && (
         <div style={{ textAlign: "center", padding: "2rem" }}>
           <Spin size="large" />
-          <div style={{ marginTop: "1rem" }}>جاري تحميل الدورات...</div>
+          <div style={{ marginTop: "1rem" }}>{t('courses.loading')}</div>
         </div>
       )}
 
@@ -210,7 +211,7 @@ const CoursesPage = () => {
 
       {!loading && !error && courses.length === 0 && (
         <Card style={{ textAlign: "center" }}>
-          <Text type="secondary">لا توجد دورات متاحة حالياً</Text>
+          <Text type="secondary">{t('courses.noCourses')}</Text>
         </Card>
       )}
 
@@ -246,7 +247,7 @@ const CoursesPage = () => {
                           )}
                         </div>
                         <div style={{ fontSize: '12px', fontWeight: 'normal', color: '#666' }}>
-                          كود: {course.course_code}
+                          {t('courses.code')} {course.course_code}
                         </div>
                       </div>
                     }
@@ -262,17 +263,17 @@ const CoursesPage = () => {
 
                         <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
                           <UserOutlined style={{ marginRight: '4px' }} />
-                          المدرب: {course.instructor || 'غير محدد'}
+                          {t('courses.instructor')}: {course.instructor || 'غير محدد'}
                         </div>
 
                         <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
                           <ClockCircleOutlined style={{ marginRight: '4px' }} />
-                          {course.training_hours} ساعة تدريبية
+                          {course.training_hours} {t('courses.hours')}
                         </div>
 
                         <div style={{ fontSize: '13px', color: '#666', marginBottom: '8px' }}>
                           <CalendarOutlined style={{ marginRight: '4px' }} />
-                          من {course.start_date} إلى {course.end_date}
+                          {t('courses.from')} {course.start_date} {t('courses.to')} {course.end_date}
                         </div>
 
                         <div style={{
@@ -285,7 +286,7 @@ const CoursesPage = () => {
                         </div>
 
                         <div style={{ fontSize: '12px', color: '#999' }}>
-                          المشاركون: {course.current_enrollment || 0} / {course.max_participants}
+                          {t('courses.participants')} {course.current_enrollment || 0} / {course.max_participants}
                         </div>
                       </div>
                     }
@@ -305,7 +306,7 @@ const CoursesPage = () => {
                       style={{ flex: 1 }}
                       onClick={() => handleShowDetails(course)}
                     >
-                      عرض التفاصيل
+                      {t('courses.viewDetails')}
                     </Button>
                     <Button
                       size="small"
@@ -318,10 +319,10 @@ const CoursesPage = () => {
                       style={{ flex: 1 }}
                     >
                       {course.current_enrollment >= course.max_participants
-                        ? 'مكتملة'
+                        ? t('courses.full')
                         : new Date(course.registration_deadline) < new Date()
-                          ? 'انتهى التسجيل'
-                          : 'التسجيل'
+                          ? t('courses.registrationClosed')
+                          : t('courses.enroll')
                       }
                     </Button>
                   </div>
@@ -342,16 +343,16 @@ const CoursesPage = () => {
                 disabled={page === 1 || loading}
                 type={page > 1 ? "default" : "default"}
               >
-                السابق
+                {t('common.previous')}
               </Button>
             </Col>
             <Col>
               <Text strong>
-                صفحة {page} من {Math.ceil(count / PAGE_SIZE) || 1}
+                {t('courses.page')} {page} {t('courses.from')} {Math.ceil(count / PAGE_SIZE) || 1}
               </Text>
               <br />
               <Text type="secondary" style={{ fontSize: '12px' }}>
-                إجمالي {count} دورة
+                {t('courses.total')} {count} {t('courses.course')}
               </Text>
             </Col>
             <Col>
@@ -360,7 +361,7 @@ const CoursesPage = () => {
                 disabled={count <= page * PAGE_SIZE || loading}
                 type={count > page * PAGE_SIZE ? "default" : "default"}
               >
-                التالي
+                {t('common.next')}
               </Button>
             </Col>
           </Row>

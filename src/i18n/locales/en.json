@@ -2,6 +2,7 @@
   "common": {
     "home": "Home",
     "posts": "Posts",
+    "postsDescription": "Stay updated with the latest news, events, and important announcements",
     "announcements": "Announcements",
     "courses": "Courses",
     "services": "Services",
@@ -41,7 +42,13 @@
     "undefined": "Undefined",
     "position": "Position",
     "startDate":"Start Date",
-    "role":"Role"
+    "role":"Role",
+    "departmentInformation":"Department Information",
+    "members":"Members",
+    "description":"Description",
+    "from":"from",
+    "phone":"Phone",
+    "days":"days"
   },
   "navigation": {
     "home": "Home",
@@ -255,7 +262,8 @@
     "registerForUpdates": "Register for More Updates",
     "viewDetails": "View Details",
     "expires": "Expires",
-    "views": "views"
+    "views": "views",
+    "totalPosts": "Total Posts: "
   },
   "errors": {
     "somethingWentWrong": "Something went wrong",
@@ -308,6 +316,7 @@
     "title": "Training Courses",
     "description": "Explore our comprehensive training programs and professional development courses",
     "searchPlaceholder": "Search courses...",
+    "typePlaceholder":"course type",
     "noCourses": "No Courses Found",
     "noCoursesDesc": "No courses are currently available.",
     "tryAdjusting": "Try adjusting your search criteria or filters.",
@@ -318,7 +327,17 @@
     "capacity": "Capacity",
     "enrolled": "Enrolled",
     "viewDetails": "View Details",
-    "enroll": "Enroll"
+    "enroll": "Enroll",
+    "hours":"hours",
+    "from":"from",
+    "to":"to",
+    "participants":"participants",
+    "full":"Full",
+    "registrationClosed":"Registration Closed",
+    "code":"Code",
+    "total":"total",
+    "course":"course",
+    "page":"page"
   },
   "services": {
     "title": "Research Services",
@@ -328,7 +347,20 @@
     "noServices": "No Services Found",
     "noServicesDesc": "No services are currently available.",
     "viewDetails": "View Details",
-    "requestService": "Request Service"
+    "requestService": "Request Service",
+    "availableServices":"Available Services",
+    "servicesDescription":"Browse all available services and request what you need",
+    "featuredServices":"Featured Services",
+    "view": "View",
+    "service": "services",
+    "filterByCategory": "Filter by Category",
+    "featured": "Featured Service",
+    "serviceDescription":"Service Description",
+    "serviceDetails":"Service Details",
+    "cost":"Cost",
+    "estimatedDuration":"Estimated Duration",
+    "category":"Category",
+    "contactInformation":"Contact Information"
   },
   "publications": {
     "title": "Research Publications",

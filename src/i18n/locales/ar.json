@@ -34,6 +34,7 @@
     "add_author": "إضافة مؤلف",
     "home": "الرئيسية",
     "posts": "المنشورات",
+    "postsDescription": "ابق على اطلاع بآخر الأخبار والفعاليات والإعلانات المهمة",
     "courses": "الدورات",
     "services": "الخدمات",
     "login": "تسجيل الدخول",
@@ -70,7 +71,12 @@
     "undefined":"غير محدد",
     "position":"المنصب",
     "startDate":"تاريخ البدء",
-    "role":"الدور"
+    "role":"الدور",
+    "departmentInformation":"معلومات القسم",
+    "members":"الأعضاء",
+    "description":"الوصف",
+    "from":"من",
+    "phone":"الهاتف"
   },
   "navigation": {
     "home": "الرئيسية",
@@ -308,7 +314,7 @@
   "announcements": {
     "title": "الإعلانات",
     "description": "ابق على اطلاع بآخر الأخبار والأحداث والإعلانات المهمة.",
-    "searchPlaceholder": "البحث في الإعلانات...",
+    "searchPlaceholder": "البحث في المنشورات...",
     "showing": "عرض {{count}} من {{total}} إعلان",
     "noAnnouncements": "لم يتم العثور على إعلانات",
     "noAnnouncementsDesc": "لا توجد إعلانات متاحة حالياً.",
@@ -316,7 +322,8 @@
     "registerForUpdates": "سجل للحصول على المزيد من التحديثات",
     "viewDetails": "عرض التفاصيل",
     "expires": "ينتهي في",
-    "views": "مشاهدة"
+    "views": "مشاهدة",
+    "totalPosts": "إجمالي المنشورات: "
   },
   "errors": {
     "somethingWentWrong": "حدث خطأ ما",
@@ -370,7 +377,9 @@
     "title": "الدورات التدريبية",
     "description": "برامج التطوير المهني والدورات التدريبية المتخصصة",
     "searchPlaceholder": "البحث في الدورات...",
-    "noCourses": "لم يتم العثور على دورات",
+    "typePlaceholder":"نوع الدورة",
+    "loading":"جاري التحميل...",
+    "noCourses": "لا توجد دورات متاحة حالياً",
     "noCoursesDesc": "لا توجد دورات متاحة حالياً.",
     "tryAdjusting": "حاول تعديل معايير البحث.",
     "registerToAccess": "سجل للوصول إلى المزيد من الدورات",
@@ -380,7 +389,17 @@
     "capacity": "السعة",
     "enrolled": "المسجلين",
     "viewDetails": "عرض التفاصيل",
-    "enroll": "التسجيل"
+    "enroll": "التسجيل",
+    "hours":"الساعات",
+    "from":"من",
+    "to":"إلى",
+    "participants":"المشاركون",
+    "full":"مكتمل",
+    "registrationClosed":"انتهى التسجيل",
+    "code": "الكود",
+    "total":"أجمالي",
+    "course":"دورة",
+    "page":"صفحة"
   },
   "services": {
     "title": "الخدمات البحثية",
@@ -390,7 +409,21 @@
     "noServices": "لم يتم العثور على خدمات",
     "noServicesDesc": "لا توجد خدمات متاحة حالياً.",
     "viewDetails": "عرض التفاصيل",
-    "requestService": "طلب الخدمة"
+    "requestService": "طلب الخدمة",
+    "availableServices":"الخدمات المتاحة",
+    "servicesDescription":"استعرض جميع الخدمات المتاحة واطلب ما تحتاج إليه",
+    "featuredServices":"الخدمات المميزة",
+    "view": "عرض",
+    "service": "خدمة",
+    "filterByCategory": "تصفية حسب الفئة",
+    "featured": "خدمة مميزة",
+    "serviceDescription":"وصف الخدمة",
+    "serviceDetails":"تفاصيل الخدمة",
+    "cost":"التكلفة",
+    "estimatedDuration":"المدة المقدرة",
+    "category":"الفئة",
+    "contactInformation":"معلومات الاتصال",
+    "days":"يوم"
   },
   "publications": {
     "title": "المنشورات البحثية",
