@@ -20,7 +20,8 @@ export const authService = {
         await apiClient.post(API_ENDPOINTS.AUTH.LOGOUT, { refresh_token: refreshToken });
       }
     } catch (error) {
-      throw error;
+      // Log the error but don't throw it - we still want to clear local storage
+      console.warn('Logout API call failed:', error.message);
     } finally {
       // Clear local storage regardless of API call success
       localStorage.removeItem('access_token');

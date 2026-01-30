@@ -201,7 +201,7 @@ const LabDetailPage = () => {
             {labMembers.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '40px' }}>
                 <UserOutlined style={{ fontSize: '48px', color: '#d9d9d9', marginBottom: '16px' }} />
-                <Title level={4} type="secondary">No Members Yet</Title>
+                <Title level={4} style={{textAlign:'center'}} type="secondary">No Members Yet</Title>
                 <Text type="secondary">This department doesn't have any assigned members yet.</Text>
               </div>
             ) : (

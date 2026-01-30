@@ -940,9 +940,6 @@ const OrganizationManagementPage = () => {
                     render: (text, record) => (
                       <div>
                         <div style={{ fontWeight: 500 }}>{text}</div>
-                        <Text type="secondary" style={{ fontSize: '12px' }}>
-                          ID: {record.id}
-                        </Text>
                       </div>
                     ),
                   },

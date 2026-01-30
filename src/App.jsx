@@ -51,7 +51,7 @@ import OrganizationManagementPage from './pages/admin/OrganizationManagementPage
 import AdminDashboard from './pages/admin/publications/AdminDashboard.jsx';
 import PublicationDetailPage from './pages/research/PublicationDetailPage.jsx';
 import PublicationsPage from './pages/research/PublicationsPage.jsx';
-import PublicationForm from './pages/research/PublicationForm.jsx';
+import PublicationFormSimplified from './pages/research/PublicationFormSimplified.jsx';
 
 // Ant Design theme configuration
 const theme = {
@@ -134,9 +134,9 @@ const AppContent = () => {
               <Route path="profile" element={<ProfilePage />} />
               <Route path="create-profile" element={<CreateProfilePage />} />
               <Route path="research/publications" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationsPage /></ProtectedRoute>} />
-              <Route path="research/publications/new" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm /></ProtectedRoute>} />
+              <Route path="research/publications/new" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationFormSimplified /></ProtectedRoute>} />
               <Route path="research/publications/:id" element={<ProtectedRoute requiredPermission="VIEW_PUBLICATIONS"><PublicationDetailPage /></ProtectedRoute>} />
-              <Route path="research/publications/:id/edit" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationForm isEdit={true} /></ProtectedRoute>} />
+              <Route path="research/publications/:id/edit" element={<ProtectedRoute requiredPermission="SUBMIT_PUBLICATIONS"><PublicationFormSimplified /></ProtectedRoute>} />
 
               {/* Home page for authenticated users */}
               <Route path="home" element={<HomePage />} />

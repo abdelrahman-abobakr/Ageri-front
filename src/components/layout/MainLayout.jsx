@@ -75,9 +75,15 @@ const MainLayout = () => {
 
 
 
-  const handleLogout = () => {
-    dispatch(logoutUser());
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+    } catch (error) {
+      // Even if logout API fails, we still want to clear local state and redirect
+      console.warn('Logout API failed, but continuing with local cleanup:', error);
+    } finally {
+      navigate('/login');
+    }
   };
 
 

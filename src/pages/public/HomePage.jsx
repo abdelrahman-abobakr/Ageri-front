@@ -306,7 +306,7 @@ const HomePage = () => {
             });
 
             // Sort by date (newest first) since all are featured
-            const sortedPosts = transformedPosts.sort((a, b) => 
+            const sortedPosts = transformedPosts.sort((a, b) =>
               new Date(b.date) - new Date(a.date)
             );
 
@@ -331,7 +331,7 @@ const HomePage = () => {
   const getCarouselSlides = () => {
     const slides = [];
     const defaultImage = '/2304.w019.n002.1028B.p15.1028.jpg';
-    
+
     // Helper function to get valid image URL
     const getValidImageUrl = (imageUrl) => {
       if (!imageUrl) return defaultImage;
@@ -369,7 +369,7 @@ const HomePage = () => {
       console.log('Vision image URL:', visionImageUrl);
       slides.push({
         id: 'vision',
-        title: t('homepage.orgName'), // Force Arabic title
+        title: t('common.orgName'), // Agricultural Genetic Engineering Research Institute
         content: organizationData.vision,
         backgroundImage: visionImageUrl,
         icon: <RocketOutlined />,
@@ -747,13 +747,10 @@ const HomePage = () => {
                 maxWidth: '600px',
                 margin: '0 auto'
               }}>
-                
-              {t('homepage.featuredPosts.description')}  
+
+                {t('homepage.featuredPosts.description')}
               </Paragraph>
-              {/* Debug info */}
-              <div style={{ marginTop: '16px', fontSize: '14px', color: '#999' }}>
-                {t('homepage.featuredCount', { count: posts.length })}
-              </div>
+
             </div>
             <Row gutter={[24, 24]}>
               {posts.slice(0, 4).map((post, index) => {
@@ -1110,7 +1107,7 @@ const HomePage = () => {
             </Card>
           </div>
         )}
-         {/* Research Excellence Section */}
+        {/* Research Excellence Section */}
         <div style={{ marginBottom: '100px' }}>
           <div style={{ marginBottom: '48px', textAlign: 'center' }}>
             <Title level={1} style={{
@@ -1122,7 +1119,7 @@ const HomePage = () => {
               fontWeight: '800',
               marginBottom: '16px'
             }}>
-              {t('homepage.researchAreas.title')}            
+              {t('homepage.researchAreas.title')}
             </Title>
             <Paragraph style={{
               marginTop: '16px',
@@ -1180,7 +1177,7 @@ const HomePage = () => {
                     position: 'relative',
                     cursor: 'pointer'
                   }}
-                  bodyStyle={{ 
+                  bodyStyle={{
                     padding: '32px 24px',
                     height: '100%',
                     display: 'flex',
@@ -1206,7 +1203,7 @@ const HomePage = () => {
                     borderRadius: '50%',
                     zIndex: 1
                   }} />
-                  
+
                   <div style={{ position: 'relative', zIndex: 2 }}>
                     <div style={{
                       fontSize: '48px',
@@ -1215,7 +1212,7 @@ const HomePage = () => {
                     }}>
                       {field.icon}
                     </div>
-                    
+
                     <Title level={4} style={{
                       color: 'white',
                       marginBottom: '12px',
@@ -1224,7 +1221,7 @@ const HomePage = () => {
                     }}>
                       {field.title}
                     </Title>
-                    
+
                     <Paragraph style={{
                       color: 'rgba(255,255,255,0.9)',
                       fontSize: '14px',
@@ -1234,7 +1231,7 @@ const HomePage = () => {
                     }}>
                       {field.description}
                     </Paragraph>
-                    
+
                     <div style={{
                       textAlign: 'center',
                       padding: '8px 16px',
@@ -1253,7 +1250,7 @@ const HomePage = () => {
         </div>
 
         {/* Success Stories Section */}
-        <div style={{ 
+        <div style={{
           marginBottom: '100px',
           background: 'linear-gradient(135deg, #f6ffed 0%, #d9f7be 100%)',
           padding: '80px 0',
@@ -1271,7 +1268,7 @@ const HomePage = () => {
             borderRadius: '50%',
             zIndex: 1
           }} />
-          
+
           <div style={{ position: 'relative', zIndex: 2, maxWidth: '1200px', margin: '0 auto', padding: '0 24px' }}>
             <div style={{ marginBottom: '48px', textAlign: 'center' }}>
               <Title level={1} style={{
@@ -1355,7 +1352,7 @@ const HomePage = () => {
                       }}>
                         {story.icon}
                       </div>
-                      
+
                       <Badge
                         count={story.year}
                         style={{
@@ -1365,7 +1362,7 @@ const HomePage = () => {
                         }}
                       />
                     </div>
-                    
+
                     <Title level={4} style={{
                       marginBottom: '16px',
                       textAlign: 'center',
@@ -1373,7 +1370,7 @@ const HomePage = () => {
                     }}>
                       {story.title}
                     </Title>
-                    
+
                     <Paragraph style={{
                       color: '#6b7280',
                       fontSize: '14px',
@@ -1383,7 +1380,7 @@ const HomePage = () => {
                     }}>
                       {story.description}
                     </Paragraph>
-                    
+
                     <div style={{
                       background: `linear-gradient(135deg, ${story.color}15 0%, ${story.color}25 100%)`,
                       padding: '16px',
@@ -1398,7 +1395,7 @@ const HomePage = () => {
                         {story.achievement}
                       </Text>
                     </div>
-                    
+
                     <div style={{
                       textAlign: 'center',
                       padding: '12px',
@@ -1417,7 +1414,7 @@ const HomePage = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Footer Section */}
       <div style={{
         background: 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
@@ -1564,8 +1561,8 @@ const HomePage = () => {
 
           <div style={{ textAlign: 'center' }}>
             <Text style={{ color: 'rgba(255,255,255,0.7)' }}>
-              {t('homepage.footer.copyright', { 
-                year: '2024', 
+              {t('homepage.footer.copyright', {
+                year: '2024',
                 name: t('homepage.organization.name')
               })}
             </Text>

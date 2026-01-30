@@ -712,117 +712,110 @@ const PublicationsListPage = () => {
 
               {/* Publication Details */}
               <Descriptions bordered column={2} size="small" title={<span className="font-bold text-blue-700">{t('publication_details') || 'تفاصيل النشر'}</span>} className="rounded-xl shadow bg-white p-4">
-                {selectedPublication.journal_name && (
-                  <Descriptions.Item label={t('journal name') || 'اسم المجلة'} span={2}>
-                    <Text strong>{selectedPublication.journal_name}</Text>
-                  </Descriptions.Item>
-                )}
-                {selectedPublication.conference_name && (
-                  <Descriptions.Item label={t('conference name') || 'اسم المؤتمر'} span={2}>
-                    <Text strong>{selectedPublication.conference_name}</Text>
-                  </Descriptions.Item>
-                )}
-                {selectedPublication.publisher && (
-                  <Descriptions.Item label={t('publisher') || 'الناشر'} span={2}>
-                    {selectedPublication.publisher}
-                  </Descriptions.Item>
-                )}
-                {selectedPublication.volume && (
-                  <Descriptions.Item label={t('volume') || 'المجلد'}>
-                    {selectedPublication.volume}
-                  </Descriptions.Item>
-                )}
-                {selectedPublication.issue && (
-                  <Descriptions.Item label={t('issue') || 'العدد'}>
-                    {selectedPublication.issue}
-                  </Descriptions.Item>
-                )}
-                {selectedPublication.pages && (
-                  <Descriptions.Item label={t('pages') || 'الصفحات'} span={2}>
-                    {selectedPublication.pages}
-                  </Descriptions.Item>
-                )}
+                <Descriptions.Item label={t('journal name') || 'اسم المجلة'} span={2}>
+                  <Text strong>{selectedPublication.journal_name || <Text type="secondary">N/A</Text>}</Text>
+                </Descriptions.Item>
+                {/* Commented out fields as requested */}
+                {/* <Descriptions.Item label={t('conference name') || 'اسم المؤتمر'} span={2}>
+                  <Text strong>{selectedPublication.conference_name || <Text type="secondary">N/A</Text>}</Text>
+                </Descriptions.Item> */}
+                {/* <Descriptions.Item label={t('publisher') || 'الناشر'} span={2}>
+                  {selectedPublication.publisher || <Text type="secondary">N/A</Text>}
+                </Descriptions.Item> */}
+                {/* <Descriptions.Item label={t('volume') || 'المجلد'}>
+                  {selectedPublication.volume || <Text type="secondary">N/A</Text>}
+                </Descriptions.Item> */}
+                {/* <Descriptions.Item label={t('issue') || 'العدد'}>
+                  {selectedPublication.issue || <Text type="secondary">N/A</Text>}
+                </Descriptions.Item> */}
+                {/* <Descriptions.Item label={t('pages') || 'الصفحات'} span={2}>
+                  {selectedPublication.pages || <Text type="secondary">N/A</Text>}
+                </Descriptions.Item> */}
                 <Descriptions.Item label={t('publication date') || 'تاريخ النشر'} span={2}>
-                  <div className="flex items-center">
-                    <CalendarOutlined className="mr-2 text-blue-400" />
-                    {formatDate(selectedPublication.publication_date)}
-                  </div>
+                  {selectedPublication.publication_date ? (
+                    <div className="flex items-center">
+                      <CalendarOutlined className="mr-2 text-blue-400" />
+                      {formatDate(selectedPublication.publication_date)}
+                    </div>
+                  ) : (
+                    <Text type="secondary">N/A</Text>
+                  )}
                 </Descriptions.Item>
               </Descriptions>
 
               {/* Identifiers */}
-              {(selectedPublication.doi || selectedPublication.isbn || selectedPublication.issn || selectedPublication.pmid) && (
-                <Descriptions bordered column={2} size="small" title={<span className="font-bold text-blue-700">{t('identifiers') || 'المعرفات'}</span>} className="rounded-xl shadow bg-white p-4">
-                  {selectedPublication.doi && (
-                    <Descriptions.Item label="DOI" span={2}>
-                      <a
-                        href={`https://doi.org/${selectedPublication.doi}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-blue-700 hover:underline"
-                      >
-                        <LinkOutlined className="mr-1" />
-                        {selectedPublication.doi}
-                      </a>
-                    </Descriptions.Item>
+              <Descriptions bordered column={2} size="small" title={<span className="font-bold text-blue-700">{t('identifiers') || 'المعرفات'}</span>} className="rounded-xl shadow bg-white p-4">
+                <Descriptions.Item label="DOI" span={2}>
+                  {selectedPublication.doi ? (
+                    <a
+                      href={`https://doi.org/${selectedPublication.doi}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-blue-700 hover:underline"
+                    >
+                      <LinkOutlined className="mr-1" />
+                      {selectedPublication.doi}
+                    </a>
+                  ) : (
+                    <Text type="secondary">N/A</Text>
                   )}
-                  {selectedPublication.isbn && (
-                    <Descriptions.Item label="ISBN">
-                      {selectedPublication.isbn}
-                    </Descriptions.Item>
+                </Descriptions.Item>
+                <Descriptions.Item label="ISBN">
+                  {selectedPublication.isbn || <Text type="secondary">N/A</Text>}
+                </Descriptions.Item>
+                <Descriptions.Item label="ISSN">
+                  {selectedPublication.issn || <Text type="secondary">N/A</Text>}
+                </Descriptions.Item>
+                <Descriptions.Item label="PMID" span={2}>
+                  {selectedPublication.pmid ? (
+                    <a
+                      href={`https://pubmed.ncbi.nlm.nih.gov/${selectedPublication.pmid}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-blue-700 hover:underline"
+                    >
+                      <LinkOutlined className="mr-1" />
+                      {selectedPublication.pmid}
+                    </a>
+                  ) : (
+                    <Text type="secondary">N/A</Text>
                   )}
-                  {selectedPublication.issn && (
-                    <Descriptions.Item label="ISSN">
-                      {selectedPublication.issn}
-                    </Descriptions.Item>
-                  )}
-                  {selectedPublication.pmid && (
-                    <Descriptions.Item label="PMID" span={2}>
-                      <a
-                        href={`https://pubmed.ncbi.nlm.nih.gov/${selectedPublication.pmid}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-blue-700 hover:underline"
-                      >
-                        <LinkOutlined className="mr-1" />
-                        {selectedPublication.pmid}
-                      </a>
-                    </Descriptions.Item>
-                  )}
-                </Descriptions>
-              )}
+                </Descriptions.Item>
+              </Descriptions>
 
               {/* URLs */}
-              {(selectedPublication.url || selectedPublication.pdf_url) && (
-                <Descriptions bordered column={1} size="small" title={<span className="font-bold text-blue-700">{t('links') || 'الروابط'}</span>} className="rounded-xl shadow bg-white p-4">
-                  {selectedPublication.url && (
-                    <Descriptions.Item label={t('publication url') || 'رابط المنشور'}>
-                      <a
-                        href={selectedPublication.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-blue-700 hover:underline"
-                      >
-                        <LinkOutlined className="mr-1" />
-                        {selectedPublication.url}
-                      </a>
-                    </Descriptions.Item>
+              <Descriptions bordered column={1} size="small" title={<span className="font-bold text-blue-700">{t('links') || 'الروابط'}</span>} className="rounded-xl shadow bg-white p-4">
+                <Descriptions.Item label={t('publication url') || 'رابط المنشور'}>
+                  {selectedPublication.url ? (
+                    <a
+                      href={selectedPublication.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-blue-700 hover:underline"
+                    >
+                      <LinkOutlined className="mr-1" />
+                      {selectedPublication.url}
+                    </a>
+                  ) : (
+                    <Text type="secondary">N/A</Text>
                   )}
-                  {selectedPublication.pdf_url && (
-                    <Descriptions.Item label={t('pdf url') || 'رابط PDF'}>
-                      <a
-                        href={selectedPublication.pdf_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center text-blue-700 hover:underline"
-                      >
-                        <LinkOutlined className="mr-1" />
-                        {selectedPublication.pdf_url}
-                      </a>
-                    </Descriptions.Item>
+                </Descriptions.Item>
+                <Descriptions.Item label={t('pdf url') || 'رابط PDF'}>
+                  {selectedPublication.pdf_url ? (
+                    <a
+                      href={selectedPublication.pdf_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center text-blue-700 hover:underline"
+                    >
+                      <LinkOutlined className="mr-1" />
+                      {selectedPublication.pdf_url}
+                    </a>
+                  ) : (
+                    <Text type="secondary">N/A</Text>
                   )}
-                </Descriptions>
-              )}
+                </Descriptions.Item>
+              </Descriptions>
 
               {/* File Download */}
               {selectedPublication.document_file && (

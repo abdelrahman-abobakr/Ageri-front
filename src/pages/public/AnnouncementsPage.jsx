@@ -99,7 +99,6 @@ const AnnouncementsPage = () => {
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto' }}>
       <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-        <Title level={1}>{t('common.posts')}</Title>
         <Paragraph style={{ fontSize: '16px', color: '#666' }}>
           {t('common.postsDescription')}
         </Paragraph>

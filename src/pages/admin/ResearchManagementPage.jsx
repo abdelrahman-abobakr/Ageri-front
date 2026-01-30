@@ -501,10 +501,9 @@ const PublicationsCardGrid = ({
           <div key={publication.id} className="publication-card" style={{ boxShadow: '0 4px 18px rgba(59,130,246,0.08)', border: '2px solid #e0e7ef', borderRadius: 20, position: 'relative' }}>
             {/* Card Header: Only place for status badge */}
             <div className="card-header" style={{ background: '#f3f6fa', borderBottom: '1.5px solid #e0e7ef', borderTopLeftRadius: 20, borderTopRightRadius: 20 }}>
-              <div className="card-id" style={{ fontWeight: 700, color: '#3b82f6', background: '#e0e7ef', borderRadius: 8, padding: '4px 12px' }}>#{publication.id}</div>
-              <div className="card-status" style={{ display: 'flex', alignItems: 'center' }}>
-                {getStatusBadge(publication.status)}
-              </div>
+              
+              {/* <div className="card-id" style={{ fontWeight: 700, color: '#3b82f6', background: '#e0e7ef', borderRadius: 8, padding: '4px 12px' }}>#{publication.id}</div> */}
+
             </div>
 
             <div className="card-content" style={{ padding: 24, gap: 18 }}>

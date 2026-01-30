@@ -339,7 +339,7 @@ const ContentManagementPage = () => {
 
           if (!res || res.success === true || res.status === 204) {
             message.success(t('admin.contentManagement.contentDeleted'));
-            setContent((prev) => prev.filter((post) => post.id !== contentItem.id));
+            // setContent((prev) => prev.filter((post) => post.id !== contentItem.id));
             loadContent();
             fetchStats();
           } else {
@@ -723,14 +723,12 @@ const ContentManagementPage = () => {
       {
         key: 'view',
         icon: <EyeOutlined />,
-        label: t('admin.contentManagement.preview'),
-        onClick: () => handlePreviewContent(record)
+        label: t('admin.contentManagement.preview')
       },
       {
         key: 'edit',
         icon: <EditOutlined />,
-        label: t('admin.contentManagement.editContent'),
-        onClick: () => handleEditContent(record)
+        label: t('admin.contentManagement.editContent')
       },
       {
         type: 'divider'
@@ -743,14 +741,12 @@ const ContentManagementPage = () => {
           key: 'accept',
           icon: <CheckCircleOutlined style={{ color: '#52c41a' }} />,
           label: 'موافقة',
-          onClick: () => handleAcceptContent(record),
           style: { color: '#52c41a' }
         });
         items.unshift({
           key: 'reject',
           icon: <ExceptionOutlined style={{ color: '#ff4d4f' }} />,
           label: 'رفض',
-          onClick: () => handleRejectContent(record),
           danger: true
         });
         items.unshift({ type: 'divider' });
@@ -761,18 +757,14 @@ const ContentManagementPage = () => {
         icon: record.is_featured ?
           <StarFilled style={{ color: '#faad14' }} /> :
           <StarOutlined />,
-        label: record.is_featured ? 'إلغاء التمييز' : 'جعل مميز',
-        onClick: () => handleToggleFeatured(record)
+        label: record.is_featured ? 'إلغاء التمييز' : 'جعل مميز'
       });
 
       if (record.status !== 'pending') {
         items.unshift({
           key: 'publish-toggle',
           icon: record.status === 'published' ? <CloseOutlined /> : <CheckOutlined />,
-          label: record.status === 'published' ? 'إلغاء النشر' : 'نشر',
-          onClick: () => record.status === 'published'
-            ? handleUnpublishContent(record)
-            : handlePublishContent(record)
+          label: record.status === 'published' ? 'إلغاء النشر' : 'نشر'
         });
       }
 
@@ -784,8 +776,7 @@ const ContentManagementPage = () => {
       items.unshift({
         key: 'submit-review',
         icon: <SendOutlined />,
-        label: 'إرسال للمراجعة',
-        onClick: () => handleSubmitForReview(record)
+        label: 'إرسال للمراجعة'
       });
       items.unshift({ type: 'divider' });
     }
@@ -795,7 +786,6 @@ const ContentManagementPage = () => {
       key: 'delete',
       icon: <DeleteOutlined />,
       label: t('admin.contentManagement.deleteContent'),
-      onClick: () => handleDeleteContent(record),
       danger: true
     });
 

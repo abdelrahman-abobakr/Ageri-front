@@ -46,6 +46,32 @@ const iconMap = {
   FileTextOutlined,
 };
 
+// Services dropdown items
+const getServicesDropdownItems = (navigate, t, isMobile, setIsDrawerOpen) => {
+  return {
+    items: [
+      {
+        key: 'services-analysis',
+        label: t('navigation.analysis', 'Analysis'),
+        icon: <ToolOutlined />,
+        onClick: () => {
+          navigate('/services');
+          if (isMobile && setIsDrawerOpen) setIsDrawerOpen(false);
+        },
+      },
+      {
+        key: 'services-training',
+        label: t('navigation.training', 'Training'),
+        icon: <ReadOutlined />,
+        onClick: () => {
+          navigate('/courses');
+          if (isMobile && setIsDrawerOpen) setIsDrawerOpen(false);
+        },
+      },
+    ],
+  };
+};
+
 const GuestLayout = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -56,7 +82,8 @@ const GuestLayout = () => {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
 
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
+  const [isTablet, setIsTablet] = useState(window.innerWidth >= 768 && window.innerWidth < 1200);
   const [labs, setLabs] = useState([]);
   const [labsLoading, setLabsLoading] = useState(false);
   const [isDepartmentsDropdownOpen, setIsDepartmentsDropdownOpen] = useState(false);
@@ -64,7 +91,8 @@ const GuestLayout = () => {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 768);
+      setIsMobile(window.innerWidth < 992);
+      setIsTablet(window.innerWidth >= 768 && window.innerWidth < 1200);
     };
 
     window.addEventListener('resize', handleResize);
@@ -141,7 +169,7 @@ const GuestLayout = () => {
         items: [
           {
             key: 'no-labs',
-            label: 'No labs available',
+            label: 'No departments available',
             disabled: true,
           },
         ],
@@ -160,7 +188,11 @@ const GuestLayout = () => {
 
   const getMenuItems = () => {
     const items = MENU_ITEMS[USER_ROLES.GUEST] || [];
-    return items.map((item) => {
+    // Filter out 'courses', 'services', and 'posts' as they will be in the dropdown or removed
+    const filteredItems = items.filter(item =>
+      item.key !== 'courses' && item.key !== 'services' && item.key !== 'posts'
+    );
+    return filteredItems.map((item) => {
       const IconComponent = iconMap[item.icon];
       return {
         key: item.path,
@@ -174,7 +206,7 @@ const GuestLayout = () => {
     <Layout style={{ minHeight: '100vh' }}>
       <Header
         style={{
-          padding: '0 24px',
+          padding: isMobile ? '0 12px' : '0 24px',
           background: '#fff',
           borderBottom: '2px solid #f0f0f0',
           display: 'flex',
@@ -184,7 +216,8 @@ const GuestLayout = () => {
           top: 0,
           zIndex: 1000,
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-          height: '80px',
+          height: isMobile ? '64px' : '80px',
+          transition: 'height 0.3s ease, padding 0.3s ease',
         }}
       >
         <div
@@ -200,7 +233,7 @@ const GuestLayout = () => {
             style={{
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
+              gap: isMobile ? '8px' : '12px',
               cursor: 'pointer',
               flexShrink: 0,
             }}
@@ -208,30 +241,80 @@ const GuestLayout = () => {
           >
             <img
               src={AppLogo}
-              alt={t('homepage.heroTitle')}
-              style={{ height: '48px', borderRadius: '8px' }}
+              alt={t('common.orgName')}
+              style={{
+                height: isMobile ? '48px' : '64px',
+                borderRadius: '8px',
+                transition: 'height 0.3s ease'
+              }}
             />
             {!isMobile && (
-              <h1
-                style={{
-                  margin: 0,
-                  color: '#1e3c72',
-                  fontSize: '28px',
-                  fontWeight: 'bold',
-                }}
-              >
-                {t('homepage.heroTitle')}
-              </h1>
+              isTablet ? (
+                // Show only acronym on tablet
+                <h1
+                  style={{
+                    margin: 0,
+                    color: '#1e3c72',
+                    fontSize: '20px',
+                    fontWeight: 'bold',
+                    lineHeight: '1',
+                  }}
+                >
+                  {t('common.orgAcronym')}
+                </h1>
+              ) : (
+                // Show full name on desktop
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0', lineHeight: '2rem' }}>
+                  <h1
+                    style={{
+                      margin: 0,
+                      color: '#1e3c72',
+                      fontSize: '18px',
+                      fontWeight: 'bold',
+                      lineHeight: '1',
+                    }}
+                  >
+                    {t('common.orgName')}
+                  </h1>
+                  <span
+                    style={{
+                      color: '#666',
+                      fontSize: '14px',
+                      fontWeight: '600',
+                      letterSpacing: '0.5px',
+                    }}
+                  >
+                    {t('common.orgAcronym')}
+                  </span>
+                </div>
+              )
             )}
           </div>
 
           {/* Desktop nav */}
           {!isMobile ? (
-            <div style={{ display: 'flex', alignItems: 'center', flex: 1 }}>
-              {/* inline buttons here */}
+            <div style={{ display: 'flex', alignItems: 'center', flex: 1, gap: 16 }}>
+              <Button
+                type={location.pathname === '/' ? 'primary' : 'text'}
+                icon={<DashboardOutlined />}
+                size="middle"
+                onClick={() => navigate('/')}
+              >
+                {t('navigation.home', 'Home')}
+              </Button>
+              <Dropdown menu={getServicesDropdownItems(navigate, t)} trigger={['click']} placement="bottomLeft">
+                <Button icon={<ToolOutlined />} size="middle">
+                  {t('navigation.services', 'Services')} <DownOutlined style={{ fontSize: '12px' }} />
+                </Button>
+              </Dropdown>
+              <Dropdown menu={getDepartmentsDropdown()} trigger={['click']} placement="bottomLeft">
+                <Button icon={<BankOutlined />} size="middle">
+                  {t('navigation.departments', 'Departments')}
+                </Button>
+              </Dropdown>
+              <div style={{ flex: 1 }} />
             </div>
           ) : (
-            // ✅ Mobile hamburger only
             <Button
               type="text"
               icon={<MenuOutlined style={{ fontSize: 22 }} />}
@@ -242,9 +325,9 @@ const GuestLayout = () => {
         </div>
 
         {/* Right side (lang + auth) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 4 : 8 }}>
           <LanguageSwitcher size={isMobile ? 'small' : 'middle'} />
-          {!isMobile && isAuthenticated && (
+          {!isMobile && !isTablet && isAuthenticated && (
             <Text style={{ marginRight: 8, color: '#666', fontSize: '16px' }}>
               Welcome, {user?.first_name || user?.username}
             </Text>
@@ -335,6 +418,14 @@ const GuestLayout = () => {
         />
 
         <div style={{ marginTop: 16 }}>
+          <Dropdown menu={getServicesDropdownItems(navigate, t, true, setIsDrawerOpen)} trigger={['click']} placement="bottomLeft">
+            <Button block icon={<ToolOutlined />}>
+              {t('navigation.services', 'Services')} <DownOutlined style={{ fontSize: '12px' }} />
+            </Button>
+          </Dropdown>
+        </div>
+
+        <div style={{ marginTop: 8 }}>
           <Dropdown menu={getDepartmentsDropdown()} trigger={['click']} placement="bottomLeft">
             <Button block icon={<BankOutlined />}>
               {t('navigation.departments', 'Departments')}
@@ -410,7 +501,7 @@ const GuestLayout = () => {
 
       <Content
         style={{
-          minHeight: 'calc(100vh - 80px)',
+          minHeight: isMobile ? 'calc(100vh - 64px)' : 'calc(100vh - 80px)',
           background: '#f8f9fa',
         }}
       >

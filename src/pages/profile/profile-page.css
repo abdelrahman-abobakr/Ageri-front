@@ -451,8 +451,8 @@
 
 .edit-modal-close-btn {
   position: absolute;
-  top: -20px;
-  right: -20px;
+  top: 1px;
+  right: 15px;
   background: #fff;
   border: 2px solid #e0e7ef;
   border-radius: 50%;
